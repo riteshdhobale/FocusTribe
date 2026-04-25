@@ -8,9 +8,10 @@ type JitsiMeetProps = {
 };
 
 // ─── Jitsi server config ───────────────────────────────────────────
-// Change JITSI_DOMAIN to your own self-hosted instance for production.
+// meet.ffmuc.net = free community Jitsi (anonymous rooms, no login required)
+// For production: self-host on DigitalOcean/AWS (~$20/mo)
 // Guide: https://jitsi.github.io/handbook/docs/devops-guide/
-const JITSI_DOMAIN = "meet.jit.si";
+const JITSI_DOMAIN = "meet.ffmuc.net";
 // ────────────────────────────────────────────────────────────────────
 
 declare global {
