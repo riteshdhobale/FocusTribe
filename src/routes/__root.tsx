@@ -29,14 +29,14 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FocusTribe — Live study rooms" },
-      { name: "description", content: "Co-working for students. Exam-specific live study rooms. Pomodoro + tasks. Unlimited at ₹149/mo." },
-      { name: "author", content: "FocusTribe" },
-      { property: "og:title", content: "FocusTribe — Live study rooms" },
-      { property: "og:description", content: "Co-working for students. Exam-specific live study rooms. Pomodoro + tasks." },
+      { title: "StudyDate — Find your perfect study room" },
+      { name: "description", content: "Join live, exam-specific study rooms with built-in Pomodoro timers. Study alongside students preparing for NEET, JEE, UPSC, and more." },
+      { name: "author", content: "StudyDate" },
+      { property: "og:title", content: "StudyDate — Live study rooms & Pomodoro" },
+      { property: "og:description", content: "Join live, exam-specific study rooms with built-in Pomodoro timers. Stay accountable and hit your goals." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@StudyDate" },
     ],
     links: [
       {

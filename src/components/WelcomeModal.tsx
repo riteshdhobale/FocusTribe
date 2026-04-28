@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/lib/useAuth";
 
 type Props = {
   open: boolean;
@@ -8,22 +9,20 @@ type Props = {
 };
 
 export function WelcomeModal({ open, onClose, redirectTo }: Props) {
-  const [name, setName] = useState("");
   const navigate = useNavigate();
+  const { signInWithGoogle, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (open) {
-      const existing = localStorage.getItem("ft_name");
-      if (existing) setName(existing);
+    if (open && isAuthenticated) {
+      onClose();
+      if (redirectTo) navigate({ to: redirectTo });
     }
-  }, [open]);
+  }, [open, isAuthenticated, onClose, navigate, redirectTo]);
 
   if (!open) return null;
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-    localStorage.setItem("ft_name", name.trim());
+  const handleGoogleLogin = async () => {
+    await signInWithGoogle();
     onClose();
     if (redirectTo) navigate({ to: redirectTo });
   };
@@ -34,36 +33,26 @@ export function WelcomeModal({ open, onClose, redirectTo }: Props) {
       style={{ background: "color-mix(in oklab, #0B1120 70%, transparent)", backdropFilter: "blur(12px)" }}
       onClick={onClose}
     >
-      <form
-        onSubmit={submit}
+      <div
         onClick={(e) => e.stopPropagation()}
-        className="surface-card w-full max-w-md p-8 animate-fade-up"
-        style={{ borderColor: "color-mix(in oklab, var(--gold) 35%, transparent)" }}
+        className="surface-card w-full max-w-md p-8 animate-fade-up text-center"
+        style={{ borderColor: "color-mix(in oklab, #FF6B9E 35%, transparent)" }}
       >
         <h3 className="text-2xl font-display font-bold mb-2">
-          Welcome to <span className="text-gold-gradient">FocusTribe</span> 🎯
+          Welcome to <span className="text-rose-gradient">StudyDate</span> 🎯
         </h3>
         <p className="text-sm text-[color:var(--text-secondary)] mb-6">
-          Enter your name to join study rooms.
+          Sign in to join live study rooms and track your pomodoro sessions.
         </p>
-        <input
-          autoFocus
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Your name"
-          className="w-full bg-[color:var(--surface-2)] border border-[color:var(--hairline)] rounded-xl px-4 py-3 outline-none transition focus:border-[color:var(--gold)]"
-          style={{ boxShadow: "none" }}
-          onFocus={(e) => (e.currentTarget.style.boxShadow = "0 0 0 4px color-mix(in oklab, var(--gold) 20%, transparent)")}
-          onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-        />
         <button
-          type="submit"
-          className="mt-5 w-full btn-pill bg-gold-gradient text-[color:var(--primary-foreground)] font-semibold py-3 hover:opacity-95 transition"
-          style={{ boxShadow: "var(--shadow-gold)" }}
+          onClick={handleGoogleLogin}
+          className="mt-2 w-full btn-pill bg-white text-black font-bold py-3 hover:opacity-95 transition flex items-center justify-center gap-3"
+          style={{ boxShadow: "var(--shadow-rose)" }}
         >
-          Join the Tribe →
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/></svg>
+          Continue with Google
         </button>
-      </form>
+      </div>
     </div>
   );
 }

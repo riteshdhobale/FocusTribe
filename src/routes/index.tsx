@@ -3,20 +3,21 @@ import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Avatars } from "@/components/Avatars";
 import { WelcomeModal } from "@/components/WelcomeModal";
+import { useAuth } from "@/lib/useAuth";
 import { CountUp } from "@/components/CountUp";
 import { Marquee } from "@/components/Marquee";
 import { categories } from "@/lib/categories";
 import {
   Check, Clock, Target, Timer, ListChecks, Flame, Wallet,
-  Sparkles, Star, ArrowRight, Quote, ShieldCheck,
+  Sparkles, Star, ArrowRight, Quote, ShieldCheck, Heart
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FocusTribe — Study with people who get your grind" },
+      { title: "StudyDate — Study with people who get your grind" },
       { name: "description", content: "Live exam-specific study rooms — NEET, JEE, UPSC, CA, GATE. Real accountability, unlimited hours, ₹149/mo." },
-      { property: "og:title", content: "FocusTribe — Live study rooms for serious students" },
+      { property: "og:title", content: "StudyDate — Live study rooms for serious students" },
       { property: "og:description", content: "Co-working for students. Pomodoro, task tracker, exam-specific rooms. Unlimited at ₹149/mo." },
     ],
   }),
@@ -39,8 +40,9 @@ function Landing() {
   const [modal, setModal] = useState<{ open: boolean; to?: string }>({ open: false });
   const navigate = useNavigate();
 
+  const { isAuthenticated } = useAuth();
   const open = (to?: string) => {
-    if (typeof window !== "undefined" && localStorage.getItem("ft_name")) {
+    if (typeof window !== "undefined" && isAuthenticated) {
       if (to) navigate({ to });
       else document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" });
     } else {
@@ -61,43 +63,53 @@ function Landing() {
         <div className="relative max-w-6xl mx-auto text-center">
           {/* status pill */}
           <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full border border-[color:var(--hairline)] bg-[color:var(--surface)]/70 backdrop-blur-md text-sm animate-fade-up">
-            <span className="badge-chip !py-1 !px-3">
-              <Sparkles className="h-3 w-3" /> New
+            <span className="badge-chip !py-1 !px-3" style={{ background: "transparent", border: "1px solid rgba(255,107,158,0.3)", color: "#FF6B9E" }}>
+              <Heart className="h-3 w-3 mr-1" /> NEW
             </span>
             <span className="text-[color:var(--text-secondary)]">
-              <span className="live-dot mr-2" />
-              <span className="text-[color:var(--text-primary)] font-semibold">{live}+</span> students studying right now
+              <span className="live-dot mr-2" style={{ background: "#10B981", boxShadow: "0 0 8px #10B981" }} />
+              <span className="text-[color:var(--text-primary)] font-semibold">{live}+</span> study dates happening now
             </span>
           </div>
 
           <h1
-            className="mt-8 font-display font-extrabold leading-[1.02] animate-fade-up"
+            className="mt-8 font-display font-extrabold leading-[1.02] animate-fade-up tracking-tight"
             style={{ fontSize: "clamp(2.8rem, 7vw, 5.4rem)" }}
           >
-            Study with people who
+            Find your perfect
             <br />
-            <span className="text-gold-gradient">get your grind.</span>
+            <span style={{ 
+              background: "linear-gradient(135deg, #FF7B90 0%, #FF58A6 100%)", 
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}>
+              study partner.
+            </span>
           </h1>
 
-          <p className="mt-7 max-w-2xl mx-auto text-lg text-[color:var(--text-secondary)] animate-fade-up">
-            Join exam-specific live study rooms — NEET, JEE, UPSC, CA, GATE.
-            Real accountability. Unlimited hours. <span className="text-[color:var(--text-primary)] font-semibold">Half the price.</span>
+          <p className="mt-7 max-w-2xl mx-auto text-lg text-[color:var(--text-secondary)] animate-fade-up" style={{ lineHeight: 1.6 }}>
+            Join live, exam-specific study rooms. Focus with built-in Pomodoro timers. 
+            Stay accountable and <span className="text-[color:var(--text-primary)] font-semibold">hit your academic goals</span> together.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4 animate-fade-up">
             <button
               onClick={() => open()}
-              className="group btn-pill bg-gold-gradient text-[color:var(--primary-foreground)] px-7 py-3.5 font-semibold transition inline-flex items-center gap-2"
-              style={{ boxShadow: "var(--shadow-gold)" }}
+              className="group btn-pill px-7 py-3.5 font-bold transition inline-flex items-center gap-2"
+              style={{ 
+                background: "linear-gradient(135deg, #FF7B90 0%, #FF58A6 100%)", 
+                color: "white", 
+                boxShadow: "0 8px 30px rgba(255, 88, 166, 0.3)" 
+              }}
             >
-              Start studying — it's free
-              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              Find a room — it's free
+              <Check className="h-4 w-4 transition group-hover:scale-110" />
             </button>
             <a
-              href="#rooms"
-              className="btn-pill border border-[color:var(--hairline)] px-7 py-3.5 font-semibold text-[color:var(--text-primary)] hover:border-[color:var(--gold)] transition bg-[color:var(--surface)]/50 backdrop-blur"
+              href="#how-it-works"
+              className="btn-pill border border-[color:var(--hairline)] px-7 py-3.5 font-semibold text-[color:var(--text-primary)] hover:bg-[color:var(--surface-2)] transition bg-[color:var(--surface)]/50 backdrop-blur"
             >
-              Explore rooms
+              How it works
             </a>
           </div>
 
@@ -106,7 +118,7 @@ function Landing() {
             <div className="flex items-center gap-2">
               <div className="flex">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-[color:var(--gold)]" style={{ color: "var(--gold)" }} />
+                  <Star key={i} className="h-4 w-4 fill-[color:var(--rose-accent)]" style={{ color: "var(--rose-accent)" }} />
                 ))}
               </div>
               <span className="text-sm text-[color:var(--text-secondary)]">
@@ -117,13 +129,13 @@ function Landing() {
 
           {/* Hero showcase card */}
           <div className="relative mt-16 mx-auto max-w-4xl animate-fade-up">
-            <div className="absolute -inset-2 rounded-[28px] bg-gold-gradient opacity-20 blur-2xl" />
-            <div className="relative surface-card overflow-hidden p-2 ring-gold-soft">
+            <div className="absolute -inset-2 rounded-[28px] bg-rose-gradient opacity-20 blur-2xl" />
+            <div className="relative surface-card overflow-hidden p-2 ring-rose-soft">
               <div
                 className="rounded-2xl p-6 md:p-8"
                 style={{
                   background:
-                    "radial-gradient(120% 80% at 0% 0%, color-mix(in oklab, var(--gold) 18%, transparent) 0%, transparent 55%), linear-gradient(180deg, #0F1729, #0B1120)",
+                    "radial-gradient(120% 80% at 0% 0%, color-mix(in oklab, var(--rose-accent) 18%, transparent) 0%, transparent 55%), linear-gradient(180deg, #0F1729, #0B1120)",
                 }}
               >
                 <div className="grid md:grid-cols-3 gap-5">
@@ -134,7 +146,7 @@ function Landing() {
                   ].map((r) => (
                     <div key={r.title} className="rounded-xl border border-[color:var(--hairline)] bg-[color:var(--surface-2)]/60 p-4 text-left">
                       <div className="flex items-center justify-between text-[10px] uppercase tracking-widest">
-                        <span className="text-gold-gradient font-bold">{r.tag}</span>
+                        <span className="text-rose-gradient font-bold">{r.tag}</span>
                         <span className="flex items-center gap-1.5 text-[color:var(--text-secondary)]">
                           <span className="live-dot" /> live
                         </span>
@@ -153,9 +165,9 @@ function Landing() {
                 <div className="mt-6 flex items-center gap-4">
                   <div className="text-xs uppercase tracking-widest text-[color:var(--text-muted)]">Pomodoro</div>
                   <div className="flex-1 h-1.5 rounded-full bg-[color:var(--surface-2)] overflow-hidden">
-                    <div className="h-full bg-gold-gradient" style={{ width: "62%" }} />
+                    <div className="h-full bg-rose-gradient" style={{ width: "62%" }} />
                   </div>
-                  <div className="font-display tabular-nums text-sm text-gold-gradient font-bold">09:32</div>
+                  <div className="font-display tabular-nums text-sm text-rose-gradient font-bold">09:32</div>
                 </div>
               </div>
             </div>
@@ -171,7 +183,7 @@ function Landing() {
             { k: "Free Tier", v: "₹0" },
           ].map((s, i) => (
             <div key={i} className="text-center">
-              <div className="text-3xl md:text-4xl font-display font-bold text-gold-gradient">{s.v}</div>
+              <div className="text-3xl md:text-4xl font-display font-bold text-rose-gradient">{s.v}</div>
               <div className="mt-1 text-xs uppercase tracking-[0.2em] text-[color:var(--text-muted)]">{s.k}</div>
             </div>
           ))}
@@ -206,21 +218,21 @@ function Landing() {
               >
                 <div
                   className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition"
-                  style={{ background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }}
+                  style={{ background: "linear-gradient(90deg, transparent, var(--rose-accent), transparent)" }}
                 />
                 <div
                   className="absolute -top-24 -right-24 h-48 w-48 rounded-full opacity-0 group-hover:opacity-30 transition"
-                  style={{ background: "radial-gradient(circle, var(--gold), transparent 60%)", filter: "blur(20px)" }}
+                  style={{ background: "radial-gradient(circle, var(--rose-accent), transparent 60%)", filter: "blur(20px)" }}
                 />
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-xl flex items-center justify-center text-2xl"
-                    style={{ background: "color-mix(in oklab, var(--gold) 12%, var(--surface-2))" }}>
+                    style={{ background: "color-mix(in oklab, var(--rose-accent) 12%, var(--surface-2))" }}>
                     {c.icon}
                   </div>
                   <div>
                     <div className="font-display font-bold text-lg">{c.name}</div>
                   </div>
-                  <ArrowRight className="ml-auto h-4 w-4 text-[color:var(--text-muted)] group-hover:text-[color:var(--gold)] group-hover:translate-x-1 transition" />
+                  <ArrowRight className="ml-auto h-4 w-4 text-[color:var(--text-muted)] group-hover:text-[color:var(--rose-accent)] group-hover:translate-x-1 transition" />
                 </div>
                 <p className="mt-4 text-sm text-[color:var(--text-secondary)]">{c.description}</p>
                 <div className="mt-6 flex items-center justify-between text-xs">
@@ -235,7 +247,7 @@ function Landing() {
         </div>
       </section>
 
-      <div className="gold-divider max-w-5xl mx-auto" />
+      <div className="rose-divider max-w-5xl mx-auto" />
 
       {/* FEATURES — Bento layout */}
       <section id="features" className="relative px-6 py-32">
@@ -243,7 +255,7 @@ function Landing() {
           <div className="text-center max-w-2xl mx-auto">
             <div className="badge-chip mx-auto"><Target className="h-3 w-3" /> Features</div>
             <h2 className="mt-5 text-4xl md:text-5xl font-display font-extrabold">
-              Built for students who <span className="text-gold-gradient">mean business</span>
+              Built for students who <span className="text-rose-gradient">mean business</span>
             </h2>
           </div>
 
@@ -251,7 +263,7 @@ function Landing() {
             {/* Big — Pomodoro */}
             <div className="surface-card p-7 md:col-span-3 md:row-span-2 relative overflow-hidden">
               <div className="absolute -bottom-20 -right-20 h-72 w-72 rounded-full opacity-30"
-                style={{ background: "radial-gradient(circle, var(--gold), transparent 60%)", filter: "blur(40px)" }} />
+                style={{ background: "radial-gradient(circle, var(--rose-accent), transparent 60%)", filter: "blur(40px)" }} />
               <div className="relative">
                 <div className="badge-chip"><Timer className="h-3 w-3" /> Pomodoro</div>
                 <h3 className="mt-5 font-display font-bold text-2xl">25 min deep focus, baked-in</h3>
@@ -259,14 +271,14 @@ function Landing() {
                   Structured focus + break cycles in every room. Boost retention by up to 40%.
                 </p>
                 <div className="mt-8 mx-auto max-w-sm">
-                  <div className="text-center font-display font-extrabold text-7xl text-gold-gradient tabular-nums">
+                  <div className="text-center font-display font-extrabold text-7xl text-rose-gradient tabular-nums">
                     24:58
                   </div>
                   <div className="mt-3 h-1.5 rounded-full bg-[color:var(--surface-2)] overflow-hidden">
-                    <div className="h-full bg-gold-gradient" style={{ width: "8%" }} />
+                    <div className="h-full bg-rose-gradient" style={{ width: "8%" }} />
                   </div>
                   <div className="mt-3 flex justify-center gap-2 text-[10px] uppercase tracking-widest text-[color:var(--text-muted)]">
-                    <span className="px-2 py-1 rounded-full bg-gold-gradient text-[color:var(--primary-foreground)]">Focus</span>
+                    <span className="px-2 py-1 rounded-full bg-rose-gradient text-[color:var(--primary-foreground)]">Focus</span>
                     <span className="px-2 py-1 rounded-full border border-[color:var(--hairline)]">Short</span>
                     <span className="px-2 py-1 rounded-full border border-[color:var(--hairline)]">Long</span>
                   </div>
@@ -321,7 +333,7 @@ function Landing() {
         </div>
       </section>
 
-      <div className="gold-divider max-w-5xl mx-auto" />
+      <div className="rose-divider max-w-5xl mx-auto" />
 
       {/* TESTIMONIALS */}
       <section className="relative px-6 py-32">
@@ -340,10 +352,10 @@ function Landing() {
               { name: "Siddharth P.", exam: "JEE Advanced", quote: "₹149 for unlimited? I cancelled three other apps. Wish this existed last year." },
             ].map((t) => (
               <div key={t.name} className="surface-card p-7 relative">
-                <Quote className="h-6 w-6" style={{ color: "var(--gold)" }} />
+                <Quote className="h-6 w-6" style={{ color: "var(--rose-accent)" }} />
                 <p className="mt-4 text-[color:var(--text-primary)] leading-relaxed">"{t.quote}"</p>
                 <div className="mt-6 flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gold-gradient flex items-center justify-center font-bold text-[color:var(--primary-foreground)]">
+                  <div className="h-10 w-10 rounded-full bg-rose-gradient flex items-center justify-center font-bold text-[color:var(--primary-foreground)]">
                     {t.name[0]}
                   </div>
                   <div>
@@ -357,7 +369,7 @@ function Landing() {
         </div>
       </section>
 
-      <div className="gold-divider max-w-5xl mx-auto" />
+      <div className="rose-divider max-w-5xl mx-auto" />
 
       {/* PRICING */}
       <section id="pricing" className="relative px-6 py-32">
@@ -365,7 +377,7 @@ function Landing() {
           <div className="text-center max-w-2xl mx-auto">
             <div className="badge-chip mx-auto"><Wallet className="h-3 w-3" /> Pricing</div>
             <h2 className="mt-5 text-4xl md:text-5xl font-display font-extrabold">
-              Transparent. Simple. <span className="text-gold-gradient">Fair.</span>
+              Transparent. Simple. <span className="text-rose-gradient">Fair.</span>
             </h2>
           </div>
 
@@ -388,15 +400,15 @@ function Landing() {
           <div className="mt-10 surface-card p-6 flex flex-wrap items-center justify-center gap-4 text-sm">
             <span className="text-[color:var(--text-muted)]">StudyStream:</span>
             <span className="line-through" style={{ color: "var(--crimson)" }}>₹690/mo · 4 hrs/day</span>
-            <span className="text-[color:var(--text-muted)]">VS FocusTribe:</span>
-            <span className="font-semibold text-gold-gradient">₹149/mo · Unlimited</span>
+            <span className="text-[color:var(--text-muted)]">VS StudyDate:</span>
+            <span className="font-semibold text-rose-gradient">₹149/mo · Unlimited</span>
           </div>
 
           {/* weekly pass */}
           <div className="mt-6 rounded-2xl px-6 py-5 flex flex-wrap items-center justify-center gap-3 text-sm"
             style={{
-              background: "linear-gradient(135deg, color-mix(in oklab, var(--gold) 12%, var(--surface)), var(--surface))",
-              border: "1px solid color-mix(in oklab, var(--gold) 35%, transparent)"
+              background: "linear-gradient(135deg, color-mix(in oklab, var(--rose-accent) 12%, var(--surface)), var(--surface))",
+              border: "1px solid color-mix(in oklab, var(--rose-accent) 35%, transparent)"
             }}>
             <span>⚡</span>
             <span className="font-semibold">Weekly Pass — ₹29</span>
@@ -405,7 +417,7 @@ function Landing() {
         </div>
       </section>
 
-      <div className="gold-divider max-w-5xl mx-auto" />
+      <div className="rose-divider max-w-5xl mx-auto" />
 
       {/* FAQ */}
       <section className="relative px-6 py-32">
@@ -416,7 +428,7 @@ function Landing() {
           </div>
           <div className="mt-12 space-y-3">
             {[
-              { q: "Is FocusTribe really free?", a: "Yes — 3 hours of free study every day, forever. Upgrade to Pro for unlimited." },
+              { q: "Is StudyDate really free?", a: "Yes — 3 hours of free study every day, forever. Upgrade to Pro for unlimited." },
               { q: "Can I switch off my camera?", a: "Of course. Use camera, audio-only, or just presence. Whatever helps you focus." },
               { q: "What payment methods do you support?", a: "UPI, cards, and net banking. Weekly passes don't auto-renew." },
               { q: "Do you have rooms for my exam?", a: "Yes — and if not, create one. Rooms can be public or invite-only." },
@@ -438,20 +450,20 @@ function Landing() {
         <div className="max-w-5xl mx-auto relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] p-10 md:p-16 text-center"
           style={{
             background:
-              "radial-gradient(80% 100% at 50% 0%, color-mix(in oklab, var(--gold) 25%, transparent) 0%, transparent 60%), linear-gradient(180deg, var(--surface), #0B1120)",
+              "radial-gradient(80% 100% at 50% 0%, color-mix(in oklab, var(--rose-accent) 25%, transparent) 0%, transparent 60%), linear-gradient(180deg, var(--surface), #0B1120)",
           }}>
           <div className="absolute inset-0 grid-lines opacity-30" />
           <div className="relative">
             <h3 className="font-display font-extrabold text-3xl md:text-5xl">
-              Your tribe is studying <span className="text-gold-gradient">right now.</span>
+              Your tribe is studying <span className="text-rose-gradient">right now.</span>
             </h3>
             <p className="mt-4 text-[color:var(--text-secondary)] max-w-xl mx-auto">
               Join {live}+ students. Pick a room. Hit start. We'll handle the rest.
             </p>
             <button
               onClick={() => open()}
-              className="mt-8 btn-pill bg-gold-gradient text-[color:var(--primary-foreground)] px-8 py-4 font-semibold inline-flex items-center gap-2"
-              style={{ boxShadow: "var(--shadow-gold)" }}
+              className="mt-8 btn-pill bg-rose-gradient text-[color:var(--primary-foreground)] px-8 py-4 font-semibold inline-flex items-center gap-2"
+              style={{ boxShadow: "var(--shadow-rose)" }}
             >
               Start studying — it's free
               <ArrowRight className="h-4 w-4" />
@@ -464,7 +476,7 @@ function Landing() {
       <footer className="px-6 pt-12 pb-12 border-t border-[color:var(--hairline)]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="font-display font-extrabold text-xl">
-            Focus<span className="text-gold-gradient">Tribe</span>
+            Study<span className="text-rose-gradient">Date</span>
           </div>
           <p className="text-sm text-[color:var(--text-secondary)]">
             Unlimited studying. Half the price. Built for India. 🇮🇳
@@ -484,7 +496,7 @@ function BentoCell({
     <div className={`surface-card p-7 ${span}`}>
       <div className="flex items-center gap-3">
         <div className="h-9 w-9 rounded-xl flex items-center justify-center"
-          style={{ background: "color-mix(in oklab, var(--gold) 14%, var(--surface-2))", color: "var(--gold)" }}>
+          style={{ background: "color-mix(in oklab, var(--rose-accent) 14%, var(--surface-2))", color: "var(--rose-accent)" }}>
           {icon}
         </div>
         <span className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--text-muted)]">{tag}</span>
@@ -501,11 +513,11 @@ function PricingCard({
   if (popular) {
     return (
       <div className="relative md:scale-[1.04]">
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-gold-gradient text-[color:var(--primary-foreground)] z-10">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-rose-gradient text-[color:var(--primary-foreground)] z-10">
           Most Popular
         </div>
         <div className="shimmer-border">
-          <div className="p-8 rounded-[22px] relative" style={{ boxShadow: "var(--shadow-gold-soft)" }}>
+          <div className="p-8 rounded-[22px] relative" style={{ boxShadow: "var(--shadow-rose-soft)" }}>
             <PricingBody name={name} price={price} period={period} features={features} popular />
           </div>
         </div>
@@ -532,16 +544,16 @@ function PricingBody({
       <ul className="mt-6 space-y-3 text-sm">
         {features.map((f) => (
           <li key={f} className="flex items-start gap-3">
-            <Check className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "var(--gold)" }} />
+            <Check className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "var(--rose-accent)" }} />
             <span className="text-[color:var(--text-secondary)]">{f}</span>
           </li>
         ))}
       </ul>
       <button
         className={`mt-7 w-full btn-pill py-3 font-semibold transition ${
-          popular ? "bg-gold-gradient text-[color:var(--primary-foreground)]" : "border border-[color:var(--hairline)] hover:border-[color:var(--gold)]"
+          popular ? "bg-rose-gradient text-[color:var(--primary-foreground)]" : "border border-[color:var(--hairline)] hover:border-[color:var(--rose-accent)]"
         }`}
-        style={popular ? { boxShadow: "var(--shadow-gold)" } : undefined}
+        style={popular ? { boxShadow: "var(--shadow-rose)" } : undefined}
       >
         {popular ? "Get Pro" : "Choose plan"}
       </button>

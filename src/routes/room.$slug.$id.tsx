@@ -1,20 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getCategory, roomsFor } from "@/lib/categories";
+import { getCategory } from "@/lib/categories";
+import { fetchRoomById, joinRoom, leaveRoom, type StudyRoom } from "@/lib/rooms";
 import { ArrowLeft, Pause, Play, RotateCcw, SkipForward, Plus, Trash2 } from "lucide-react";
 import { JitsiMeet } from "@/components/JitsiMeet";
+import { useAuth } from "@/lib/useAuth";
 
 export const Route = createFileRoute("/room/$slug/$id")({
   head: ({ params }) => {
     const c = getCategory(params.slug);
     return {
       meta: [
-        { title: `${c?.name ?? "Study"} room — FocusTribe` },
+        { title: `${c?.name ?? "Study"} room — StudyDate` },
         { name: "description", content: "Live study room with Pomodoro and tasks." },
       ],
     };
   },
-  component: StudyRoom,
+  component: StudyRoomView,
 });
 
 type Mode = "focus" | "short" | "long";
@@ -22,25 +24,46 @@ const DURATIONS: Record<Mode, number> = { focus: 25 * 60, short: 5 * 60, long: 1
 
 type Task = { id: string; text: string; done: boolean };
 
-function StudyRoom() {
+function StudyRoomView() {
   const { slug, id } = Route.useParams();
   const cat = getCategory(slug);
-  const rooms = roomsFor(slug);
-  const room = rooms[Number(id)] ?? rooms[0];
+  const { user, isAuthenticated } = useAuth();
+  
+  const [room, setRoom] = useState<StudyRoom | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load room data
+  useEffect(() => {
+    fetchRoomById(id).then(res => {
+      setRoom(res);
+      setLoading(false);
+    });
+  }, [id]);
+
+  // Handle participant tracking
+  useEffect(() => {
+    if (isAuthenticated) {
+      joinRoom(id);
+      return () => { leaveRoom(id); };
+    }
+  }, [id, isAuthenticated]);
+
+  // Handle window closing / refresh for leaving
+  useEffect(() => {
+    const handleUnload = () => { if (isAuthenticated) leaveRoom(id); };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, [id, isAuthenticated]);
 
   // Get username for Jitsi display name
-  const [userName, setUserName] = useState("Tribe Member");
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("ft_name");
-    if (stored) setUserName(stored);
-  }, []);
+  const userName = useMemo(() => {
+    if (user?.email) return user.email.split("@")[0];
+    if (typeof window !== "undefined") return localStorage.getItem("ft_name") || "Tribe Member";
+    return "Tribe Member";
+  }, [user]);
 
-  // Generate a deterministic Jitsi room name from slug + room name
-  const jitsiRoomName = useMemo(() => {
-    const base = room?.name ?? `room-${id}`;
-    return `${slug}-${base}`.replace(/\s+/g, "-").toLowerCase();
-  }, [slug, room, id]);
+  // Generate a deterministic Jitsi room name
+  const jitsiRoomName = `studydate-${slug}-${id}`.replace(/[^a-zA-Z0-9-]/g, "");
 
   // Pomodoro
   const [mode, setMode] = useState<Mode>("focus");
@@ -88,6 +111,9 @@ function StudyRoom() {
     setInput("");
   };
 
+  if (loading) return <div className="h-screen w-screen flex items-center justify-center bg-[color:var(--background)]">Loading room...</div>;
+  if (!room) return <div className="h-screen w-screen flex items-center justify-center bg-[color:var(--background)]">Room not found.</div>;
+
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-[color:var(--background)]">
       {/* top bar */}
@@ -96,11 +122,11 @@ function StudyRoom() {
           <ArrowLeft className="h-4 w-4" /> Leave
         </Link>
         <div className="text-sm text-center min-w-0 px-4">
-          <span className="font-display font-bold truncate">{room?.name ?? "Study Room"}</span>
+          <span className="font-display font-bold truncate">{room.name}</span>
           <span className="text-[color:var(--text-muted)]"> · {cat?.name}</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
-          <span className="live-dot" /> {room?.in ?? 1} live
+          <span className="live-dot" /> {room.participantCount || 1} live
         </div>
       </div>
 
@@ -124,31 +150,31 @@ function StudyRoom() {
                   key={m}
                   onClick={() => setMode(m)}
                   className={`flex-1 text-xs py-1.5 btn-pill font-semibold transition ${
-                    mode === m ? "bg-gold-gradient text-[color:var(--primary-foreground)]" : "border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
+                    mode === m ? "bg-rose-gradient text-[color:var(--primary-foreground)]" : "border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
                   }`}
                 >
                   {m === "focus" ? "Focus" : m === "short" ? "Short" : "Long"}
                 </button>
               ))}
             </div>
-            <div className="text-center font-display font-extrabold text-6xl text-gold-gradient tracking-tight tabular-nums">
+            <div className="text-center font-display font-extrabold text-6xl text-rose-gradient tracking-tight tabular-nums">
               {mm}:{ss}
             </div>
             <div className="mt-4 h-1.5 rounded-full overflow-hidden bg-[color:var(--surface-2)]">
-              <div className="h-full bg-gold-gradient transition-all" style={{ width: `${pct * 100}%` }} />
+              <div className="h-full bg-rose-gradient transition-all" style={{ width: `${pct * 100}%` }} />
             </div>
             <div className="mt-5 flex items-center justify-center gap-3">
               <button
                 onClick={() => { setSecs(DURATIONS[mode]); setRunning(false); }}
-                className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center hover:border-[color:var(--gold)] transition"
+                className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center hover:border-[color:var(--rose-accent)] transition"
                 aria-label="Reset"
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setRunning((r) => !r)}
-                className="h-12 w-12 rounded-full bg-gold-gradient text-[color:var(--primary-foreground)] flex items-center justify-center"
-                style={{ boxShadow: "var(--shadow-gold)" }}
+                className="h-12 w-12 rounded-full bg-rose-gradient text-[color:var(--primary-foreground)] flex items-center justify-center"
+                style={{ boxShadow: "var(--shadow-rose)" }}
                 aria-label={running ? "Pause" : "Play"}
               >
                 {running ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
@@ -159,7 +185,7 @@ function StudyRoom() {
                   const next = order[(order.indexOf(mode) + 1) % order.length];
                   setMode(next);
                 }}
-                className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center hover:border-[color:var(--gold)] transition"
+                className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center hover:border-[color:var(--rose-accent)] transition"
                 aria-label="Skip"
               >
                 <SkipForward className="h-4 w-4" />
@@ -208,9 +234,9 @@ function StudyRoom() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Add a task…"
-                className="flex-1 bg-[color:var(--surface-2)] border border-[color:var(--hairline)] rounded-lg px-3 py-2 text-sm outline-none focus:border-[color:var(--gold)] transition"
+                className="flex-1 bg-[color:var(--surface-2)] border border-[color:var(--hairline)] rounded-lg px-3 py-2 text-sm outline-none focus:border-[color:var(--rose-accent)] transition"
               />
-              <button type="submit" className="h-9 w-9 rounded-lg bg-gold-gradient text-[color:var(--primary-foreground)] flex items-center justify-center">
+              <button type="submit" className="h-9 w-9 rounded-lg bg-rose-gradient text-[color:var(--primary-foreground)] flex items-center justify-center">
                 <Plus className="h-4 w-4" />
               </button>
             </form>

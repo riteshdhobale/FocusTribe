@@ -36,7 +36,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --color-gold: var(--gold);
+  --color-gold: var(--rose-accent);
   --color-gold-soft: var(--gold-soft);
   --color-gold-bright: var(--gold-bright);
   --color-rose: var(--rose-accent);
@@ -49,8 +49,8 @@
   --color-surface-2: var(--surface-2);
   --color-hairline: var(--hairline);
 
-  --shadow-gold: 0 10px 40px -12px color-mix(in oklab, var(--gold) 45%, transparent);
-  --shadow-gold-soft: 0 0 30px -6px color-mix(in oklab, var(--gold) 30%, transparent);
+  --shadow-gold: 0 10px 40px -12px color-mix(in oklab, var(--rose-accent) 45%, transparent);
+  --shadow-gold-soft: 0 0 30px -6px color-mix(in oklab, var(--rose-accent) 30%, transparent);
   --shadow-rose: 0 10px 40px -12px color-mix(in oklab, var(--rose-accent) 45%, transparent);
   --shadow-rose-soft: 0 0 30px -6px color-mix(in oklab, var(--rose-accent) 30%, transparent);
 }
@@ -65,9 +65,9 @@
   --surface-2: oklch(0.27 0.04 265);
   --hairline: oklch(0.75 0.02 250 / 0.08);
 
-  --gold: oklch(0.78 0.13 88);                 /* #C9A84C */
-  --gold-soft: oklch(0.86 0.12 90);            /* #E2CC7E */
-  --gold-bright: oklch(0.93 0.10 95);          /* #F5E6A8 */
+  --gold: oklch(0.68 0.19 350);                 /* #FF6B9E Pink */
+  --gold-soft: oklch(0.75 0.16 350);            /* Soft pink */
+  --gold-bright: oklch(0.85 0.10 350);          /* Bright pink */
 
   /* StudyDate accents */
   --rose-accent: oklch(0.72 0.19 350);         /* rose-pink for match interactions */
@@ -86,7 +86,7 @@
   --card-foreground: var(--text-primary);
   --popover: var(--surface);
   --popover-foreground: var(--text-primary);
-  --primary: var(--gold);
+  --primary: var(--rose-accent);
   --primary-foreground: oklch(0.18 0.04 265);
   --secondary: var(--surface-2);
   --secondary-foreground: var(--text-primary);
@@ -98,7 +98,7 @@
   --destructive-foreground: oklch(0.18 0.04 265);
   --border: var(--hairline);
   --input: var(--hairline);
-  --ring: var(--gold);
+  --ring: var(--rose-accent);
 }
 
 .dark {
@@ -127,30 +127,22 @@
     letter-spacing: -0.03em;
   }
   ::selection {
-    background: color-mix(in oklab, var(--gold) 40%, transparent);
+    background: color-mix(in oklab, var(--rose-accent) 40%, transparent);
     color: var(--text-primary);
   }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: color-mix(in oklab, var(--gold) 25%, var(--surface));
+    background: color-mix(in oklab, var(--rose-accent) 25%, var(--surface));
     border-radius: 999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in oklab, var(--gold) 45%, var(--surface));
+    background: color-mix(in oklab, var(--rose-accent) 45%, var(--surface));
   }
 }
 
 @layer utilities {
-  .text-gold-gradient {
-    background: linear-gradient(135deg, #C9A84C, #E2CC7E 45%, #F5E6A8);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .bg-gold-gradient {
-    background: linear-gradient(135deg, #C9A84C, #E2CC7E, #F5E6A8);
-  }
+  /* removed duplicate */
   /* Rose/love gradient for study-date interactions */
   .text-rose-gradient {
     background: linear-gradient(135deg, #F472B6, #E879A8 45%, #FB7185);
@@ -180,17 +172,17 @@
   }
   .surface-card:hover {
     transform: translateY(-6px);
-    border-color: color-mix(in oklab, var(--gold) 50%, transparent);
-    box-shadow: var(--shadow-gold-soft);
+    border-color: color-mix(in oklab, var(--rose-accent) 50%, transparent);
+    box-shadow: var(--shadow-rose-soft);
   }
   .surface-card-static {
     background: var(--surface);
     border: 1px solid var(--hairline);
     border-radius: 20px;
   }
-  .gold-divider {
+  .rose-divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--gold) 60%, transparent), transparent);
+    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--rose-accent) 60%, transparent), transparent);
   }
   .ambient-orbs {
     position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0;
@@ -224,9 +216,9 @@
     content: "";
     position: absolute; inset: -20%;
     background:
-      radial-gradient(40% 35% at 18% 22%, color-mix(in oklab, var(--gold) 35%, transparent) 0%, transparent 60%),
+      radial-gradient(40% 35% at 18% 22%, color-mix(in oklab, var(--rose-accent) 35%, transparent) 0%, transparent 60%),
       radial-gradient(35% 30% at 82% 18%, color-mix(in oklab, #F472B6 40%, transparent) 0%, transparent 60%),
-      radial-gradient(45% 40% at 50% 90%, color-mix(in oklab, var(--gold) 28%, transparent) 0%, transparent 65%),
+      radial-gradient(45% 40% at 50% 90%, color-mix(in oklab, var(--rose-accent) 28%, transparent) 0%, transparent 65%),
       radial-gradient(30% 25% at 90% 70%, color-mix(in oklab, #A78BFA 30%, transparent) 0%, transparent 60%);
     filter: blur(40px);
     opacity: 0.55;
@@ -249,11 +241,11 @@
     border-radius: 23px;
     padding: 1px;
     background: conic-gradient(from 0deg,
-      color-mix(in oklab, var(--gold) 0%, transparent) 0deg,
-      color-mix(in oklab, var(--gold) 80%, transparent) 90deg,
-      color-mix(in oklab, var(--gold) 0%, transparent) 180deg,
-      color-mix(in oklab, var(--gold) 80%, transparent) 270deg,
-      color-mix(in oklab, var(--gold) 0%, transparent) 360deg);
+      color-mix(in oklab, var(--rose-accent) 0%, transparent) 0deg,
+      color-mix(in oklab, var(--rose-accent) 80%, transparent) 90deg,
+      color-mix(in oklab, var(--rose-accent) 0%, transparent) 180deg,
+      color-mix(in oklab, var(--rose-accent) 80%, transparent) 270deg,
+      color-mix(in oklab, var(--rose-accent) 0%, transparent) 360deg);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
             mask-composite: exclude;
@@ -295,23 +287,23 @@
   /* Subtle dotted/gridline background for sections */
   .grid-lines {
     background-image:
-      linear-gradient(to right, color-mix(in oklab, var(--gold) 10%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in oklab, var(--gold) 10%, transparent) 1px, transparent 1px);
+      linear-gradient(to right, color-mix(in oklab, var(--rose-accent) 10%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--rose-accent) 10%, transparent) 1px, transparent 1px);
     background-size: 56px 56px;
     -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
             mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
   }
-  .ring-gold-soft {
-    box-shadow: 0 0 0 1px color-mix(in oklab, var(--gold) 40%, transparent),
-                0 20px 60px -20px color-mix(in oklab, var(--gold) 40%, transparent);
+  .ring-rose-soft {
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--rose-accent) 40%, transparent),
+                0 20px 60px -20px color-mix(in oklab, var(--rose-accent) 40%, transparent);
   }
   .badge-chip {
     display: inline-flex; align-items: center; gap: .5rem;
     padding: .375rem .75rem; border-radius: 9999px;
-    background: color-mix(in oklab, var(--gold) 10%, var(--surface));
-    border: 1px solid color-mix(in oklab, var(--gold) 25%, transparent);
+    background: color-mix(in oklab, var(--rose-accent) 10%, var(--surface));
+    border: 1px solid color-mix(in oklab, var(--rose-accent) 25%, transparent);
     font-size: .75rem; letter-spacing: .08em; text-transform: uppercase;
-    color: color-mix(in oklab, var(--gold) 80%, white);
+    color: color-mix(in oklab, var(--rose-accent) 80%, white);
   }
   .badge-chip-rose {
     display: inline-flex; align-items: center; gap: .5rem;

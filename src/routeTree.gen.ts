@@ -9,10 +9,40 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SafetyRouteImport } from './routes/safety'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as MatchesRouteImport } from './routes/matches'
+import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoomsSlugRouteImport } from './routes/rooms.$slug'
 import { Route as RoomSlugIdRouteImport } from './routes/room.$slug.$id'
 
+const SafetyRoute = SafetyRouteImport.update({
+  id: '/safety',
+  path: '/safety',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchesRoute = MatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiscoverRoute = DiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,36 +61,116 @@ const RoomSlugIdRoute = RoomSlugIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/discover': typeof DiscoverRoute
+  '/matches': typeof MatchesRoute
+  '/pricing': typeof PricingRoute
+  '/profile': typeof ProfileRoute
+  '/safety': typeof SafetyRoute
   '/rooms/$slug': typeof RoomsSlugRoute
   '/room/$slug/$id': typeof RoomSlugIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/discover': typeof DiscoverRoute
+  '/matches': typeof MatchesRoute
+  '/pricing': typeof PricingRoute
+  '/profile': typeof ProfileRoute
+  '/safety': typeof SafetyRoute
   '/rooms/$slug': typeof RoomsSlugRoute
   '/room/$slug/$id': typeof RoomSlugIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/discover': typeof DiscoverRoute
+  '/matches': typeof MatchesRoute
+  '/pricing': typeof PricingRoute
+  '/profile': typeof ProfileRoute
+  '/safety': typeof SafetyRoute
   '/rooms/$slug': typeof RoomsSlugRoute
   '/room/$slug/$id': typeof RoomSlugIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/rooms/$slug' | '/room/$slug/$id'
+  fullPaths:
+    | '/'
+    | '/discover'
+    | '/matches'
+    | '/pricing'
+    | '/profile'
+    | '/safety'
+    | '/rooms/$slug'
+    | '/room/$slug/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/rooms/$slug' | '/room/$slug/$id'
-  id: '__root__' | '/' | '/rooms/$slug' | '/room/$slug/$id'
+  to:
+    | '/'
+    | '/discover'
+    | '/matches'
+    | '/pricing'
+    | '/profile'
+    | '/safety'
+    | '/rooms/$slug'
+    | '/room/$slug/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/discover'
+    | '/matches'
+    | '/pricing'
+    | '/profile'
+    | '/safety'
+    | '/rooms/$slug'
+    | '/room/$slug/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DiscoverRoute: typeof DiscoverRoute
+  MatchesRoute: typeof MatchesRoute
+  PricingRoute: typeof PricingRoute
+  ProfileRoute: typeof ProfileRoute
+  SafetyRoute: typeof SafetyRoute
   RoomsSlugRoute: typeof RoomsSlugRoute
   RoomSlugIdRoute: typeof RoomSlugIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/safety': {
+      id: '/safety'
+      path: '/safety'
+      fullPath: '/safety'
+      preLoaderRoute: typeof SafetyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matches': {
+      id: '/matches'
+      path: '/matches'
+      fullPath: '/matches'
+      preLoaderRoute: typeof MatchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/discover': {
+      id: '/discover'
+      path: '/discover'
+      fullPath: '/discover'
+      preLoaderRoute: typeof DiscoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +197,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DiscoverRoute: DiscoverRoute,
+  MatchesRoute: MatchesRoute,
+  PricingRoute: PricingRoute,
+  ProfileRoute: ProfileRoute,
+  SafetyRoute: SafetyRoute,
   RoomsSlugRoute: RoomsSlugRoute,
   RoomSlugIdRoute: RoomSlugIdRoute,
 }

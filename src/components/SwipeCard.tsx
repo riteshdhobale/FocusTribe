@@ -1,278 +1,197 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState, useRef } from "react";
+import { Heart, X, Star, MessageCircle } from "lucide-react";
+import { INTENTS, ACADEMIC_FOCUS } from "@/lib/constants";
+import { ReportButton } from "./ReportButton";
 import type { Profile } from "@/lib/profiles";
-import { compatibilityScore, getMyProfile } from "@/lib/profiles";
-import { Heart, X, Star, MapPin, BookOpen, GraduationCap, Clock, Flame, Users } from "lucide-react";
 
-type SwipeCardProps = {
+type Props = {
   profile: Profile;
-  onSwipeRight: (profile: Profile) => void;
-  onSwipeLeft: (profile: Profile) => void;
-  onSuperLike: (profile: Profile) => void;
-  isTop: boolean;
-  stackIndex: number;
+  compatibility: number;
+  onLike: () => void;
+  onPass: () => void;
+  onSuperLike: () => void;
+  onComment: () => void;
 };
 
-export function SwipeCard({ profile, onSwipeRight, onSwipeLeft, onSuperLike, isTop, stackIndex }: SwipeCardProps) {
+export function SwipeCard({ profile, compatibility, onLike, onPass, onSuperLike, onComment }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [dragging, setDragging] = useState(false);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [exiting, setExiting] = useState<"left" | "right" | "up" | null>(null);
-  const [expanded, setExpanded] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startX = useRef(0);
 
-  const me = getMyProfile();
-  const compat = me ? compatibilityScore(me, profile) : Math.floor(Math.random() * 30 + 60);
+  const intentObj = INTENTS.find(i => i.value === profile.intent);
+  const examLabels = profile.examFocus.map(e => ACADEMIC_FOCUS.find(a => a.value === e)?.label || e);
 
-  const SWIPE_THRESHOLD = 100;
-  const SWIPE_UP_THRESHOLD = 80;
-
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (!isTop || exiting) return;
-    setDragging(true);
-    setStartPos({ x: e.clientX, y: e.clientY });
+  // Drag handlers
+  const handlePointerDown = (e: React.PointerEvent) => {
+    startX.current = e.clientX;
+    setIsDragging(true);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [isTop, exiting]);
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragging) return;
-    setPos({ x: e.clientX - startPos.x, y: e.clientY - startPos.y });
-  }, [dragging, startPos]);
-
-  const handlePointerUp = useCallback(() => {
-    if (!dragging) return;
-    setDragging(false);
-
-    if (pos.x > SWIPE_THRESHOLD) {
-      setExiting("right");
-      setTimeout(() => onSwipeRight(profile), 300);
-    } else if (pos.x < -SWIPE_THRESHOLD) {
-      setExiting("left");
-      setTimeout(() => onSwipeLeft(profile), 300);
-    } else if (pos.y < -SWIPE_UP_THRESHOLD) {
-      setExiting("up");
-      setTimeout(() => onSuperLike(profile), 300);
-    } else {
-      setPos({ x: 0, y: 0 });
-    }
-  }, [dragging, pos, onSwipeRight, onSwipeLeft, onSuperLike, profile]);
-
-  // Button actions
-  const handleLike = () => {
-    if (exiting) return;
-    setExiting("right");
-    setTimeout(() => onSwipeRight(profile), 300);
-  };
-  const handleNope = () => {
-    if (exiting) return;
-    setExiting("left");
-    setTimeout(() => onSwipeLeft(profile), 300);
-  };
-  const handleSuperLike = () => {
-    if (exiting) return;
-    setExiting("up");
-    setTimeout(() => onSuperLike(profile), 300);
   };
 
-  const rotation = dragging ? pos.x * 0.1 : 0;
-  const likeOpacity = Math.min(1, Math.max(0, pos.x / SWIPE_THRESHOLD));
-  const nopeOpacity = Math.min(1, Math.max(0, -pos.x / SWIPE_THRESHOLD));
-  const superOpacity = Math.min(1, Math.max(0, -pos.y / SWIPE_UP_THRESHOLD));
-
-  const cardStyle: React.CSSProperties = {
-    zIndex: 10 - stackIndex,
-    transform: exiting === "right"
-      ? "translateX(150%) rotate(30deg)"
-      : exiting === "left"
-      ? "translateX(-150%) rotate(-30deg)"
-      : exiting === "up"
-      ? "translateY(-150%) scale(0.9)"
-      : isTop
-      ? `translate(${pos.x}px, ${pos.y}px) rotate(${rotation}deg) scale(1)`
-      : `scale(${1 - stackIndex * 0.05}) translateY(${stackIndex * 12}px)`,
-    opacity: exiting ? 0 : 1,
-    transition: dragging ? "none" : "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-    pointerEvents: isTop ? "auto" : "none",
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX.current;
+    setDragX(dx);
   };
+
+  const handlePointerUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (dragX > 120) onLike();
+    else if (dragX < -120) onPass();
+    else setDragX(0);
+  };
+
+  const rotation = dragX * 0.05;
+  const opacity = Math.max(0, 1 - Math.abs(dragX) / 400);
 
   return (
-    <div
-      ref={cardRef}
-      className={`swipe-card ${dragging ? "swiping" : ""}`}
-      style={cardStyle}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-    >
-      {/* Swipe indicators */}
-      <div className="swipe-card-overlay like" style={{ opacity: likeOpacity }}>
-        STUDY DATE 💚
-      </div>
-      <div className="swipe-card-overlay nope" style={{ opacity: nopeOpacity }}>
-        PASS ✕
-      </div>
-      <div className="swipe-card-overlay super-like" style={{ opacity: superOpacity }}>
-        SUPER LIKE ⭐
-      </div>
-
-      {/* Card content */}
-      <div className="h-full flex flex-col">
-        {/* Profile avatar area */}
-        <div
-          className="relative flex-shrink-0 flex items-center justify-center"
-          style={{
-            height: expanded ? "35%" : "55%",
-            background: `linear-gradient(135deg, ${profile.avatarColor}, color-mix(in oklab, ${profile.avatarColor} 60%, #0B1120))`,
-            transition: "height 0.3s ease",
-          }}
-          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-        >
-          <div className="text-7xl select-none" style={{ filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.3))" }}>
-            {profile.avatarEmoji}
+    <div className="relative w-full max-w-md mx-auto">
+      {/* Card */}
+      <div
+        ref={cardRef}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        className="rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing transition-transform select-none"
+        style={{
+          transform: `translateX(${dragX}px) rotate(${rotation}deg)`,
+          opacity,
+          transition: isDragging ? "none" : "all 0.3s ease",
+          touchAction: "none",
+        }}
+      >
+        {/* Gradient header */}
+        <div className="relative pt-8 pb-24 px-6" style={{ background: profile.avatarColor }}>
+          {/* Match badge */}
+          <div className="flex items-center justify-between mb-4">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+              style={{ background: "rgba(0,0,0,0.35)", color: "#fff", backdropFilter: "blur(8px)" }}>
+              ✨ {compatibility}% MATCH
+            </span>
+            {profile.isVerified && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium"
+                style={{ background: "rgba(0,0,0,0.3)", color: "#fff", backdropFilter: "blur(8px)" }}>
+                18+ verified vibe
+              </span>
+            )}
+            <ReportButton userId={profile.id} userName={profile.name} context="swipe_card" />
           </div>
 
-          {/* Online indicator */}
-          {profile.isOnline && (
-            <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full"
-              style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }}>
-              <span className="live-dot" style={{ width: 6, height: 6 }} />
-              <span className="text-xs font-medium text-white">Online</span>
-            </div>
-          )}
-
-          {/* Compatibility badge */}
-          <div className="absolute top-4 right-4 compat-badge">
-            {compat}% match
-          </div>
-
-          {/* Group preference */}
-          {profile.groupPref !== "any" && (
-            <div className="absolute bottom-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
-              style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", color: "#E2CC7E" }}>
-              <Users className="h-3 w-3" />
-              {profile.groupPref === "1v1" ? "1-on-1" : "Group"}
-            </div>
-          )}
-        </div>
-
-        {/* Info section */}
-        <div className="flex-1 p-5 flex flex-col overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center gap-3">
-            <h3 className="font-display font-bold text-xl">{profile.name}</h3>
-            <span className="text-[color:var(--text-secondary)] font-medium">{profile.age}</span>
-          </div>
-
-          <div className="flex items-center gap-2 mt-1.5 text-sm text-[color:var(--text-secondary)]">
-            <GraduationCap className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />
-            <span>{profile.college}</span>
-            <span className="text-[color:var(--text-muted)]">· {profile.year}</span>
-          </div>
-
-          {/* Exam focus tags */}
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            {profile.examFocus.map(e => (
-              <span key={e} className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                style={{
-                  background: "color-mix(in oklab, var(--gold) 12%, var(--surface-2))",
-                  color: "var(--gold-soft)",
-                  border: "1px solid color-mix(in oklab, var(--gold) 20%, transparent)",
-                }}>
+          {/* Intent + exam tags */}
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {intentObj && (
+              <span className="px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+                style={{ background: "rgba(0,0,0,0.3)", color: "#fff", backdropFilter: "blur(4px)" }}>
+                {intentObj.label}
+              </span>
+            )}
+            {examLabels.map(e => (
+              <span key={e} className="px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+                style={{ background: "rgba(0,0,0,0.3)", color: "#fff", backdropFilter: "blur(4px)" }}>
                 {e}
               </span>
             ))}
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-              style={{
-                background: "color-mix(in oklab, #F472B6 12%, var(--surface-2))",
-                color: "#F9A8D4",
-                border: "1px solid color-mix(in oklab, #F472B6 20%, transparent)",
-              }}>
-              {profile.lookingFor}
-            </span>
+            {profile.careerGoal && (
+              <span className="px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+                style={{ background: "rgba(0,0,0,0.3)", color: "#fff", backdropFilter: "blur(4px)" }}>
+                {profile.careerGoal}
+              </span>
+            )}
+          </div>
+
+          {/* Like indicator on heart */}
+          <button onClick={onLike} className="absolute right-6 bottom-20 w-10 h-10 rounded-full flex items-center justify-center transition hover:scale-110"
+            style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)" }}>
+            <Heart className="w-5 h-5 text-white" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 pt-5 pb-6" style={{ background: "var(--bg-card)" }}>
+          {/* Name + meta */}
+          <h2 className="font-display font-extrabold text-2xl" style={{ color: "var(--text-primary)" }}>
+            {profile.name}, {profile.age}
+          </h2>
+          <div className="flex items-center gap-3 mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
+            <span className="flex items-center gap-1">🎓 {profile.college}</span>
+            <span className="flex items-center gap-1">📍 {profile.city}</span>
+            <span className="flex items-center gap-1">🕐 {profile.availability}</span>
           </div>
 
           {/* Bio */}
-          <p className="mt-3 text-sm text-[color:var(--text-secondary)] leading-relaxed">
+          <p className="text-sm mt-4 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             {profile.bio}
           </p>
 
-          {expanded && (
-            <div className="mt-3 space-y-3 animate-slide-up">
-              {/* Interests */}
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-[color:var(--text-muted)] mb-1.5">Interests</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {profile.interests.map(i => (
-                    <span key={i} className="px-2 py-0.5 rounded-full text-xs border border-[color:var(--hairline)] text-[color:var(--text-secondary)]">
-                      {i}
-                    </span>
-                  ))}
-                </div>
-              </div>
+          {/* Study format + interest tags */}
+          <div className="flex flex-wrap gap-1.5 mt-4">
+            {profile.studyFormats.slice(0, 3).map(f => (
+              <span key={f} className="px-2.5 py-1 rounded-lg text-[11px] font-medium border"
+                style={{ borderColor: "var(--hairline)", color: "var(--text-secondary)" }}>
+                {f}
+              </span>
+            ))}
+            {profile.interests.slice(0, 3).map(i => (
+              <span key={i} className="px-2.5 py-1 rounded-lg text-[11px] font-medium border"
+                style={{ borderColor: "var(--hairline)", color: "var(--text-secondary)" }}>
+                {i}
+              </span>
+            ))}
+          </div>
 
-              {/* Stats */}
-              <div className="flex items-center gap-4 text-xs text-[color:var(--text-muted)]">
-                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {profile.hoursStudied}h studied</span>
-                <span className="flex items-center gap-1"><Flame className="h-3 w-3" style={{ color: "#F97316" }} /> {profile.streak} day streak</span>
-              </div>
-
-              {/* Study style */}
-              <div className="flex items-center gap-2 text-xs">
-                <BookOpen className="h-3 w-3" style={{ color: "var(--gold)" }} />
-                <span className="text-[color:var(--text-secondary)]">
-                  Study style: <span className="text-[color:var(--text-primary)] font-medium capitalize">{profile.studyStyle}</span>
-                </span>
-              </div>
+          {/* Looking For prompt */}
+          {profile.lookingForPrompt && (
+            <div className="mt-4 p-3 rounded-xl" style={{ background: "var(--bg-main)" }}>
+              <span className="text-[10px] font-mono tracking-widest uppercase block mb-1" style={{ color: "var(--text-muted)" }}>
+                Looking For
+              </span>
+              <p className="text-sm" style={{ color: "var(--text-primary)" }}>
+                {profile.lookingForPrompt}
+              </p>
             </div>
           )}
-
-          {!expanded && (
-            <button
-              onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
-              className="mt-2 text-xs text-[color:var(--gold)] hover:underline self-start"
-            >
-              Show more ↓
-            </button>
-          )}
         </div>
+
+        {/* Swipe indicators */}
+        {dragX > 50 && (
+          <div className="absolute top-1/3 left-6 px-6 py-3 rounded-xl font-extrabold text-2xl border-4 -rotate-12"
+            style={{ borderColor: "#10B981", color: "#10B981", opacity: Math.min(1, (dragX - 50) / 100) }}>
+            LIKE
+          </div>
+        )}
+        {dragX < -50 && (
+          <div className="absolute top-1/3 right-6 px-6 py-3 rounded-xl font-extrabold text-2xl border-4 rotate-12"
+            style={{ borderColor: "#EF4444", color: "#EF4444", opacity: Math.min(1, (Math.abs(dragX) - 50) / 100) }}>
+            NOPE
+          </div>
+        )}
       </div>
 
-      {/* Action buttons (only show on top card) */}
-      {isTop && !dragging && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-center gap-4"
-          style={{ background: "linear-gradient(transparent, rgba(11,17,32,0.95))" }}>
-          <button
-            onClick={(e) => { e.stopPropagation(); handleNope(); }}
-            className="h-14 w-14 rounded-full flex items-center justify-center transition hover:scale-110"
-            style={{
-              background: "color-mix(in oklab, var(--crimson) 15%, var(--surface-2))",
-              border: "2px solid color-mix(in oklab, var(--crimson) 40%, transparent)",
-            }}
-          >
-            <X className="h-6 w-6" style={{ color: "var(--crimson)" }} />
-          </button>
-
-          <button
-            onClick={(e) => { e.stopPropagation(); handleSuperLike(); }}
-            className="h-11 w-11 rounded-full flex items-center justify-center transition hover:scale-110"
-            style={{
-              background: "color-mix(in oklab, #60A5FA 15%, var(--surface-2))",
-              border: "2px solid color-mix(in oklab, #60A5FA 40%, transparent)",
-            }}
-          >
-            <Star className="h-5 w-5" style={{ color: "#60A5FA" }} />
-          </button>
-
-          <button
-            onClick={(e) => { e.stopPropagation(); handleLike(); }}
-            className="h-14 w-14 rounded-full flex items-center justify-center transition hover:scale-110"
-            style={{
-              background: "color-mix(in oklab, var(--emerald-live) 15%, var(--surface-2))",
-              border: "2px solid color-mix(in oklab, var(--emerald-live) 40%, transparent)",
-            }}
-          >
-            <Heart className="h-6 w-6" style={{ color: "var(--emerald-live)" }} />
-          </button>
-        </div>
-      )}
+      {/* Action buttons */}
+      <div className="flex items-center justify-center gap-4 mt-6">
+        <button onClick={onPass}
+          className="w-14 h-14 rounded-full flex items-center justify-center border-2 transition hover:scale-110 active:scale-95"
+          style={{ borderColor: "var(--hairline)", background: "var(--bg-card)" }}>
+          <X className="w-6 h-6" style={{ color: "var(--text-muted)" }} />
+        </button>
+        <button onClick={onLike}
+          className="w-14 h-14 rounded-full flex items-center justify-center border-2 transition hover:scale-110 active:scale-95"
+          style={{ borderColor: "#F472B6", background: "rgba(244,114,182,0.1)" }}>
+          <Heart className="w-6 h-6" style={{ color: "#F472B6" }} />
+        </button>
+        <button onClick={onSuperLike}
+          className="w-14 h-14 rounded-full flex items-center justify-center border-2 transition hover:scale-110 active:scale-95"
+          style={{ borderColor: "#FF6B9E", background: "rgba(201,165,78,0.1)" }}>
+          <Star className="w-6 h-6" style={{ color: "#FF6B9E" }} />
+        </button>
+        <button onClick={onComment}
+          className="w-14 h-14 rounded-full flex items-center justify-center border-2 transition hover:scale-110 active:scale-95"
+          style={{ borderColor: "var(--hairline)", background: "var(--bg-card)" }}>
+          <MessageCircle className="w-6 h-6" style={{ color: "var(--text-muted)" }} />
+        </button>
+      </div>
     </div>
   );
 }

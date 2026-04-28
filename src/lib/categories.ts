@@ -16,6 +16,8 @@ export const categories: Category[] = [
   { slug: "law", name: "Law", icon: "⚖️", description: "CLAT, Judiciary, LLB exam prep", studying: 11, rooms: 4 },
   { slug: "tech", name: "Tech & Coding", icon: "💻", description: "DSA, System Design, Web Dev, CP", studying: 27, rooms: 9 },
   { slug: "general", name: "General Study", icon: "📚", description: "College exams, skill building, reading", studying: 14, rooms: 5 },
+  { slug: "startup", name: "Startup Founders", icon: "🚀", description: "Product building, fundraising, growth", studying: 9, rooms: 3 },
+  { slug: "research", name: "Research & PhD", icon: "🔬", description: "Paper writing, literature review, thesis", studying: 7, rooms: 2 },
 ];
 
 export const getCategory = (slug: string) => categories.find((c) => c.slug === slug);
@@ -59,6 +61,14 @@ export const roomsFor = (slug: string) => {
     general: [
       { name: "Deep Reading Room", topic: "Atomic Habits · ch. 4", in: 5, cap: 12 },
       { name: "College Finals", topic: "Open syllabus session", in: 6, cap: 15 },
+    ],
+    startup: [
+      { name: "Product Builders", topic: "MVP sprint session", in: 4, cap: 8 },
+      { name: "Pitch Deck Workshop", topic: "Investor readiness", in: 3, cap: 8 },
+    ],
+    research: [
+      { name: "Paper Writing Lab", topic: "IEEE format drafting", in: 2, cap: 6 },
+      { name: "Literature Review", topic: "Cross-discipline readings", in: 3, cap: 8 },
     ],
   };
   return base[slug] ?? [];
