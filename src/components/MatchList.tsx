@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import type { Match, Profile } from "@/lib/profiles";
 import { getProfileById } from "@/lib/profiles";
 import { MessageCircle } from "lucide-react";
@@ -10,7 +11,25 @@ type Props = {
 };
 
 export function MatchList({ matches, selectedId, myId, onSelect }: Props) {
+  const [profilesCache, setProfilesCache] = useState<Record<string, Profile>>({});
   const sortedMatches = [...matches].sort((a, b) => b.timestamp - a.timestamp);
+
+  // Load partner profiles for all matches
+  useEffect(() => {
+    matches.forEach(m => {
+      const partnerId = m.profileA === myId ? m.profileB : m.profileA;
+      if (!profilesCache[partnerId]) {
+        getProfileById(partnerId).then(p => {
+          if (p) setProfilesCache(prev => ({ ...prev, [p.id]: p }));
+        });
+      }
+    });
+  }, [matches, myId]);
+
+  const getPartner = (m: Match): Profile | null => {
+    const partnerId = m.profileA === myId ? m.profileB : m.profileA;
+    return profilesCache[partnerId] || null;
+  };
 
   return (
     <div className="h-full flex flex-col border-r border-[color:var(--hairline)]" style={{ background: "var(--surface)" }}>
@@ -30,8 +49,7 @@ export function MatchList({ matches, selectedId, myId, onSelect }: Props) {
           <div className="text-[10px] uppercase tracking-widest text-[color:var(--text-muted)] mb-2">New Matches</div>
           <div className="flex gap-3 overflow-x-auto pb-1">
             {matches.filter(m => !m.lastMessage).map(m => {
-              const partnerId = m.profileA === myId ? m.profileB : m.profileA;
-              const partner = getProfileById(partnerId);
+              const partner = getPartner(m);
               if (!partner) return null;
               return (
                 <button
@@ -74,8 +92,7 @@ export function MatchList({ matches, selectedId, myId, onSelect }: Props) {
         )}
 
         {sortedMatches.filter(m => m.lastMessage).map(m => {
-          const partnerId = m.profileA === myId ? m.profileB : m.profileA;
-          const partner = getProfileById(partnerId);
+          const partner = getPartner(m);
           if (!partner) return null;
 
           const isSelected = m.id === selectedId;

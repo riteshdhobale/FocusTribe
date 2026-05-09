@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getCategory } from "@/lib/categories";
-import { fetchRoomById, joinRoom, leaveRoom, type StudyRoom } from "@/lib/rooms";
-import { ArrowLeft, Pause, Play, RotateCcw, SkipForward, Plus, Trash2 } from "lucide-react";
+import { fetchRoomById, joinRoom, leaveRoom, leaveRoomBeacon, type StudyRoom } from "@/lib/rooms";
+import { ArrowLeft, Pause, Play, RotateCcw, SkipForward, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { JitsiMeet } from "@/components/JitsiMeet";
 import { useAuth } from "@/lib/useAuth";
 
@@ -35,10 +35,25 @@ function StudyRoomView() {
   // Load room data
   useEffect(() => {
     fetchRoomById(id).then(res => {
-      setRoom(res);
+      if (res) {
+        setRoom(res);
+      } else if (id.length > 10) {
+        // Fallback: If no public room is found but the ID is a long UUID (like a Match ID),
+        // we automatically create a private 1-on-1 Study Date room on the fly!
+        setRoom({
+          id,
+          slug,
+          name: "Private Study Date",
+          topic: "1-on-1 Session",
+          capacity: 2,
+          created_by: "system",
+          is_active: true,
+          participantCount: 1
+        });
+      }
       setLoading(false);
     });
-  }, [id]);
+  }, [id, slug]);
 
   // Handle participant tracking
   useEffect(() => {
@@ -48,12 +63,14 @@ function StudyRoomView() {
     }
   }, [id, isAuthenticated]);
 
-  // Handle window closing / refresh for leaving
+  // Handle window closing / refresh for leaving — uses keepalive fetch for reliability
   useEffect(() => {
-    const handleUnload = () => { if (isAuthenticated) leaveRoom(id); };
+    const handleUnload = () => {
+      if (isAuthenticated && user?.id) leaveRoomBeacon(id, user.id);
+    };
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
-  }, [id, isAuthenticated]);
+  }, [id, isAuthenticated, user?.id]);
 
   // Get username for Jitsi display name
   const userName = useMemo(() => {
@@ -65,16 +82,35 @@ function StudyRoomView() {
   // Generate a deterministic Jitsi room name
   const jitsiRoomName = `studydate-${slug}-${id}`.replace(/[^a-zA-Z0-9-]/g, "");
 
-  // Pomodoro
-  const [mode, setMode] = useState<Mode>("focus");
-  const [secs, setSecs] = useState(DURATIONS.focus);
+  // Pomodoro — with localStorage persistence
+  const timerKey = `ft_timer_${slug}_${id}`;
+  const [mode, setMode] = useState<Mode>(() => {
+    if (typeof window === "undefined") return "focus";
+    try { const s = JSON.parse(localStorage.getItem(timerKey) || "{}"); return s.mode || "focus"; } catch { return "focus"; }
+  });
+  const [secs, setSecs] = useState(() => {
+    if (typeof window === "undefined") return DURATIONS.focus;
+    try {
+      const s = JSON.parse(localStorage.getItem(timerKey) || "{}");
+      if (s.mode && s.secs != null && s.mode === (s.mode || "focus")) return s.secs;
+    } catch {}
+    return DURATIONS.focus;
+  });
   const [running, setRunning] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
   const ref = useRef<number | null>(null);
+
+  // Save timer state to localStorage on every tick
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(timerKey, JSON.stringify({ mode, secs }));
+    }
+  }, [mode, secs, timerKey]);
 
   useEffect(() => {
     if (!running) return;
     ref.current = window.setInterval(() => {
-      setSecs((s) => {
+      setSecs((s: number) => {
         if (s <= 1) {
           setRunning(false);
           return 0;
@@ -85,7 +121,12 @@ function StudyRoomView() {
     return () => { if (ref.current) clearInterval(ref.current); };
   }, [running]);
 
-  useEffect(() => { setSecs(DURATIONS[mode]); setRunning(false); }, [mode]);
+  // When mode changes manually (not from persistence), reset to full duration
+  const handleModeChange = (newMode: Mode) => {
+    setMode(newMode);
+    setSecs(DURATIONS[newMode]);
+    setRunning(false);
+  };
 
   const mm = String(Math.floor(secs / 60)).padStart(2, "0");
   const ss = String(secs % 60).padStart(2, "0");
@@ -130,9 +171,9 @@ function StudyRoomView() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Jitsi video */}
-        <div className="flex-1 p-5">
+        <div className="flex-1 p-3 lg:p-5">
           <JitsiMeet
             roomName={jitsiRoomName}
             displayName={userName}
@@ -140,15 +181,15 @@ function StudyRoomView() {
           />
         </div>
 
-        {/* sidebar */}
-        <aside className="w-[340px] border-l border-[color:var(--hairline)] p-5 flex flex-col gap-5 overflow-y-auto">
+        {/* Desktop sidebar — hidden on mobile */}
+        <aside className="hidden lg:flex w-[340px] border-l border-[color:var(--hairline)] p-5 flex-col gap-5 overflow-y-auto">
           {/* timer */}
           <div className="surface-card p-5">
             <div className="flex gap-2 mb-5">
               {(["focus","short","long"] as Mode[]).map((m) => (
                 <button
                   key={m}
-                  onClick={() => setMode(m)}
+                  onClick={() => handleModeChange(m)}
                   className={`flex-1 text-xs py-1.5 btn-pill font-semibold transition ${
                     mode === m ? "bg-rose-gradient text-[color:var(--primary-foreground)]" : "border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
                   }`}
@@ -183,7 +224,7 @@ function StudyRoomView() {
                 onClick={() => {
                   const order: Mode[] = ["focus","short","focus","short","focus","long"];
                   const next = order[(order.indexOf(mode) + 1) % order.length];
-                  setMode(next);
+                  handleModeChange(next);
                 }}
                 className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center hover:border-[color:var(--rose-accent)] transition"
                 aria-label="Skip"
@@ -194,54 +235,183 @@ function StudyRoomView() {
           </div>
 
           {/* tasks */}
-          <div className="surface-card p-5 flex-1 min-h-[260px] flex flex-col">
-            <div className="flex items-center justify-between mb-3">
-              <div className="font-display font-bold">📋 Session Tasks</div>
-              <span className="text-xs text-[color:var(--text-muted)]">
-                {tasks.filter(t => t.done).length}/{tasks.length}
+          <div className="surface-card flex-1 min-h-[260px] flex flex-col relative overflow-hidden">
+            
+            {/* Notepad Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--hairline)] bg-[color:var(--surface-2)]">
+              <div className="flex items-center gap-2 font-display font-bold text-white tracking-wide">
+                📋 Session Tasks
+              </div>
+              <span className="text-xs font-bold text-[color:var(--text-muted)]">
+                {tasks.filter(t => t.done).length} / {tasks.length}
               </span>
             </div>
-            <div className="flex-1 space-y-2 overflow-y-auto pr-1">
+
+            <div className="flex-1 space-y-1 overflow-y-auto px-4 py-3 relative z-10">
               {tasks.map((t) => (
-                <div key={t.id} className="group flex items-center gap-3 py-1.5">
-                  <button
-                    onClick={() => setTasks((arr) => arr.map(x => x.id === t.id ? { ...x, done: !x.done } : x))}
-                    className="h-5 w-5 rounded-full border flex items-center justify-center transition"
-                    style={{
-                      borderColor: t.done ? "var(--emerald-live)" : "var(--hairline)",
-                      background: t.done ? "color-mix(in oklab, var(--emerald-live) 90%, transparent)" : "transparent",
-                    }}
-                  >
-                    {t.done && <span className="text-[10px] text-[color:var(--background)]">✓</span>}
-                  </button>
-                  <span className={`flex-1 text-sm ${t.done ? "line-through text-[color:var(--text-muted)]" : ""}`}>{t.text}</span>
+                <div key={t.id} className="group flex items-start gap-3 p-2 rounded-xl hover:bg-[color:var(--surface-2)] transition-colors">
+                  <div className="pt-0.5 relative z-10">
+                    <button
+                      onClick={() => setTasks((arr) => arr.map(x => x.id === t.id ? { ...x, done: !x.done } : x))}
+                      className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
+                        t.done 
+                          ? "border-[color:var(--emerald-live)] bg-[color:var(--emerald-live)]" 
+                          : "border-slate-500 bg-[color:var(--background)] hover:border-[color:var(--rose-accent)]"
+                      }`}
+                    >
+                      {t.done && <span className="text-[10px] text-white font-bold">✓</span>}
+                    </button>
+                  </div>
+                  <span className={`flex-1 text-sm mt-0.5 transition-colors ${t.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-200"}`}>
+                    {t.text}
+                  </span>
                   <button
                     onClick={() => setTasks((arr) => arr.filter(x => x.id !== t.id))}
-                    className="opacity-0 group-hover:opacity-100 transition text-[color:var(--text-muted)] hover:text-[color:var(--crimson)]"
+                    className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg text-[color:var(--text-muted)] hover:bg-rose-500/10 hover:text-[color:var(--crimson)] mt-[-4px]"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               ))}
               {tasks.length === 0 && (
-                <div className="text-xs text-[color:var(--text-muted)] py-4 text-center">
-                  Add your first task to get started.
+                <div className="text-sm text-[color:var(--text-muted)] py-8 text-center italic font-light">
+                  Empty slate. Add a task below.
                 </div>
               )}
             </div>
-            <form onSubmit={addTask} className="mt-3 flex items-center gap-2">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Add a task…"
-                className="flex-1 bg-[color:var(--surface-2)] border border-[color:var(--hairline)] rounded-lg px-3 py-2 text-sm outline-none focus:border-[color:var(--rose-accent)] transition"
-              />
-              <button type="submit" className="h-9 w-9 rounded-lg bg-rose-gradient text-[color:var(--primary-foreground)] flex items-center justify-center">
-                <Plus className="h-4 w-4" />
-              </button>
-            </form>
+            
+            {/* Input area */}
+            <div className="p-4 border-t border-[color:var(--hairline)] bg-[color:var(--surface-2)] relative z-10">
+              <form onSubmit={addTask} className="flex gap-2 relative">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="What are we focusing on?"
+                  className="flex-1 bg-[color:var(--background)] border border-[color:var(--hairline)] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[color:var(--rose-accent)] transition-colors shadow-inner"
+                />
+                <button
+                  type="submit"
+                  disabled={!input.trim()}
+                  className="h-10 w-10 shrink-0 rounded-xl bg-rose-gradient text-white flex items-center justify-center hover:opacity-90 transition disabled:opacity-50 shadow-md"
+                >
+                  <Plus className="h-5 w-5" strokeWidth={2.5} />
+                </button>
+              </form>
+            </div>
           </div>
         </aside>
+
+        {/* Mobile floating timer button — visible only on mobile */}
+        <button
+          onClick={() => setShowPanel(!showPanel)}
+          className="lg:hidden fixed bottom-4 right-4 z-40 h-14 px-4 rounded-full flex items-center gap-3 border shadow-xl transition active:scale-95"
+          style={{
+            background: "color-mix(in oklab, var(--surface) 95%, transparent)",
+            borderColor: running ? "var(--rose-accent)" : "var(--hairline)",
+            backdropFilter: "blur(12px)",
+            boxShadow: running ? "0 4px 20px rgba(255,107,158,0.3)" : "0 4px 20px rgba(0,0,0,0.3)",
+          }}
+        >
+          <span className="font-display font-bold text-lg tabular-nums text-rose-gradient">{mm}:{ss}</span>
+          {showPanel ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+        </button>
+
+        {/* Mobile slide-up panel */}
+        {showPanel && (
+          <div className="lg:hidden fixed inset-x-0 bottom-0 z-30 max-h-[70vh] overflow-y-auto rounded-t-3xl border-t p-5 space-y-4 animate-in slide-in-from-bottom duration-300"
+            style={{ background: "var(--bg-main)", borderColor: "var(--hairline)" }}>
+            {/* Timer controls */}
+            <div className="flex gap-2 mb-3">
+              {(["focus","short","long"] as Mode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => handleModeChange(m)}
+                  className={`flex-1 text-xs py-1.5 btn-pill font-semibold transition ${
+                    mode === m ? "bg-rose-gradient text-[color:var(--primary-foreground)]" : "border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
+                  }`}
+                >
+                  {m === "focus" ? "Focus" : m === "short" ? "Short" : "Long"}
+                </button>
+              ))}
+            </div>
+            <div className="text-center font-display font-extrabold text-5xl text-rose-gradient tracking-tight tabular-nums">
+              {mm}:{ss}
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden bg-[color:var(--surface-2)]">
+              <div className="h-full bg-rose-gradient transition-all" style={{ width: `${pct * 100}%` }} />
+            </div>
+            <div className="flex items-center justify-center gap-3">
+              <button onClick={() => { setSecs(DURATIONS[mode]); setRunning(false); }}
+                className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center" aria-label="Reset">
+                <RotateCcw className="h-4 w-4" />
+              </button>
+              <button onClick={() => setRunning((r) => !r)}
+                className="h-12 w-12 rounded-full bg-rose-gradient text-[color:var(--primary-foreground)] flex items-center justify-center"
+                style={{ boxShadow: "var(--shadow-rose)" }} aria-label={running ? "Pause" : "Play"}>
+                {running ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+              </button>
+              <button onClick={() => { const order: Mode[] = ["focus","short","focus","short","focus","long"]; handleModeChange(order[(order.indexOf(mode) + 1) % order.length]); }}
+                className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center" aria-label="Skip">
+                <SkipForward className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Tasks */}
+            <div className="pt-5 mt-2">
+              <div className="surface-card flex-1 min-h-[200px] flex flex-col relative overflow-hidden">
+                
+                {/* Notepad Header */}
+                <div className="flex items-center justify-between px-4 py-3 bg-[color:var(--surface-2)] border-b border-[color:var(--hairline)]">
+                  <div className="flex items-center gap-2 font-display font-bold text-white text-sm">
+                    📋 Tasks
+                  </div>
+                  <span className="text-xs font-bold text-[color:var(--text-muted)]">
+                    {tasks.filter(t => t.done).length} / {tasks.length}
+                  </span>
+                </div>
+
+                <div className="flex-1 space-y-1 max-h-48 overflow-y-auto px-3 py-2 relative z-10">
+                  {tasks.map((t) => (
+                    <div key={t.id} className="flex items-start gap-3 p-2 rounded-xl hover:bg-[color:var(--surface-2)] transition-colors">
+                      <div className="pt-0.5 relative z-10">
+                        <button onClick={() => setTasks((arr) => arr.map(x => x.id === t.id ? { ...x, done: !x.done } : x))}
+                          className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                            t.done 
+                              ? "border-[color:var(--emerald-live)] bg-[color:var(--emerald-live)]" 
+                              : "border-slate-500 bg-[color:var(--background)]"
+                          }`}
+                        >
+                          {t.done && <span className="text-[10px] text-white font-bold">✓</span>}
+                        </button>
+                      </div>
+                      <span className={`flex-1 text-sm mt-0.5 ${t.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-200"}`}>{t.text}</span>
+                      <button onClick={() => setTasks((arr) => arr.filter(x => x.id !== t.id))} className="p-1 text-[color:var(--text-muted)] mt-[-2px]">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {tasks.length === 0 && (
+                    <div className="text-xs text-[color:var(--text-muted)] py-6 text-center italic">
+                      Empty slate.
+                    </div>
+                  )}
+                </div>
+                
+                {/* Input area */}
+                <div className="p-3 border-t border-[color:var(--hairline)] bg-[color:var(--surface-2)]">
+                  <form onSubmit={addTask} className="flex items-center gap-2">
+                    <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Add a task…"
+                      className="flex-1 bg-[color:var(--background)] border border-[color:var(--hairline)] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[color:var(--rose-accent)] transition-colors shadow-inner" />
+                    <button type="submit" disabled={!input.trim()} className="h-10 w-10 shrink-0 rounded-xl bg-rose-gradient text-white flex items-center justify-center hover:opacity-90 transition disabled:opacity-50 shadow-md">
+                      <Plus className="h-5 w-5" strokeWidth={2.5} />
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

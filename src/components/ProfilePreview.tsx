@@ -10,9 +10,10 @@ type Props = {
   intent: string;
   studyFormats: string[];
   interests: string[];
+  photoUrl?: string;
 };
 
-export function ProfilePreview({ name, age, college, city, examFocus, careerGoal, intent, studyFormats, interests }: Props) {
+export function ProfilePreview({ name, age, college, city, examFocus, careerGoal, intent, studyFormats, interests, photoUrl }: Props) {
   const intentLabels = intent.split(",").map(iVal => INTENTS.find(i => i.value === iVal)?.label).filter(Boolean);
   const examLabel = ACADEMIC_FOCUS.find(a => a.value === examFocus)?.label || examFocus;
 
@@ -29,6 +30,12 @@ export function ProfilePreview({ name, age, college, city, examFocus, careerGoal
       <span className="text-[10px] font-mono tracking-widest uppercase mb-2 block" style={{ color: "var(--text-muted)" }}>
         Profile Preview
       </span>
+
+      {photoUrl && (
+        <div className="mb-3 rounded-xl overflow-hidden border" style={{ borderColor: "var(--hairline)" }}>
+          <img src={photoUrl} alt="Profile preview" className="w-full h-40 object-cover" />
+        </div>
+      )}
 
       <h3 className="font-display font-bold text-lg" style={{ color: "var(--text-primary)" }}>
         {name || "Your Name"}, {age}

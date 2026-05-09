@@ -60,13 +60,16 @@ export function useAuth() {
     return () => data?.subscription?.unsubscribe();
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string, displayName?: string) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/discover`,
+        data: {
+          full_name: displayName || email.split("@")[0],
+        },
       },
     });
     setState(prev => ({

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Avatars } from "@/components/Avatars";
@@ -24,19 +24,9 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-function useLiveCount(initial: number) {
-  const [n, setN] = useState(initial);
-  useEffect(() => {
-    const id = setInterval(() => {
-      setN((v) => Math.max(initial - 8, v + (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 3)));
-    }, 8000);
-    return () => clearInterval(id);
-  }, [initial]);
-  return n;
-}
+
 
 function Landing() {
-  const live = useLiveCount(230);
   const [modal, setModal] = useState<{ open: boolean; to?: string }>({ open: false });
   const navigate = useNavigate();
 
@@ -68,7 +58,7 @@ function Landing() {
             </span>
             <span className="text-[color:var(--text-secondary)]">
               <span className="live-dot mr-2" style={{ background: "#10B981", boxShadow: "0 0 8px #10B981" }} />
-              <span className="text-[color:var(--text-primary)] font-semibold">{live}+</span> study dates happening now
+              <span className="text-[color:var(--text-primary)] font-semibold">Beta is live</span> — free rooms open now
             </span>
           </div>
 
@@ -91,6 +81,13 @@ function Landing() {
             Join live, exam-specific study rooms. Focus with built-in Pomodoro timers. 
             Stay accountable and <span className="text-[color:var(--text-primary)] font-semibold">hit your academic goals</span> together.
           </p>
+
+          <div className="mt-6 animate-fade-up animate-delay-200">
+            <p className="inline-block px-4 py-1.5 rounded-full border border-[color:var(--hairline)] bg-[color:var(--surface)]/50 backdrop-blur-sm text-sm font-medium"
+               style={{ color: "var(--text-secondary)", boxShadow: "0 4px 20px rgba(255,107,158,0.05)" }}>
+              <span className="opacity-80">Stop swiping on potential.</span> <span style={{ color: "#FF6B9E" }}>Match with pure ambition.</span> <span className="text-xs opacity-50 ml-1">'cause action speaks louder than words.</span>
+            </p>
+          </div>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4 animate-fade-up">
             <button
@@ -122,7 +119,7 @@ function Landing() {
                 ))}
               </div>
               <span className="text-sm text-[color:var(--text-secondary)]">
-                Loved by <span className="text-[color:var(--text-primary)] font-semibold">12,400+</span> students
+                Built for <span className="text-[color:var(--text-primary)] font-semibold">NEET · JEE · UPSC</span> aspirants
               </span>
             </div>
           </div>
@@ -177,7 +174,7 @@ function Landing() {
         {/* stats bar */}
         <div className="relative max-w-5xl mx-auto mt-20 pt-8 border-t border-[color:var(--hairline)] grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
-            { k: "Studying Now", v: <CountUp to={live} suffix="+" /> },
+            { k: "Exams Covered", v: <CountUp to={15} suffix="+" /> },
             { k: "Active Rooms", v: <CountUp to={75} /> },
             { k: "Exam Categories", v: <CountUp to={8} /> },
             { k: "Free Tier", v: "₹0" },
@@ -197,6 +194,45 @@ function Landing() {
         </div>
         <Marquee />
       </section>
+
+      {/* HOW IT WORKS */}
+      <section id="how-it-works" className="relative px-6 py-32">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="badge-chip mx-auto"><Target className="h-3 w-3" /> How it works</div>
+            <h2 className="mt-5 text-4xl md:text-5xl font-display font-extrabold">
+              From zero to <span className="text-rose-gradient">focused</span> in 60 seconds
+            </h2>
+            <p className="mt-4 text-[color:var(--text-secondary)]">
+              No signups that take 20 minutes. No tutorials. Just pick, join, and study.
+            </p>
+          </div>
+
+          <div className="mt-14 grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[
+              { step: "01", icon: "🎯", title: "Pick your exam", desc: "NEET, JEE, UPSC, CAT — choose the room that matches your grind." },
+              { step: "02", icon: "🚪", title: "Join a room", desc: "One click. Camera on or off. You're in a live study session in seconds." },
+              { step: "03", icon: "⏱️", title: "Hit the Pomodoro", desc: "25 min focus, 5 min break. Structured sessions built into every room." },
+              { step: "04", icon: "🔥", title: "Build your streak", desc: "Track daily consistency. Watch your hours climb. Stay accountable." },
+            ].map((s) => (
+              <div key={s.step} className="surface-card p-6 relative overflow-hidden group">
+                <div
+                  className="absolute -top-16 -right-16 h-32 w-32 rounded-full opacity-0 group-hover:opacity-20 transition"
+                  style={{ background: "radial-gradient(circle, var(--rose-accent), transparent 60%)", filter: "blur(20px)" }}
+                />
+                <div className="relative">
+                  <div className="text-[10px] font-mono tracking-[0.3em] uppercase text-[color:var(--text-muted)]">Step {s.step}</div>
+                  <div className="mt-3 text-3xl">{s.icon}</div>
+                  <h3 className="mt-3 font-display font-bold text-lg">{s.title}</h3>
+                  <p className="mt-2 text-sm text-[color:var(--text-secondary)]">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="rose-divider max-w-5xl mx-auto" />
 
       {/* CATEGORIES */}
       <section id="rooms" className="relative px-6 py-32">
@@ -379,6 +415,10 @@ function Landing() {
             <h2 className="mt-5 text-4xl md:text-5xl font-display font-extrabold">
               Transparent. Simple. <span className="text-rose-gradient">Fair.</span>
             </h2>
+            <p className="mt-4 text-[color:var(--text-secondary)] font-medium">
+              <span className="opacity-70 line-through decoration-red-500/30 mr-2">Delete the distractions.</span>
+              <span className="text-rose-gradient font-bold tracking-wide">Invest in your actual future.</span>
+            </p>
           </div>
 
           <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
@@ -396,12 +436,15 @@ function Landing() {
             />
           </div>
 
-          {/* competitor strip */}
+          {/* price anchor */}
           <div className="mt-10 surface-card p-6 flex flex-wrap items-center justify-center gap-4 text-sm">
-            <span className="text-[color:var(--text-muted)]">StudyStream:</span>
-            <span className="line-through" style={{ color: "var(--crimson)" }}>₹690/mo · 4 hrs/day</span>
-            <span className="text-[color:var(--text-muted)]">VS StudyDate:</span>
-            <span className="font-semibold text-rose-gradient">₹149/mo · Unlimited</span>
+            <span className="text-[color:var(--text-muted)]">Tinder Gold: ₹500</span>
+            <span className="text-[color:var(--text-muted)]">·</span>
+            <span className="text-[color:var(--text-muted)]">Netflix: ₹199</span>
+            <span className="text-[color:var(--text-muted)]">·</span>
+            <span className="text-[color:var(--text-muted)]">Spotify: ₹119</span>
+            <span className="text-[color:var(--text-muted)]">·</span>
+            <span className="font-semibold text-rose-gradient">StudyDate Pro: ₹149 — your co-working space from any desk</span>
           </div>
 
           {/* weekly pass */}
@@ -411,8 +454,8 @@ function Landing() {
               border: "1px solid color-mix(in oklab, var(--rose-accent) 35%, transparent)"
             }}>
             <span>⚡</span>
-            <span className="font-semibold">Weekly Pass — ₹29</span>
-            <span className="text-[color:var(--text-secondary)]">Full unlimited for 7 days. No auto-renewal. Pay via UPI.</span>
+            <span className="font-semibold">Not sure yet? Try a week for ₹29.</span>
+            <span className="text-[color:var(--text-secondary)]">Full Pro. No auto-renewal. Cancel by doing nothing.</span>
           </div>
         </div>
       </section>
@@ -457,8 +500,17 @@ function Landing() {
             <h3 className="font-display font-extrabold text-3xl md:text-5xl">
               Your tribe is studying <span className="text-rose-gradient">right now.</span>
             </h3>
+            
+            <div className="mt-5 mb-2 flex items-center justify-center gap-3">
+              <div className="h-px w-8 bg-gradient-to-r from-transparent to-rose-500/50"></div>
+              <p className="text-sm md:text-base font-semibold tracking-wide text-[color:var(--text-primary)]">
+                <span className="opacity-60 font-normal italic">Don't settle for dead-end chats.</span> <span className="text-rose-gradient">Find a partner in the grind.</span>
+              </p>
+              <div className="h-px w-8 bg-gradient-to-l from-transparent to-rose-500/50"></div>
+            </div>
+
             <p className="mt-4 text-[color:var(--text-secondary)] max-w-xl mx-auto">
-              Join {live}+ students. Pick a room. Hit start. We'll handle the rest.
+              Join the beta. Pick a room. Hit start. We'll handle the rest.
             </p>
             <button
               onClick={() => open()}
@@ -474,13 +526,24 @@ function Landing() {
 
       {/* FOOTER */}
       <footer className="px-6 pt-12 pb-12 border-t border-[color:var(--hairline)]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="font-display font-extrabold text-xl">
-            Study<span className="text-rose-gradient">Date</span>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+            <div className="font-display font-extrabold text-xl">
+              Study<span className="text-rose-gradient">Date</span>
+            </div>
+            <p className="text-sm text-[color:var(--text-secondary)]">
+              Unlimited studying. Half the price. Built for India. 🇮🇳
+            </p>
           </div>
-          <p className="text-sm text-[color:var(--text-secondary)]">
-            Unlimited studying. Half the price. Built for India. 🇮🇳
-          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-[color:var(--text-muted)]">
+            <Link to="/terms" className="hover:text-[color:var(--text-primary)] transition">Terms of Service</Link>
+            <Link to="/privacy" className="hover:text-[color:var(--text-primary)] transition">Privacy Policy</Link>
+            <Link to="/safety" className="hover:text-[color:var(--text-primary)] transition">Safety</Link>
+            <Link to="/pricing" className="hover:text-[color:var(--text-primary)] transition">Pricing</Link>
+            <a href="mailto:support@studydate.in" className="hover:text-[color:var(--text-primary)] transition">Contact</a>
+            <span className="text-[color:var(--hairline)]">·</span>
+            <span>© {new Date().getFullYear()} StudyDate Technologies</span>
+          </div>
         </div>
       </footer>
 

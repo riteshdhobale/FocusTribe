@@ -1,5 +1,6 @@
 import { LOCATION_MODES, ACADEMIC_FOCUS, INTENTS, CAREER_GOALS, type LocationMode } from "@/lib/constants";
-import { getMyProfile, type MatchPreferences } from "@/lib/profiles";
+import { getMyProfile, type MatchPreferences, type Profile } from "@/lib/profiles";
+import { useState, useEffect } from "react";
 import * as Slider from "@radix-ui/react-slider";
 
 type Props = {
@@ -8,7 +9,8 @@ type Props = {
 };
 
 export function MatchFilters({ prefs, onChange }: Props) {
-  const me = getMyProfile();
+  const [me, setMe] = useState<Profile | null>(null);
+  useEffect(() => { getMyProfile().then(setMe); }, []);
 
   const toggleExamFocus = (focus: string) => {
     const examFocus = prefs.examFocus.includes(focus) ? prefs.examFocus.filter(f => f !== focus) : [...prefs.examFocus, focus];

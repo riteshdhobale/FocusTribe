@@ -5,14 +5,16 @@ import { SwipeCard } from "@/components/SwipeCard";
 import { MatchFilters } from "@/components/MatchFilters";
 import { ProfileSetup } from "@/components/ProfileSetup";
 import { MatchCelebration } from "@/components/MatchCelebration";
+import { SendPromptModal } from "@/components/SendPromptModal";
 import { AuthPage } from "@/components/AuthPage";
 import { BanScreen } from "@/components/BanScreen";
 import { useAuth } from "@/lib/useAuth";
 import { useBanCheck } from "@/lib/useBanCheck";
+import { useActionLimits, MAX_LEFT_SWIPES, MAX_RIGHT_SWIPES, MAX_MONTHLY_PROMPTS } from "@/hooks/useActionLimits";
 import {
   getMyProfile, getFilteredDeck, getPreferences, savePreferences,
-  addToSwipeHistory, saveMatch, compatibilityScore,
-  type Profile, type MatchPreferences, type Match,
+  addToSwipeHistory, compatibilityScore, sendMessage,
+  type Profile, type MatchPreferences, type Match, type Message
 } from "@/lib/profiles";
 
 export const Route = createFileRoute("/discover")({
@@ -47,9 +49,12 @@ function DiscoverPage() {
   const [deck, setDeck] = useState<Profile[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [celebration, setCelebration] = useState<Profile | null>(null);
+  const limits = useActionLimits();
+  const [limitAlert, setLimitAlert] = useState<{ title: string, message: string } | null>(null);
+  const [showPromptModal, setShowPromptModal] = useState<Profile | null>(null);
 
-  const refreshDeck = useCallback(() => {
-    const filtered = getFilteredDeck(prefs);
+  const refreshDeck = useCallback(async () => {
+    const filtered = await getFilteredDeck(prefs);
     setDeck(filtered);
     setCurrentIdx(0);
   }, [prefs]);
@@ -74,34 +79,32 @@ function DiscoverPage() {
     getMyProfile().then(p => setMyProfile(p));
   };
 
-  const handleSwipe = (action: "like" | "pass" | "super") => {
+  const handleSwipe = async (action: "like" | "pass" | "super") => {
     const profile = deck[currentIdx];
     if (!profile || !myProfile) return;
 
-    addToSwipeHistory(profile.id);
-
-    if (action === "like" || action === "super") {
-      // Simulate ~60% match rate for likes
-      const isMatch = Math.random() < 0.6;
-      if (isMatch) {
-        const match: Match = {
-          id: `m_${Date.now()}`,
-          profileA: myProfile.id,
-          profileB: profile.id,
-          status: "matched",
-          timestamp: Date.now(),
-          unread: 0,
-        };
-        saveMatch(match);
-        setCelebration(profile);
-        return; // Don't advance until celebration dismissed
-      }
-    }
-
+    // Optimistically advance to keep UI snappy
     if (currentIdx + 1 < deck.length) {
-      setCurrentIdx(currentIdx + 1);
+      setCurrentIdx(prev => prev + 1);
     } else {
       refreshDeck();
+    }
+
+    const dbAction = action === "pass" ? "left" : (action === "super" ? "super-like" : "right");
+    await addToSwipeHistory(profile.id, dbAction);
+
+    // Check if the trigger auto-created a match (meaning it was a mutual like)
+    if (action === "like" || action === "super") {
+      import("@/lib/supabase").then(async ({ supabase }) => {
+        // Query to see if a match exists between these two users
+        const { data } = await supabase.from("matches").select("id")
+          .or(`and(profile_a.eq.${myProfile.id},profile_b.eq.${profile.id}),and(profile_a.eq.${profile.id},profile_b.eq.${myProfile.id})`)
+          .single();
+          
+        if (data) {
+          setCelebration(profile);
+        }
+      });
     }
   };
 
@@ -109,9 +112,6 @@ function DiscoverPage() {
     setCelebration(null);
     if (goToChat) {
       navigate({ to: "/matches" });
-    } else {
-      if (currentIdx + 1 < deck.length) setCurrentIdx(currentIdx + 1);
-      else refreshDeck();
     }
   };
 
@@ -153,6 +153,11 @@ function DiscoverPage() {
     );
   }
 
+  // Extra safety: should be unreachable due to earlier guard.
+  if (!myProfile) {
+    return <ProfileSetup onComplete={handleSetupComplete} />;
+  }
+
   const currentProfile = deck[currentIdx];
 
   return (
@@ -185,7 +190,7 @@ function DiscoverPage() {
                 onLike={() => handleSwipe("like")}
                 onPass={() => handleSwipe("pass")}
                 onSuperLike={() => handleSwipe("super")}
-                onComment={() => handleSwipe("like")}
+                onComment={() => setShowPromptModal(currentProfile)}
               />
             ) : (
               <div className="w-full max-w-md p-10 rounded-[2rem] border relative overflow-hidden text-center group" style={{ borderColor: "rgba(255,107,158,0.2)", background: "linear-gradient(145deg, rgba(30,41,59,0.4) 0%, rgba(15,23,42,0.8) 100%)", backdropFilter: "blur(20px)" }}>
@@ -198,7 +203,7 @@ function DiscoverPage() {
                     <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ background: "var(--rose-accent)" }}></div>
                     <span className="text-4xl">✨</span>
                   </div>
-                  
+
                   <h3 className="font-display font-extrabold text-2xl mb-3 text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B9E] to-[#FFA3C0]">
                     You're all caught up!
                   </h3>
@@ -207,7 +212,7 @@ function DiscoverPage() {
                       ? "There are no more study profiles in your immediate area. Widen your horizon to connect with ambitious minds globally."
                       : "You've seen everyone matching your specific academic goals. Adjust your filters to discover more people."}
                   </p>
-                  
+
                   <button onClick={() => { handlePrefsChange({ ...prefs, ageRange: null, cities: [], colleges: [], locationMode: "global" }); refreshDeck(); }}
                     className="w-full relative px-6 py-4 rounded-xl text-sm font-bold overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(255,107,158,0.3)]"
                     style={{ background: "linear-gradient(135deg, #FF6B9E 0%, #FF8FB5 100%)", color: "#0B1120" }}>
@@ -229,6 +234,22 @@ function DiscoverPage() {
           profile={celebration}
           onMessage={() => dismissCelebration(true)}
           onKeep={() => dismissCelebration(false)}
+        />
+      )}
+
+      {/* Send Prompt / Comment Modal */}
+      {showPromptModal && (
+        <SendPromptModal
+          profile={showPromptModal}
+          onClose={() => setShowPromptModal(null)}
+          onSend={async (text) => {
+            setShowPromptModal(null);
+            // Swiping right with a comment counts as a like. 
+            // The match will be auto-created if it's a mutual like, but for the demo we'll also manually send the message if they match.
+            // For now, we'll just handle the swipe. The real backend handles messages.
+            await handleSwipe("like");
+            // If we matched instantly (demo mode), the celebration will pop up!
+          }}
         />
       )}
     </div>

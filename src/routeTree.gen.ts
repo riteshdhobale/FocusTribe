@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SafetyRouteImport } from './routes/safety'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as DiscoverRouteImport } from './routes/discover'
@@ -18,6 +20,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoomsSlugRouteImport } from './routes/rooms.$slug'
 import { Route as RoomSlugIdRouteImport } from './routes/room.$slug.$id'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SafetyRoute = SafetyRouteImport.update({
   id: '/safety',
   path: '/safety',
@@ -26,6 +33,11 @@ const SafetyRoute = SafetyRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -64,8 +76,10 @@ export interface FileRoutesByFullPath {
   '/discover': typeof DiscoverRoute
   '/matches': typeof MatchesRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/safety': typeof SafetyRoute
+  '/terms': typeof TermsRoute
   '/rooms/$slug': typeof RoomsSlugRoute
   '/room/$slug/$id': typeof RoomSlugIdRoute
 }
@@ -74,8 +88,10 @@ export interface FileRoutesByTo {
   '/discover': typeof DiscoverRoute
   '/matches': typeof MatchesRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/safety': typeof SafetyRoute
+  '/terms': typeof TermsRoute
   '/rooms/$slug': typeof RoomsSlugRoute
   '/room/$slug/$id': typeof RoomSlugIdRoute
 }
@@ -85,8 +101,10 @@ export interface FileRoutesById {
   '/discover': typeof DiscoverRoute
   '/matches': typeof MatchesRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/safety': typeof SafetyRoute
+  '/terms': typeof TermsRoute
   '/rooms/$slug': typeof RoomsSlugRoute
   '/room/$slug/$id': typeof RoomSlugIdRoute
 }
@@ -97,8 +115,10 @@ export interface FileRouteTypes {
     | '/discover'
     | '/matches'
     | '/pricing'
+    | '/privacy'
     | '/profile'
     | '/safety'
+    | '/terms'
     | '/rooms/$slug'
     | '/room/$slug/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -107,8 +127,10 @@ export interface FileRouteTypes {
     | '/discover'
     | '/matches'
     | '/pricing'
+    | '/privacy'
     | '/profile'
     | '/safety'
+    | '/terms'
     | '/rooms/$slug'
     | '/room/$slug/$id'
   id:
@@ -117,8 +139,10 @@ export interface FileRouteTypes {
     | '/discover'
     | '/matches'
     | '/pricing'
+    | '/privacy'
     | '/profile'
     | '/safety'
+    | '/terms'
     | '/rooms/$slug'
     | '/room/$slug/$id'
   fileRoutesById: FileRoutesById
@@ -128,14 +152,23 @@ export interface RootRouteChildren {
   DiscoverRoute: typeof DiscoverRoute
   MatchesRoute: typeof MatchesRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   SafetyRoute: typeof SafetyRoute
+  TermsRoute: typeof TermsRoute
   RoomsSlugRoute: typeof RoomsSlugRoute
   RoomSlugIdRoute: typeof RoomSlugIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/safety': {
       id: '/safety'
       path: '/safety'
@@ -148,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -200,8 +240,10 @@ const rootRouteChildren: RootRouteChildren = {
   DiscoverRoute: DiscoverRoute,
   MatchesRoute: MatchesRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   SafetyRoute: SafetyRoute,
+  TermsRoute: TermsRoute,
   RoomsSlugRoute: RoomsSlugRoute,
   RoomSlugIdRoute: RoomSlugIdRoute,
 }

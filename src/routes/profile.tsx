@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Navbar } from "@/components/Navbar";
 import { ACADEMIC_FOCUS, CAREER_GOALS, INTENTS, STUDY_FORMATS, INTERESTS, isStudentEmail } from "@/lib/constants";
 import { getMyProfile, saveMyProfile, type Profile } from "@/lib/profiles";
+import { useSubscription } from "@/lib/useSubscription";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -13,6 +14,7 @@ function ProfilePage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [saved, setSaved] = useState(false);
+  const { isPro, plan } = useSubscription();
 
   useEffect(() => {
     getMyProfile().then(p => setProfile(p));
@@ -62,9 +64,20 @@ function ProfilePage() {
       <Navbar />
 
       <div className="max-w-3xl mx-auto px-4 pt-6 pb-16">
-        <div className="mb-8">
-          <span className="text-xs font-mono tracking-widest uppercase mb-1 block" style={{ color: "var(--rose-accent)" }}>Profile</span>
-          <h1 className="font-display font-bold text-2xl" style={{ color: "var(--text-primary)" }}>Shape how people discover you</h1>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <span className="text-xs font-mono tracking-widest uppercase mb-1 block" style={{ color: "var(--rose-accent)" }}>Profile</span>
+            <h1 className="font-display font-bold text-2xl flex items-center gap-3" style={{ color: "var(--text-primary)" }}>
+              Shape how people discover you
+            </h1>
+          </div>
+          {isPro && (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 shadow-lg animate-fade-in"
+              style={{ background: "linear-gradient(135deg, rgba(255,107,158,0.15) 0%, rgba(255,107,158,0.05) 100%)", borderColor: "rgba(255,107,158,0.4)", color: "#FF6B9E", backdropFilter: "blur(8px)" }}>
+              <span className="text-lg drop-shadow-[0_0_8px_rgba(255,107,158,0.8)]">{plan === "campus" ? "🎓" : "⭐"}</span>
+              <span className="text-sm font-extrabold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B9E] to-[#FFA3C0]">StudyDate {plan}</span>
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -165,8 +178,12 @@ function ProfilePage() {
               <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>Day streak</span>
             </div>
             <div className="p-4 rounded-2xl border text-center" style={{ borderColor: "var(--hairline)", background: "var(--bg-card)" }}>
-              <span className="text-2xl font-display font-bold block" style={{ color: "var(--rose-accent)" }}>{profile.isPro ? "⭐" : "Free"}</span>
-              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>Plan</span>
+              <span className="text-2xl font-display font-bold block" style={{ color: isPro ? "#FF6B9E" : "var(--text-primary)" }}>
+                {isPro ? (plan === "campus" ? "🎓" : "⭐") : "Free"}
+              </span>
+              <span className="text-[11px]" style={{ color: "var(--text-muted)", textTransform: "capitalize" }}>
+                {isPro ? `${plan} Plan` : "Plan"}
+              </span>
             </div>
           </div>
 

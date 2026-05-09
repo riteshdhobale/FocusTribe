@@ -9,6 +9,7 @@ type Step = 1 | 2 | 3 | 4;
 
 export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState<Step>(1);
+  const maxPhotos = 6;
 
   // Step 1
   const [name, setName] = useState("");
@@ -17,6 +18,9 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
   const [college, setCollege] = useState("");
   const [gender, setGender] = useState<Gender>("male");
   const [genderPref, setGenderPref] = useState<"male" | "female" | "any">("any");
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [photoInput, setPhotoInput] = useState("");
+  const [photoError, setPhotoError] = useState("");
 
   // Step 2
   const [academicFocus, setAcademicFocus] = useState("");
@@ -37,6 +41,49 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
   const [otpValue, setOtpValue] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
   const [groupPref, setGroupPref] = useState<GroupPref>("any");
+
+  const addPhotoUrl = (rawUrl: string) => {
+    const url = rawUrl.trim();
+    if (!url) return;
+    if (photoUrls.length >= maxPhotos) {
+      setPhotoError(`You can add up to ${maxPhotos} photos.`);
+      return;
+    }
+    if (photoUrls.includes(url)) {
+      setPhotoError("That photo is already added.");
+      return;
+    }
+    setPhotoUrls(prev => [...prev, url]);
+    setPhotoInput("");
+    setPhotoError("");
+  };
+
+  const handlePhotoFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const remaining = Math.max(0, maxPhotos - photoUrls.length);
+    const selected = Array.from(files).slice(0, remaining);
+    if (files.length > remaining) {
+      setPhotoError(`Only ${remaining} more photo${remaining === 1 ? "" : "s"} can be added.`);
+    }
+    selected.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result === "string") {
+          setPhotoUrls(prev => (prev.length < maxPhotos ? [...prev, result] : prev));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removePhoto = (idx: number) => {
+    setPhotoUrls(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const makePrimary = (idx: number) => {
+    setPhotoUrls(prev => [prev[idx], ...prev.filter((_, i) => i !== idx)]);
+  };
 
   const toggleChip = (arr: string[], val: string, setter: (v: string[]) => void) => {
     setter(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val]);
@@ -66,7 +113,7 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
   };
 
   const canContinue = (): boolean => {
-    if (step === 1) return name.trim().length > 0 && city.length > 0 && college.length > 0;
+    if (step === 1) return name.trim().length > 0 && city.length > 0 && college.length > 0 && photoUrls.length >= 2;
     if (step === 2) return academicFocus.length > 0 && careerGoal.length > 0;
     if (step === 3) return studyFormats.length > 0;
     if (step === 4) return bio.trim().length > 0;
@@ -101,6 +148,7 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
       studentEmail: studentEmail.trim() || undefined,
       isVerified: emailVerified,
       isPro: false,
+      photoUrls: photoUrls.slice(0, maxPhotos),
     };
     saveMyProfile(profile);
 
@@ -113,7 +161,9 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
       locationMode: "my-city",
       groupPref,
       onlineOnly: false,
-    });
+      intent: intents,
+      careerGoals: [],
+    } as any);
 
     onComplete();
   };
@@ -215,6 +265,75 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium" style={{ color: "var(--text-primary)" }}>Profile photos</label>
+                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>Add at least 2 · first is cover</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  {Array.from({ length: maxPhotos }).map((_, idx) => {
+                    const url = photoUrls[idx];
+                    return (
+                      <div key={`photo-slot-${idx}`} className="relative aspect-[3/4] rounded-xl border overflow-hidden"
+                        style={{ borderColor: "var(--hairline)", background: "var(--bg-main)" }}>
+                        {url ? (
+                          <img src={url} alt={`Profile ${idx + 1}`} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs" style={{ color: "var(--text-muted)" }}>
+                            + Add
+                          </div>
+                        )}
+
+                        {url && (
+                          <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2">
+                            {idx === 0 ? (
+                              <span className="text-[10px] px-2 py-1 rounded-full" style={{ background: "rgba(15,23,42,0.7)", color: "#fff" }}>
+                                Cover
+                              </span>
+                            ) : (
+                              <button type="button" onClick={() => makePrimary(idx)}
+                                className="text-[10px] px-2 py-1 rounded-full"
+                                style={{ background: "rgba(15,23,42,0.7)", color: "#fff" }}>
+                                Make cover
+                              </button>
+                            )}
+                            <button type="button" onClick={() => removePhoto(idx)}
+                              className="text-[10px] px-2 py-1 rounded-full"
+                              style={{ background: "rgba(239,68,68,0.8)", color: "#fff" }}>
+                              Remove
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-3 flex gap-2">
+                  <input type="url" value={photoInput} onChange={e => setPhotoInput(e.target.value)} placeholder="Paste image URL"
+                    className="flex-1 px-4 py-3 rounded-xl border text-sm outline-none"
+                    style={{ background: "var(--bg-main)", borderColor: "var(--hairline)", color: "var(--text-primary)" }} />
+                  <button type="button" onClick={() => addPhotoUrl(photoInput)}
+                    className="px-4 rounded-xl text-sm font-semibold transition"
+                    style={{ background: "var(--rose-accent)", color: "#0B1120" }}>
+                    Add
+                  </button>
+                </div>
+
+                <div className="mt-3">
+                  <label className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Upload photos</label>
+                  <input type="file" accept="image/*" multiple
+                    onChange={e => handlePhotoFiles(e.target.files)}
+                    className="mt-2 w-full text-xs"
+                    style={{ color: "var(--text-muted)" }} />
+                </div>
+
+                {photoError && (
+                  <p className="text-xs mt-2" style={{ color: "#F97316" }}>{photoError}</p>
+                )}
               </div>
             </div>
           )}
@@ -361,7 +480,7 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
                     </button>
                   )}
                 </div>
-                
+
                 {emailVerified && (
                   <p className="text-xs mt-2 font-medium" style={{ color: "#10B981" }}>
                     ✓ Email verified! You'll get the 🎓 Campus badge.
@@ -418,6 +537,7 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
                 name={name} age={parseInt(age) || 21} college={college}
                 city={city} examFocus={academicFocus} careerGoal={careerGoal}
                 intent={intents.join(",")} studyFormats={studyFormats} interests={interests}
+                photoUrl={photoUrls[0]}
               />
             </div>
           )}

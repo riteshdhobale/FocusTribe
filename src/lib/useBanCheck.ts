@@ -48,15 +48,11 @@ export function useBanCheck(): BanStatus {
 
         if (bans && bans.length > 0) {
           const ban = bans[0] as { ban_type: string; reason: string; expires_at: string | null };
-          // Check if temporary ban has expired
+          // Check if temporary ban has expired (client-side display only).
+          // SECURITY: We NEVER deactivate bans from the client.
+          // Expired bans should be cleaned up by a Supabase cron job or Edge Function.
           if (ban.expires_at && new Date(ban.expires_at) < new Date()) {
-            // Ban expired, deactivate it
-            await (supabase.from("bans") as any)
-              .update({ is_active: false })
-              .eq("user_id", user.id)
-              .eq("is_active", true)
-              .lte("expires_at", new Date().toISOString());
-
+            // Ban expired — treat as not banned for UX, but don't modify the DB
             setStatus({ isBanned: false, reason: null, banType: null, expiresAt: null, loading: false });
           } else {
             setStatus({

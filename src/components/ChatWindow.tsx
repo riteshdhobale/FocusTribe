@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Message, Profile, Match } from "@/lib/profiles";
+import type { Message, Profile, Match, MatchStatus } from "@/lib/profiles";
 import { getMessages, sendMessage, getAutoReply, getMyProfile, updateMatch } from "@/lib/profiles";
 import { Send, Video, Sparkles } from "lucide-react";
 import { ReportButton } from "./ReportButton";
@@ -8,18 +8,50 @@ import { useNavigate } from "@tanstack/react-router";
 type Props = {
   match: Match;
   partner: Profile;
+  onStatusChange?: (status: MatchStatus) => void;
 };
 
-export function ChatWindow({ match, partner }: Props) {
+export function ChatWindow({ match, partner, onStatusChange }: Props) {
   const navigate = useNavigate();
-  const me = getMyProfile();
+  const [me, setMe] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMessages(getMessages(match.id));
+    getMyProfile().then(setMe);
+  }, []);
+
+  useEffect(() => {
+    getMessages(match.id).then(setMessages);
+
+    // Subscribe to realtime messages
+    let channel: any;
+    import("@/lib/supabase").then(({ supabase }) => {
+      channel = supabase
+        .channel(`chat:${match.id}`)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${match.id}` }, payload => {
+          const newMsg = payload.new;
+          setMessages(prev => {
+            if (prev.find(m => m.id === newMsg.id)) return prev;
+            return [...prev, {
+              id: newMsg.id,
+              matchId: newMsg.match_id,
+              senderId: newMsg.sender_id,
+              text: newMsg.is_filtered ? "[Message blocked by filter]" : newMsg.text,
+              timestamp: new Date(newMsg.created_at).getTime(),
+            }];
+          });
+        })
+        .subscribe();
+    });
+
+    return () => {
+      if (channel) {
+        import("@/lib/supabase").then(({ supabase }) => supabase.removeChannel(channel));
+      }
+    };
   }, [match.id]);
 
   useEffect(() => {
@@ -28,44 +60,36 @@ export function ChatWindow({ match, partner }: Props) {
     }
   }, [messages]);
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !me) return;
 
-    const msg: Message = {
+    const text = input.trim();
+    setInput("");
+
+    // Optimistic UI update
+    const tempMsg: Message = {
       id: crypto.randomUUID(),
       matchId: match.id,
       senderId: me.id,
-      text: input.trim(),
+      text: text,
       timestamp: Date.now(),
     };
+    setMessages(prev => [...prev, tempMsg]);
 
-    sendMessage(msg);
-    setMessages(prev => [...prev, msg]);
-    setInput("");
-
-    // Simulate typing + auto-reply
-    setTyping(true);
-    const delay = 1500 + Math.random() * 2000;
-    setTimeout(() => {
-      setTyping(false);
-      const reply: Message = {
-        id: crypto.randomUUID(),
-        matchId: match.id,
-        senderId: partner.id,
-        text: getAutoReply(),
-        timestamp: Date.now(),
-      };
-      sendMessage(reply);
-      setMessages(prev => [...prev, reply]);
-    }, delay);
+    try {
+      await sendMessage(match.id, text);
+    } catch (error) {
+      // If error, remove optimistic message
+      setMessages(prev => prev.filter(m => m.id !== tempMsg.id));
+    }
   };
 
   const startStudyDate = () => {
     // Navigate to a study room with this match
     updateMatch(match.id, { status: "study-date" });
     const examSlug = partner.examFocus[0] || "general";
-    navigate({ to: `/room/${examSlug}/0` });
+    navigate({ to: `/room/${examSlug}/${match.id}` });
   };
 
   const formatTime = (ts: number) => {
@@ -127,12 +151,12 @@ export function ChatWindow({ match, partner }: Props) {
         {messages.map(msg => {
           const isMine = msg.senderId === me?.id;
           return (
-            <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-              <div>
-                <div className={`chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}`}>
+            <div key={msg.id} className={`flex w-full ${isMine ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[85%] md:max-w-[75%] flex flex-col ${isMine ? "items-end" : "items-start"}`}>
+                <div className={`chat-bubble inline-block ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}`}>
                   {msg.text}
                 </div>
-                <div className={`text-[10px] text-[color:var(--text-muted)] mt-1 ${isMine ? "text-right" : "text-left"}`}>
+                <div className={`text-[10px] text-[color:var(--text-muted)] mt-1.5 ${isMine ? "text-right" : "text-left"}`}>
                   {formatTime(msg.timestamp)}
                 </div>
               </div>
@@ -161,23 +185,54 @@ export function ChatWindow({ match, partner }: Props) {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSend} className="p-4 border-t border-[color:var(--hairline)] flex items-center gap-3"
-        style={{ background: "var(--surface)" }}>
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder="Type a message..."
-          className="flex-1 bg-[color:var(--surface-2)] border border-[color:var(--hairline)] rounded-full px-4 py-2.5 text-sm outline-none transition focus:border-[#F472B6]"
-        />
-        <button
-          type="submit"
-          disabled={!input.trim()}
-          className="h-10 w-10 rounded-full bg-rose-gradient text-white flex items-center justify-center transition disabled:opacity-40"
-          style={{ boxShadow: input.trim() ? "var(--shadow-rose)" : "none" }}
-        >
-          <Send className="h-4 w-4" />
-        </button>
-      </form>
+      {match.status === "pending" ? (
+        <div className="p-5 border-t border-[color:var(--hairline)] flex flex-col items-center gap-3 bg-[color:var(--surface)] text-center">
+          <p className="text-sm text-[color:var(--text-secondary)]">Accept {partner.name}'s request to start chatting and studying together.</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={async () => {
+                const { updateMatch } = await import("@/lib/profiles");
+                await updateMatch(match.id, { status: "unmatched" });
+                onStatusChange?.("unmatched");
+              }}
+              className="px-6 py-2.5 rounded-full border border-[color:var(--hairline)] font-medium text-[color:var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition"
+            >
+              Reject
+            </button>
+            <button
+              onClick={async () => {
+                const { updateMatch } = await import("@/lib/profiles");
+                await updateMatch(match.id, { status: "matched" });
+                onStatusChange?.("matched");
+              }}
+              className="px-6 py-2.5 rounded-full bg-rose-gradient text-white font-semibold transition hover:scale-105 active:scale-95"
+              style={{ boxShadow: "0 4px 15px rgba(255,107,158,0.3)" }}
+            >
+              Accept Request
+            </button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSend} className="p-4 border-t border-[color:var(--hairline)] relative"
+          style={{ background: "var(--surface)" }}>
+          <div className="relative flex items-center">
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1 bg-[color:var(--surface-2)] border border-[color:var(--hairline)] rounded-full pl-5 pr-12 py-3.5 text-sm outline-none transition focus:border-[color:var(--rose-accent)] focus:ring-1 focus:ring-[color:var(--rose-accent)] placeholder:text-[color:var(--text-muted)]"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim()}
+              className="absolute right-1.5 h-9 w-9 rounded-full bg-rose-gradient text-white flex items-center justify-center transition disabled:opacity-40 hover:scale-105 active:scale-95"
+              style={{ boxShadow: input.trim() ? "0 4px 15px rgba(255,107,158,0.3)" : "none" }}
+            >
+              <Send className="h-4 w-4 ml-0.5" />
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

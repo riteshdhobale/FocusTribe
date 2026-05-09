@@ -51,11 +51,32 @@ function RoomBrowser() {
     else setModal({ open: true, to });
   };
 
-  const createRoom = () => {
-    // Navigate to a create room page or open modal
-    // For now, require auth
-    if (!isAuthenticated) setModal({ open: true });
-    else alert("Room creation coming soon! Connect your DB fully first.");
+  const createRoom = async () => {
+    if (!isAuthenticated) {
+      setModal({ open: true });
+      return;
+    }
+    const name = window.prompt("Room name (e.g., 'Organic Chemistry Sprint'):");
+    if (!name?.trim()) return;
+    const topic = window.prompt("What topic? (e.g., 'GOC + Stereochemistry')") || "Open study session";
+    try {
+      const { createStudyRoom } = await import("@/lib/rooms");
+      const newRoom = await createStudyRoom({
+        slug,
+        name: name.trim(),
+        topic: topic.trim(),
+        capacity: 12,
+      });
+      if (newRoom) {
+        // Add to state immediately so user sees it
+        setRooms(prev => [newRoom, ...prev]);
+        // Navigate to the new room
+        navigate({ to: `/room/${slug}/${newRoom.id}` });
+      }
+    } catch (err) {
+      console.error("Failed to create room:", err);
+      alert("Something went wrong creating the room. Please try again.");
+    }
   };
 
   if (!cat) {
