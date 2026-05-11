@@ -181,7 +181,7 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
               </div>
               <div className="rose-divider mt-4" />
               <p className="text-xs mt-4" style={{ color: "var(--text-muted)" }}>
-                Price check: StudyDate Pro (₹149/mo) is less than a Netflix plan — and it pays back in consistency.
+                Price check: StudyDate Pro (₹199/mo) is less than a Netflix plan — and it pays back in consistency.
               </p>
             </div>
           </div>

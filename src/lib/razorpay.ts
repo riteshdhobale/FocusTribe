@@ -3,6 +3,7 @@
 // Docs: https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/
 
 import { supabase, isSupabaseConfigured } from "./supabase";
+import { getRegionPricing, detectRegion, type PricingRegion, type RegionPricing } from "./geoPrice";
 
 // ─── Config ────────────────────────────────────────────────────────
 const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || "";
@@ -10,10 +11,34 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 
 export type PlanId = "pro" | "campus" | "weekly";
 
+// Static config for display names (amounts come from geoPrice)
+const PLAN_LABELS: Record<PlanId, { name: string; period: string; description: string }> = {
+  pro:    { name: "Pro",    period: "monthly", description: "Unlimited swipes, study rooms & streaks" },
+  campus: { name: "Campus", period: "yearly",  description: "Annual plan for verified students" },
+  weekly: { name: "Weekly", period: "weekly",  description: "7-day full Pro access, no auto-renew" },
+};
+
+/**
+ * Get the plan config for the user's detected region.
+ * Returns amount in smallest currency unit (paise/cents) + currency code.
+ */
+export function getPlanConfig(planId: PlanId, region?: PricingRegion) {
+  const pricing = getRegionPricing(region);
+  const plan = pricing.plans[planId];
+  const label = PLAN_LABELS[planId];
+  return {
+    ...label,
+    amount: plan.amount,
+    currency: pricing.currency,
+    currencySymbol: pricing.currencySymbol,
+  };
+}
+
+// Keep PLAN_CONFIG as a backward-compatible getter (defaults to detected region)
 export const PLAN_CONFIG: Record<PlanId, { name: string; amount: number; period: string; description: string }> = {
-  pro:    { name: "Pro",    amount: 14900, period: "monthly", description: "Unlimited swipes, study rooms & streaks" },
-  campus: { name: "Campus", amount: 118800, period: "yearly",  description: "Annual plan for verified students" },
-  weekly: { name: "Weekly", amount: 2900,  period: "weekly",  description: "7-day full Pro access, no auto-renew" },
+  get pro() { const p = getPlanConfig("pro"); return { name: p.name, amount: p.amount, period: p.period, description: p.description }; },
+  get campus() { const p = getPlanConfig("campus"); return { name: p.name, amount: p.amount, period: p.period, description: p.description }; },
+  get weekly() { const p = getPlanConfig("weekly"); return { name: p.name, amount: p.amount, period: p.period, description: p.description }; },
 };
 
 // ─── Load Razorpay SDK ─────────────────────────────────────────────
@@ -42,13 +67,19 @@ async function createOrder(planId: PlanId): Promise<{ orderId: string; amount: n
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error("Not authenticated");
 
+  const planConfig = getPlanConfig(planId);
+
   const res = await fetch(`${SUPABASE_URL}/functions/v1/create-razorpay-order`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${session.access_token}`,
     },
-    body: JSON.stringify({ plan: planId }),
+    body: JSON.stringify({
+      plan: planId,
+      amount: planConfig.amount,
+      currency: planConfig.currency,
+    }),
   });
 
   if (!res.ok) {

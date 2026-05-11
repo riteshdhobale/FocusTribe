@@ -1,18 +1,19 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Navbar } from "@/components/Navbar";
 import { usePayment } from "@/hooks/usePayment";
 import { useAuth } from "@/lib/useAuth";
 import { useSubscription } from "@/lib/useSubscription";
-import { PLAN_CONFIG, type PlanId } from "@/lib/razorpay";
-import { Check, Sparkles, GraduationCap, Zap, Flame, Tv, Music, Target, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { type PlanId } from "@/lib/razorpay";
+import { getRegionPricing, formatPrice, formatMrp, discountPercent, detectRegion } from "@/lib/geoPrice";
+import { Check, Sparkles, GraduationCap, Zap, Flame, Tv, Music, Target, Loader2, CheckCircle2, AlertCircle, Clock, Shield } from "lucide-react";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingPage,
   head: () => ({
     meta: [
       { title: "Pricing — StudyDate" },
-      { name: "description", content: "StudyDate Pro: ₹149/mo unlimited study rooms, streaks, and matching. Half the price of the competition." },
+      { name: "description", content: "StudyDate Pro: Unlimited study rooms, streaks, and matching. Half the price of the competition." },
     ],
   }),
 });
@@ -23,18 +24,52 @@ function PricingPage() {
   const { checkout, loading: paymentLoading, error: paymentError, success: paymentSuccess, clearError, clearSuccess, isConfigured } = usePayment();
   const { plan: currentPlan, isPro, inReverseTrial, trialDaysLeft } = useSubscription();
 
+  // Detect pricing region
+  const pricing = useMemo(() => getRegionPricing(), []);
+  const sym = pricing.currencySymbol;
+
   const handleUpgrade = async (planId: PlanId) => {
     if (!isAuthenticated) {
-      navigate({ to: "/discover" }); // Will redirect to auth
+      navigate({ to: "/discover" });
       return;
     }
 
     const result = await checkout(planId);
     if (result.success) {
-      // Payment successful — refresh after a moment to update subscription state
       setTimeout(() => window.location.reload(), 2000);
     }
   };
+
+  // Entertainment comparison (geo-aware)
+  const comparisons = pricing.region === "india" ? [
+    { app: "Dating Apps", price: "₹500+", icon: (
+      <div className="flex justify-center items-center gap-2 -ml-2">
+        <img src="https://cdn.simpleicons.org/tinder/FE3C72" alt="Tinder" className="w-7 h-7 drop-shadow-md" />
+        <svg viewBox="0 0 24 24" className="w-7 h-7 drop-shadow-md" fill="#FFC629" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 0a12 12 0 1 0 12 12A12.013 12.013 0 0 0 12 0zm5.176 17.525a.863.863 0 0 1-.863.863H7.688a.863.863 0 0 1-.863-.863v-1.638a.863.863 0 0 1 .863-.863h8.625a.863.863 0 0 1 .863.863v1.638zm1.962-4.088a.863.863 0 0 1-.863.863H5.725a.863.863 0 0 1-.863-.863v-1.638a.863.863 0 0 1 .863-.863h12.55a.863.863 0 0 1 .863.863v1.638zm-2.887-4.088a.863.863 0 0 1-.863.863H8.612a.863.863 0 0 1-.863-.863V7.71a.863.863 0 0 1 .863-.863h6.775a.863.863 0 0 1 .863.863v1.639z" />
+        </svg>
+      </div>
+    ), note: "Swipes that go nowhere", per: "/mo", type: "waste" as const },
+    { app: "Netflix", price: "₹199", icon: <img src="https://cdn.simpleicons.org/netflix/E50914" alt="Netflix" className="w-9 h-9 mx-auto drop-shadow-md" />, note: "Hours lost to autoplay", per: "/mo", type: "waste" as const },
+    { app: "Spotify", price: "₹119", icon: <img src="https://cdn.simpleicons.org/spotify/1DB954" alt="Spotify" className="w-9 h-9 mx-auto drop-shadow-md" />, note: "Background noise", per: "/mo", type: "waste" as const },
+    { app: "StudyDate Pro", price: formatPrice(pricing.plans.pro.amount, sym), icon: <Target className="w-10 h-10 mx-auto" style={{ color: "#FF6B9E", filter: "drop-shadow(0 0 8px rgba(255,107,158,0.5))" }}/>, note: "Builds your actual future", per: "/mo", highlight: true, type: "growth" as const },
+  ] : [
+    { app: "Dating Apps", price: "$25+", icon: (
+      <div className="flex justify-center items-center gap-2 -ml-2">
+        <img src="https://cdn.simpleicons.org/tinder/FE3C72" alt="Tinder" className="w-7 h-7 drop-shadow-md" />
+        <svg viewBox="0 0 24 24" className="w-7 h-7 drop-shadow-md" fill="#FFC629" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 0a12 12 0 1 0 12 12A12.013 12.013 0 0 0 12 0zm5.176 17.525a.863.863 0 0 1-.863.863H7.688a.863.863 0 0 1-.863-.863v-1.638a.863.863 0 0 1 .863-.863h8.625a.863.863 0 0 1 .863.863v1.638zm1.962-4.088a.863.863 0 0 1-.863.863H5.725a.863.863 0 0 1-.863-.863v-1.638a.863.863 0 0 1 .863-.863h12.55a.863.863 0 0 1 .863.863v1.638zm-2.887-4.088a.863.863 0 0 1-.863.863H8.612a.863.863 0 0 1-.863-.863V7.71a.863.863 0 0 1 .863-.863h6.775a.863.863 0 0 1 .863.863v1.639z" />
+        </svg>
+      </div>
+    ), note: "Swipes that go nowhere", per: "/mo", type: "waste" as const },
+    { app: "Netflix", price: "$15.49", icon: <img src="https://cdn.simpleicons.org/netflix/E50914" alt="Netflix" className="w-9 h-9 mx-auto drop-shadow-md" />, note: "Hours lost to autoplay", per: "/mo", type: "waste" as const },
+    { app: "Spotify", price: "$11.99", icon: <img src="https://cdn.simpleicons.org/spotify/1DB954" alt="Spotify" className="w-9 h-9 mx-auto drop-shadow-md" />, note: "Background noise", per: "/mo", type: "waste" as const },
+    { app: "StudyDate Pro", price: formatPrice(pricing.plans.pro.amount, sym), icon: <Target className="w-10 h-10 mx-auto" style={{ color: "#FF6B9E", filter: "drop-shadow(0 0 8px rgba(255,107,158,0.5))" }}/>, note: "Builds your actual future", per: "/mo", highlight: true, type: "growth" as const },
+  ];
+
+  const proDiscount = discountPercent(pricing.plans.pro.mrp, pricing.plans.pro.amount);
+  const campusDiscount = discountPercent(pricing.plans.campus.mrp, pricing.plans.campus.amount);
+  const weeklyDiscount = discountPercent(pricing.plans.weekly.mrp, pricing.plans.weekly.amount);
 
   return (
     <div className="relative min-h-screen bg-[color:var(--background)]">
@@ -77,7 +112,10 @@ function PricingPage() {
             <span className="text-rose-gradient">Start matching with ambition.</span>
           </h1>
           <p className="text-lg text-[color:var(--text-secondary)] max-w-2xl mx-auto mb-12">
-            You're paying ₹850/mo on Tinder to swipe on people with no direction. For less than that, find someone who makes you smarter, sharper, and more consistent.
+            {pricing.region === "india"
+              ? "You're paying ₹500+/mo on dating apps to swipe on people with no direction. For less than that, find someone who makes you smarter, sharper, and more consistent."
+              : "You're paying $25+/mo on dating apps to swipe on people with no direction. For a fraction of that, find someone who makes you smarter, sharper, and more consistent."
+            }
           </p>
 
           {/* Psychological price comparison (Anchoring effect) */}
@@ -94,31 +132,7 @@ function PricingPage() {
               </h2>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                {[
-                  { 
-                    app: "Dating Apps", price: "₹500+", 
-                    icon: (
-                      <div className="flex justify-center items-center gap-2 -ml-2">
-                        <img src="https://cdn.simpleicons.org/tinder/FE3C72" alt="Tinder" className="w-7 h-7 drop-shadow-md" />
-                        
-                        {/* Bumble SVG */}
-                        <svg viewBox="0 0 24 24" className="w-7 h-7 drop-shadow-md" fill="#FFC629" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 0a12 12 0 1 0 12 12A12.013 12.013 0 0 0 12 0zm5.176 17.525a.863.863 0 0 1-.863.863H7.688a.863.863 0 0 1-.863-.863v-1.638a.863.863 0 0 1 .863-.863h8.625a.863.863 0 0 1 .863.863v1.638zm1.962-4.088a.863.863 0 0 1-.863.863H5.725a.863.863 0 0 1-.863-.863v-1.638a.863.863 0 0 1 .863-.863h12.55a.863.863 0 0 1 .863.863v1.638zm-2.887-4.088a.863.863 0 0 1-.863.863H8.612a.863.863 0 0 1-.863-.863V7.71a.863.863 0 0 1 .863-.863h6.775a.863.863 0 0 1 .863.863v1.639z" />
-                        </svg>
-
-                        {/* Hinge SVG */}
-                        <svg viewBox="0 0 24 24" className="w-7 h-7 drop-shadow-md opacity-90" fill="#FFFFFF" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M24 12C24 18.6274 18.6274 24 12 24C5.37258 24 0 18.6274 0 12C0 5.37258 5.37258 0 12 0C18.6274 0 24 5.37258 24 12Z" fill="white"/>
-                          <path d="M13.5 12.375V18H16.5V10.875C16.5 10.875 16.5 9 13.5 9C10.5 9 10.5 10.875 10.5 10.875V12.375H13.5ZM10.5 13.125V18H7.5V6H10.5V13.125Z" fill="black"/>
-                        </svg>
-                      </div>
-                    ), 
-                    note: "Swipes that go nowhere", per: "/mo", type: "waste" 
-                  },
-                  { app: "Netflix", price: "₹199", icon: <img src="https://cdn.simpleicons.org/netflix/E50914" alt="Netflix" className="w-9 h-9 mx-auto drop-shadow-md" />, note: "Hours lost to autoplay", per: "/mo", type: "waste" },
-                  { app: "Spotify", price: "₹119", icon: <img src="https://cdn.simpleicons.org/spotify/1DB954" alt="Spotify" className="w-9 h-9 mx-auto drop-shadow-md" />, note: "Background noise", per: "/mo", type: "waste" },
-                  { app: "StudyDate Pro", price: "₹149", icon: <Target className="w-10 h-10 mx-auto" style={{ color: "#FF6B9E", filter: "drop-shadow(0 0 8px rgba(255,107,158,0.5))" }}/>, note: "Builds your actual future", per: "/mo", highlight: true, type: "growth" },
-                ].map((item) => (
+                {comparisons.map((item) => (
                   <div key={item.app} className="p-6 rounded-2xl border transition-all duration-300 group hover:-translate-y-1 flex flex-col h-full"
                     style={{
                       borderColor: item.highlight ? "rgba(255,107,158,0.5)" : "var(--hairline)",
@@ -149,12 +163,21 @@ function PricingPage() {
             </div>
           </div>
 
+          {/* Founding Member Banner */}
+          <div className="mb-10 flex items-center justify-center gap-3 px-6 py-4 rounded-2xl border animate-fade-up"
+            style={{ borderColor: "rgba(255,107,158,0.3)", background: "linear-gradient(135deg, rgba(255,107,158,0.06) 0%, rgba(124,58,237,0.06) 100%)" }}>
+            <Clock className="w-5 h-5 shrink-0" style={{ color: "#FF6B9E" }} />
+            <p className="text-sm" style={{ color: "var(--text-primary)" }}>
+              <strong className="text-rose-gradient">Founding Member Price</strong> — Lock in today's price forever. Prices increase to {formatMrp(pricing.plans.pro.mrp, sym)}/mo for new members in 2027.
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-6 text-left">
             {/* Free */}
             <div className="surface-card p-8 rounded-[24px] border border-[color:var(--hairline)] flex flex-col">
               <h3 className="font-bold text-xl mb-2 text-[color:var(--text-primary)]">Free</h3>
               <div className="mb-4">
-                <span className="text-4xl font-display font-extrabold">₹0</span>
+                <span className="text-4xl font-display font-extrabold">{sym}0</span>
               </div>
               <p className="text-sm text-[color:var(--text-secondary)] mb-8">
                 3 hours of study time every day, forever free. No credit card needed.
@@ -189,9 +212,20 @@ function PricingPage() {
               <h3 className="font-bold text-xl mb-2 text-[color:var(--text-primary)] flex items-center gap-2">
                 Pro <Sparkles className="w-4 h-4" style={{ color: "#FF6B9E" }} />
               </h3>
-              <div className="mb-4 flex items-end gap-2">
-                <span className="text-4xl font-display font-extrabold">₹149</span>
+              <div className="mb-1 flex items-end gap-2">
+                <span className="text-lg line-through opacity-40" style={{ color: "var(--text-muted)" }}>
+                  {formatMrp(pricing.plans.pro.mrp, sym)}
+                </span>
+              </div>
+              <div className="mb-2 flex items-end gap-2">
+                <span className="text-4xl font-display font-extrabold">{formatPrice(pricing.plans.pro.amount, sym)}</span>
                 <span className="text-[color:var(--text-muted)] mb-1">/mo</span>
+              </div>
+              <div className="mb-4 flex items-center gap-2">
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,107,158,0.15)", color: "#FF6B9E" }}>
+                  {proDiscount}% OFF
+                </span>
+                <span className="text-xs" style={{ color: "var(--text-muted)" }}>{pricing.plans.pro.perDay}</span>
               </div>
               <p className="text-sm text-[color:var(--text-secondary)] mb-8">
                 Less than a coffee. Unlimited swiping, see who liked you, and more.
@@ -238,12 +272,23 @@ function PricingPage() {
               <h3 className="font-bold text-xl mb-2 text-[color:var(--text-primary)] flex items-center gap-2">
                 Campus <GraduationCap className="w-5 h-5" style={{ color: "#FF6B9E" }} />
               </h3>
-              <div className="mb-4 flex items-end gap-2">
-                <span className="text-4xl font-display font-extrabold">₹99</span>
+              <div className="mb-1 flex items-end gap-2">
+                <span className="text-lg line-through opacity-40" style={{ color: "var(--text-muted)" }}>
+                  {formatMrp(pricing.plans.campus.mrp, sym)}/yr
+                </span>
+              </div>
+              <div className="mb-2 flex items-end gap-2">
+                <span className="text-4xl font-display font-extrabold">{pricing.plans.campus.perMonth}</span>
                 <span className="text-[color:var(--text-muted)] mb-1">/mo</span>
               </div>
+              <div className="mb-4 flex items-center gap-2">
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,107,158,0.15)", color: "#FF6B9E" }}>
+                  {campusDiscount}% OFF
+                </span>
+                <span className="text-xs" style={{ color: "var(--text-muted)" }}>Billed {formatPrice(pricing.plans.campus.amount, sym)}/yr</span>
+              </div>
               <p className="text-sm text-[color:var(--text-secondary)] mb-8">
-                Billed at ₹1,188/year. Exclusive pricing for verified college students (.edu email required).
+                Annual plan for verified college students. Requires .edu / .ac.in email.
               </p>
               <ul className="space-y-4 mb-8 flex-1">
                 <li className="flex items-start gap-3 text-sm text-[color:var(--text-secondary)]">
@@ -286,9 +331,25 @@ function PricingPage() {
             id="upgrade-weekly-btn"
           >
             <Zap className="h-4 w-4" style={{ color: "#FF6B9E" }} />
-            <span className="font-semibold">Not sure yet? Try a week for ₹29.</span>
+            <span className="font-semibold">Not sure yet? Try a week for {formatPrice(pricing.plans.weekly.amount, sym)}.</span>
             <span className="text-[color:var(--text-secondary)]">Full Pro access. No auto-renewal. Cancel by doing nothing.</span>
           </button>
+
+          {/* Trust badges */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-xs" style={{ color: "var(--text-muted)" }}>
+            <div className="flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5" style={{ color: "#10B981" }} />
+              <span>Razorpay Secure Payment</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" style={{ color: "#10B981" }} />
+              <span>Cancel anytime</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" style={{ color: "#FF6B9E" }} />
+              <span>Founding member price locked forever</span>
+            </div>
+          </div>
         </div>
       </section>
     </div>

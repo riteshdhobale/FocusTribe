@@ -16,9 +16,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "StudyDate — Study with people who get your grind" },
-      { name: "description", content: "Live exam-specific study rooms — NEET, JEE, UPSC, CA, GATE. Real accountability, unlimited hours, ₹149/mo." },
+      { name: "description", content: "Live exam-specific study rooms — NEET, JEE, UPSC, CA, GATE. Real accountability, unlimited hours. Starting at ₹199/mo." },
       { property: "og:title", content: "StudyDate — Live study rooms for serious students" },
-      { property: "og:description", content: "Co-working for students. Pomodoro, task tracker, exam-specific rooms. Unlimited at ₹149/mo." },
+      { property: "og:description", content: "Co-working for students. Pomodoro, task tracker, exam-specific rooms. Starting at ₹199/mo." },
     ],
   }),
   component: Landing,
@@ -355,7 +355,7 @@ function Landing() {
               icon={<Wallet className="h-5 w-5" />}
               tag="Pricing"
               title="Half the price"
-              copy="₹149/mo unlimited vs ₹690/mo for 4 hrs elsewhere."
+              copy="₹199/mo unlimited vs ₹690/mo for 4 hrs elsewhere."
               span="md:col-span-2"
             />
             <BentoCell
@@ -385,7 +385,7 @@ function Landing() {
             {[
               { name: "Aarav R.", exam: "NEET Aspirant", quote: "10x more accountable than studying alone. The room dynamic is unreal." },
               { name: "Meera K.", exam: "UPSC CSE", quote: "I went from 3 to 9 hours/day in two weeks. The pomodoro + tribe combo is magic." },
-              { name: "Siddharth P.", exam: "JEE Advanced", quote: "₹149 for unlimited? I cancelled three other apps. Wish this existed last year." },
+              { name: "Siddharth P.", exam: "JEE Advanced", quote: "₹199 for unlimited? I cancelled three other apps. Wish this existed last year." },
             ].map((t) => (
               <div key={t.name} className="surface-card p-7 relative">
                 <Quote className="h-6 w-6" style={{ color: "var(--rose-accent)" }} />
@@ -427,7 +427,7 @@ function Landing() {
               features={["3 hours daily", "All categories", "Pomodoro timer", "Task tracker", "—  No streaks", "—  No priority rooms"]}
             />
             <PricingCard
-              popular name="Pro" price="₹149" period="per month · unlimited"
+              popular name="Pro" price="₹199" period="per month · unlimited"
               features={["Unlimited study time", "All categories", "Pomodoro + Tasks", "Study streaks", "Priority rooms", "Cancel anytime"]}
             />
             <PricingCard
@@ -444,7 +444,7 @@ function Landing() {
             <span className="text-[color:var(--text-muted)]">·</span>
             <span className="text-[color:var(--text-muted)]">Spotify: ₹119</span>
             <span className="text-[color:var(--text-muted)]">·</span>
-            <span className="font-semibold text-rose-gradient">StudyDate Pro: ₹149 — your co-working space from any desk</span>
+            <span className="font-semibold text-rose-gradient">StudyDate Pro: ₹199 — your co-working space from any desk</span>
           </div>
 
           {/* weekly pass */}
@@ -454,7 +454,7 @@ function Landing() {
               border: "1px solid color-mix(in oklab, var(--rose-accent) 35%, transparent)"
             }}>
             <span>⚡</span>
-            <span className="font-semibold">Not sure yet? Try a week for ₹29.</span>
+            <span className="font-semibold">Not sure yet? Try a week for ₹59.</span>
             <span className="text-[color:var(--text-secondary)]">Full Pro. No auto-renewal. Cancel by doing nothing.</span>
           </div>
         </div>

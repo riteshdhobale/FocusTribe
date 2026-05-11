@@ -83,9 +83,9 @@ function TermsPage() {
             </p>
             <ul className="list-disc pl-6 mt-2 space-y-1">
               <li>You authorize us to charge your chosen payment method for the subscription fee</li>
-              <li><strong>Monthly (Pro):</strong> ₹149/month, auto-renews unless cancelled</li>
+              <li><strong>Monthly (Pro):</strong> ₹199/month, auto-renews unless cancelled</li>
               <li><strong>Annual (Campus):</strong> ₹1,188/year (₹99/month equivalent), for verified students</li>
-              <li><strong>Weekly Pass:</strong> ₹29 one-time, does NOT auto-renew</li>
+              <li><strong>Weekly Pass:</strong> ₹59 one-time, does NOT auto-renew</li>
               <li>You may cancel your subscription at any time from your profile settings</li>
               <li>No refunds are provided for partial billing periods</li>
             </ul>

@@ -55,7 +55,7 @@ serve(async (req) => {
     }
 
     // Parse request
-    const { plan } = await req.json();
+    const { plan, amount: clientAmount, currency: clientCurrency } = await req.json();
     const planConfig = PLANS[plan];
     if (!planConfig) {
       return new Response(JSON.stringify({ error: `Invalid plan: ${plan}` }), {
@@ -63,6 +63,10 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Use client-specified amount/currency for geo-pricing, fallback to server defaults
+    const orderAmount = clientAmount && typeof clientAmount === "number" && clientAmount > 0 ? clientAmount : planConfig.amount;
+    const orderCurrency = clientCurrency && typeof clientCurrency === "string" ? clientCurrency : planConfig.currency;
 
     // Check if user already has an active subscription
     const { data: existingSub } = await supabase
@@ -88,8 +92,8 @@ serve(async (req) => {
         "Authorization": `Basic ${credentials}`,
       },
       body: JSON.stringify({
-        amount: planConfig.amount,
-        currency: planConfig.currency,
+        amount: orderAmount,
+        currency: orderCurrency,
         receipt: `sd_${user.id.slice(0, 8)}_${Date.now()}`,
         notes: {
           user_id: user.id,
@@ -113,8 +117,8 @@ serve(async (req) => {
     // Log order in payments table as pending
     await supabase.from("payments").insert({
       user_id: user.id,
-      amount_cents: planConfig.amount,
-      currency: planConfig.currency,
+      amount_cents: orderAmount,
+      currency: orderCurrency,
       payment_provider: "razorpay",
       provider_order_id: order.id,
       status: "pending",
@@ -124,8 +128,8 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       orderId: order.id,
-      amount: planConfig.amount,
-      currency: planConfig.currency,
+      amount: orderAmount,
+      currency: orderCurrency,
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
