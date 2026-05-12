@@ -36,7 +36,7 @@ export function CountUp({
           }
         });
       },
-      { threshold: 0.4 }
+      { threshold: 0.4 },
     );
     io.observe(el);
     return () => io.disconnect();

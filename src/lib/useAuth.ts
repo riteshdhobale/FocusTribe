@@ -24,7 +24,7 @@ export function useAuth() {
   useEffect(() => {
     // Skip on server
     if (typeof window === "undefined") {
-      setState(prev => ({ ...prev, loading: false }));
+      setState((prev) => ({ ...prev, loading: false }));
       return;
     }
 
@@ -34,34 +34,35 @@ export function useAuth() {
     }
 
     // Get initial session
-    supabase.auth.getSession().then(({ data, error }) => {
-      setState({
-        user: data?.session?.user ?? null,
-        session: data?.session ?? null,
-        loading: false,
-        error: error?.message ?? null,
+    supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        setState({
+          user: data?.session?.user ?? null,
+          session: data?.session ?? null,
+          loading: false,
+          error: error?.message ?? null,
+        });
+      })
+      .catch(() => {
+        setState((prev) => ({ ...prev, loading: false }));
       });
-    }).catch(() => {
-      setState(prev => ({ ...prev, loading: false }));
-    });
 
     // Listen for auth changes
-    const { data } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setState(prev => ({
-          ...prev,
-          user: session?.user ?? null,
-          session,
-          loading: false,
-        }));
-      }
-    );
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setState((prev) => ({
+        ...prev,
+        user: session?.user ?? null,
+        session,
+        loading: false,
+      }));
+    });
 
     return () => data?.subscription?.unsubscribe();
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, displayName?: string) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -72,7 +73,7 @@ export function useAuth() {
         },
       },
     });
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       user: data.user,
       session: data.session,
@@ -83,12 +84,12 @@ export function useAuth() {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       user: data.user,
       session: data.session,
@@ -99,21 +100,21 @@ export function useAuth() {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/discover`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
     if (error) {
-      setState(prev => ({ ...prev, loading: false, error: error.message }));
+      setState((prev) => ({ ...prev, loading: false, error: error.message }));
     }
     return { data, error };
   }, []);
 
   const signOut = useCallback(async () => {
-    setState(prev => ({ ...prev, loading: true }));
+    setState((prev) => ({ ...prev, loading: true }));
     const { error } = await supabase.auth.signOut();
     setState({
       user: null,

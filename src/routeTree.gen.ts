@@ -18,6 +18,7 @@ import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoomsSlugRouteImport } from './routes/rooms.$slug'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as RoomSlugIdRouteImport } from './routes/room.$slug.$id'
 
 const TermsRoute = TermsRouteImport.update({
@@ -65,6 +66,11 @@ const RoomsSlugRoute = RoomsSlugRouteImport.update({
   path: '/rooms/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoomSlugIdRoute = RoomSlugIdRouteImport.update({
   id: '/room/$slug/$id',
   path: '/room/$slug/$id',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/safety': typeof SafetyRoute
   '/terms': typeof TermsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/rooms/$slug': typeof RoomsSlugRoute
   '/room/$slug/$id': typeof RoomSlugIdRoute
 }
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/safety': typeof SafetyRoute
   '/terms': typeof TermsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/rooms/$slug': typeof RoomsSlugRoute
   '/room/$slug/$id': typeof RoomSlugIdRoute
 }
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/safety': typeof SafetyRoute
   '/terms': typeof TermsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/rooms/$slug': typeof RoomsSlugRoute
   '/room/$slug/$id': typeof RoomSlugIdRoute
 }
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/safety'
     | '/terms'
+    | '/auth/callback'
     | '/rooms/$slug'
     | '/room/$slug/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/safety'
     | '/terms'
+    | '/auth/callback'
     | '/rooms/$slug'
     | '/room/$slug/$id'
   id:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/safety'
     | '/terms'
+    | '/auth/callback'
     | '/rooms/$slug'
     | '/room/$slug/$id'
   fileRoutesById: FileRoutesById
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   SafetyRoute: typeof SafetyRoute
   TermsRoute: typeof TermsRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   RoomsSlugRoute: typeof RoomsSlugRoute
   RoomSlugIdRoute: typeof RoomSlugIdRoute
 }
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/room/$slug/$id': {
       id: '/room/$slug/$id'
       path: '/room/$slug/$id'
@@ -244,6 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   SafetyRoute: SafetyRoute,
   TermsRoute: TermsRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   RoomsSlugRoute: RoomsSlugRoute,
   RoomSlugIdRoute: RoomSlugIdRoute,
 }

@@ -11,7 +11,7 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "YOUR_SUPABA
 if (SUPABASE_URL === "YOUR_SUPABASE_URL") {
   console.warn(
     "⚠️ Supabase not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.\n" +
-    "Running in localStorage-only mode."
+      "Running in localStorage-only mode.",
   );
 }
 const isServer = typeof window === "undefined";
@@ -20,8 +20,12 @@ const isServer = typeof window === "undefined";
 const memoryStorage: Record<string, string> = {};
 const noopStorage = {
   getItem: (key: string) => memoryStorage[key] ?? null,
-  setItem: (key: string, value: string) => { memoryStorage[key] = value; },
-  removeItem: (key: string) => { delete memoryStorage[key]; },
+  setItem: (key: string, value: string) => {
+    memoryStorage[key] = value;
+  },
+  removeItem: (key: string) => {
+    delete memoryStorage[key];
+  },
 };
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {

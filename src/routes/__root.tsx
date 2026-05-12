@@ -30,11 +30,19 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "StudyDate — Find your perfect study room" },
-      { name: "description", content: "Join live, exam-specific study rooms with built-in Pomodoro timers. Study alongside students preparing for NEET, JEE, UPSC, and more." },
+      {
+        name: "description",
+        content:
+          "Join live, exam-specific study rooms with built-in Pomodoro timers. Study alongside students preparing for NEET, JEE, UPSC, and more.",
+      },
       { name: "author", content: "StudyDate" },
       { name: "theme-color", content: "#FF6B9E" },
       { property: "og:title", content: "StudyDate — Live study rooms & Pomodoro" },
-      { property: "og:description", content: "Join live, exam-specific study rooms with built-in Pomodoro timers. Stay accountable and hit your goals." },
+      {
+        property: "og:description",
+        content:
+          "Join live, exam-specific study rooms with built-in Pomodoro timers. Stay accountable and hit your goals.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "/favicon.png" },
       { name: "twitter:card", content: "summary" },

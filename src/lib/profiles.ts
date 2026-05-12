@@ -215,7 +215,7 @@ export async function saveMyProfile(profileUpdates: Partial<Profile>) {
     gender_pref: profileUpdates.genderPref,
     student_email: profileUpdates.studentEmail,
     photo_urls: profileUpdates.photoUrls,
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   };
 
   const { error } = await supabase.from("profiles").upsert(dbUpdates as any);
@@ -254,7 +254,8 @@ export const BOT_PROFILE: Profile = {
   studyFormats: ["Pomodoro", "Video call sessions"],
   interests: ["Coding", "Physics", "Coffee"],
   availability: "Evenings + Weekends",
-  lookingForPrompt: "Someone who's serious about studying but knows how to have fun. Let's crack this together! 🚀",
+  lookingForPrompt:
+    "Someone who's serious about studying but knows how to have fun. Let's crack this together! 🚀",
   avatarColor: "#FF6B9E",
   avatarEmoji: "🤖",
   isOnline: true,
@@ -296,7 +297,7 @@ export async function getMatches(): Promise<Match[]> {
 
   if (error || !data) return [];
 
-  return data.map(m => ({
+  return data.map((m) => ({
     id: m.id,
     profileA: m.profile_a,
     profileB: m.profile_b,
@@ -311,14 +312,18 @@ export async function updateMatch(matchId: string, updates: Partial<Match>) {
   const dbUpdates: any = { updated_at: new Date().toISOString() };
   if (updates.status) dbUpdates.status = updates.status;
   if (updates.lastMessage) dbUpdates.last_message = updates.lastMessage;
-  
+
   const { data: session } = await supabase.auth.getSession();
   if (!session?.session?.user) return;
   const uid = session.session.user.id;
 
   if (updates.unread === 0) {
     // Determine if user is profile_a or profile_b to reset unread
-    const { data: match } = await supabase.from("matches").select("profile_a").eq("id", matchId).single();
+    const { data: match } = await supabase
+      .from("matches")
+      .select("profile_a")
+      .eq("id", matchId)
+      .single();
     if (match) {
       if (match.profile_a === uid) dbUpdates.unread_a = 0;
       else dbUpdates.unread_b = 0;
@@ -337,7 +342,7 @@ export async function getMessages(matchId: string): Promise<Message[]> {
 
   if (error || !data) return [];
 
-  return data.map(m => ({
+  return data.map((m) => ({
     id: m.id,
     matchId: m.match_id,
     senderId: m.sender_id,
@@ -354,7 +359,7 @@ export async function sendMessage(matchId: string, text: string) {
   const { error } = await supabase.from("messages").insert({
     match_id: matchId,
     sender_id: uid,
-    text: text
+    text: text,
   });
 
   if (error) {
@@ -363,12 +368,16 @@ export async function sendMessage(matchId: string, text: string) {
   }
 
   // Update match last message and increment unread for the other person
-  const { data: match } = await supabase.from("matches").select("profile_a, unread_a, unread_b").eq("id", matchId).single();
+  const { data: match } = await supabase
+    .from("matches")
+    .select("profile_a, unread_a, unread_b")
+    .eq("id", matchId)
+    .single();
   if (match) {
     const isUserA = match.profile_a === uid;
     const dbUpdates: any = {
       last_message: text,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
     if (isUserA) dbUpdates.unread_b = match.unread_b + 1;
     else dbUpdates.unread_a = match.unread_a + 1;
@@ -380,12 +389,37 @@ export async function sendMessage(matchId: string, text: string) {
 const PREFS_KEY = "sd_match_prefs";
 
 export function getPreferences(): MatchPreferences {
-  if (typeof window === "undefined") return { ageRange: null, genderPref: "any", examFocus: [], colleges: [], cities: [], locationMode: "my-city", groupPref: "any", onlineOnly: false, intent: [], careerGoals: [] };
+  if (typeof window === "undefined")
+    return {
+      ageRange: null,
+      genderPref: "any",
+      examFocus: [],
+      colleges: [],
+      cities: [],
+      locationMode: "my-city",
+      groupPref: "any",
+      onlineOnly: false,
+      intent: [],
+      careerGoals: [],
+    };
   const stored = localStorage.getItem(PREFS_KEY);
   if (stored) {
-    try { return JSON.parse(stored); } catch {}
+    try {
+      return JSON.parse(stored);
+    } catch {}
   }
-  return { ageRange: null, genderPref: "any", examFocus: [], colleges: [], cities: [], locationMode: "my-city", groupPref: "any", onlineOnly: false, intent: [], careerGoals: [] };
+  return {
+    ageRange: null,
+    genderPref: "any",
+    examFocus: [],
+    colleges: [],
+    cities: [],
+    locationMode: "my-city",
+    groupPref: "any",
+    onlineOnly: false,
+    intent: [],
+    careerGoals: [],
+  };
 }
 
 export function savePreferences(prefs: MatchPreferences) {
@@ -413,7 +447,7 @@ export async function getFilteredDeck(prefs: MatchPreferences): Promise<Profile[
     console.error("Failed to fetch deck:", error);
     return [];
   }
-  
+
   if (!data || data.length === 0) {
     // If no real users match, maybe return seedProfiles for demo purposes?
     // In production, we'd just return empty. Let's return real empty array.
@@ -423,10 +457,14 @@ export async function getFilteredDeck(prefs: MatchPreferences): Promise<Profile[
   return data.map(mapProfile);
 }
 
-export async function addToSwipeHistory(profileId: string, action: "left" | "right" | "super-like" = "right") {
+export async function addToSwipeHistory(
+  profileId: string,
+  action: "left" | "right" | "super-like" = "right",
+) {
   if (typeof window !== "undefined" && action) {
     const { right, left } = getTodaySwipeCounts();
-    if (action === "right" || action === "super-like") setTodaySwipeCounts({ right: right + 1, left });
+    if (action === "right" || action === "super-like")
+      setTodaySwipeCounts({ right: right + 1, left });
     else setTodaySwipeCounts({ right, left: left + 1 });
   }
 
@@ -434,13 +472,13 @@ export async function addToSwipeHistory(profileId: string, action: "left" | "rig
   if (!session?.session?.user) return;
   const uid = session.session.user.id;
 
-  const dbAction = action === "left" ? "pass" : (action === "super-like" ? "super-like" : "like");
+  const dbAction = action === "left" ? "pass" : action === "super-like" ? "super-like" : "like";
 
   // Insert swipe into DB. The Supabase trigger `check_mutual_like` will handle auto-creating a match!
   const { error } = await supabase.from("swipe_history").insert({
     swiper_id: uid,
     swiped_id: profileId,
-    action: dbAction
+    action: dbAction,
   });
 
   if (error) {
@@ -450,13 +488,16 @@ export async function addToSwipeHistory(profileId: string, action: "left" | "rig
 
   // DEMO MODE INVESTOR FIX:
   // If we swiped right on a mock user (UUIDs like 11111111-... to 88888888-...),
-  // we simulate an instant match! We insert directly into `matches` because 
+  // we simulate an instant match! We insert directly into `matches` because
   // inserting into `swipe_history` for another user is blocked by RLS.
-  if ((dbAction === "like" || dbAction === "super-like") && /^[1-8]{8}-[1-8]{4}-[1-8]{4}-[1-8]{4}-[1-8]{12}$/.test(profileId)) {
+  if (
+    (dbAction === "like" || dbAction === "super-like") &&
+    /^[1-8]{8}-[1-8]{4}-[1-8]{4}-[1-8]{4}-[1-8]{12}$/.test(profileId)
+  ) {
     await supabase.from("matches").insert({
       profile_a: uid, // Our RLS policy allows inserting if profile_a == auth.uid()
       profile_b: profileId,
-      status: "matched"
+      status: "matched",
     });
   }
 }
@@ -464,21 +505,31 @@ export async function addToSwipeHistory(profileId: string, action: "left" | "rig
 export function compatibilityScore(a: Profile, b: Profile): number {
   const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
-  const setA = new Set((a.examFocus || []).map(x => x.toLowerCase()));
-  const setB = new Set((b.examFocus || []).map(x => x.toLowerCase()));
-  const sharedFocus = [...setA].filter(x => setB.has(x)).length;
+  const setA = new Set((a.examFocus || []).map((x) => x.toLowerCase()));
+  const setB = new Set((b.examFocus || []).map((x) => x.toLowerCase()));
+  const sharedFocus = [...setA].filter((x) => setB.has(x)).length;
 
-  const intentsA = new Set((a.intent || "").split(",").map(x => x.trim()).filter(Boolean));
-  const intentsB = new Set((b.intent || "").split(",").map(x => x.trim()).filter(Boolean));
-  const sharedIntent = [...intentsA].filter(x => intentsB.has(x)).length;
+  const intentsA = new Set(
+    (a.intent || "")
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean),
+  );
+  const intentsB = new Set(
+    (b.intent || "")
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean),
+  );
+  const sharedIntent = [...intentsA].filter((x) => intentsB.has(x)).length;
 
-  const formatsA = new Set((a.studyFormats || []).map(x => x.toLowerCase()));
-  const formatsB = new Set((b.studyFormats || []).map(x => x.toLowerCase()));
-  const sharedFormats = [...formatsA].filter(x => formatsB.has(x)).length;
+  const formatsA = new Set((a.studyFormats || []).map((x) => x.toLowerCase()));
+  const formatsB = new Set((b.studyFormats || []).map((x) => x.toLowerCase()));
+  const sharedFormats = [...formatsA].filter((x) => formatsB.has(x)).length;
 
-  const interestsA = new Set((a.interests || []).map(x => x.toLowerCase()));
-  const interestsB = new Set((b.interests || []).map(x => x.toLowerCase()));
-  const sharedInterests = [...interestsA].filter(x => interestsB.has(x)).length;
+  const interestsA = new Set((a.interests || []).map((x) => x.toLowerCase()));
+  const interestsB = new Set((b.interests || []).map((x) => x.toLowerCase()));
+  const sharedInterests = [...interestsA].filter((x) => interestsB.has(x)).length;
 
   const sameCity = a.city && b.city && a.city.toLowerCase() === b.city.toLowerCase();
 

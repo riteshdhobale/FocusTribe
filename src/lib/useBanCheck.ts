@@ -24,21 +24,22 @@ export function useBanCheck(): BanStatus {
 
   useEffect(() => {
     if (typeof window === "undefined" || !isSupabaseConfigured()) {
-      setStatus(prev => ({ ...prev, loading: false }));
+      setStatus((prev) => ({ ...prev, loading: false }));
       return;
     }
 
     const checkBan = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) {
-          setStatus(prev => ({ ...prev, loading: false }));
+          setStatus((prev) => ({ ...prev, loading: false }));
           return;
         }
 
         // Check active bans (not warnings, only actual bans)
-        const { data: bans } = await (supabase
-          .from("bans") as any)
+        const { data: bans } = await (supabase.from("bans") as any)
           .select("ban_type, reason, expires_at")
           .eq("user_id", user.id)
           .eq("is_active", true)
@@ -53,7 +54,13 @@ export function useBanCheck(): BanStatus {
           // Expired bans should be cleaned up by a Supabase cron job or Edge Function.
           if (ban.expires_at && new Date(ban.expires_at) < new Date()) {
             // Ban expired — treat as not banned for UX, but don't modify the DB
-            setStatus({ isBanned: false, reason: null, banType: null, expiresAt: null, loading: false });
+            setStatus({
+              isBanned: false,
+              reason: null,
+              banType: null,
+              expiresAt: null,
+              loading: false,
+            });
           } else {
             setStatus({
               isBanned: true,
@@ -64,11 +71,17 @@ export function useBanCheck(): BanStatus {
             });
           }
         } else {
-          setStatus({ isBanned: false, reason: null, banType: null, expiresAt: null, loading: false });
+          setStatus({
+            isBanned: false,
+            reason: null,
+            banType: null,
+            expiresAt: null,
+            loading: false,
+          });
         }
       } catch {
         // If bans table doesn't exist yet, don't block user
-        setStatus(prev => ({ ...prev, loading: false }));
+        setStatus((prev) => ({ ...prev, loading: false }));
       }
     };
 

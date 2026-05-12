@@ -2,7 +2,15 @@ import { useState, useCallback } from "react";
 import { X, AlertTriangle, Send, Shield } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
-type ReportType = "harassment" | "fake_profile" | "spam" | "inappropriate_content" | "underage" | "threats" | "hate_speech" | "other";
+type ReportType =
+  | "harassment"
+  | "fake_profile"
+  | "spam"
+  | "inappropriate_content"
+  | "underage"
+  | "threats"
+  | "hate_speech"
+  | "other";
 
 type ReportModalProps = {
   isOpen: boolean;
@@ -23,7 +31,13 @@ const REPORT_REASONS: { value: ReportType; label: string; emoji: string }[] = [
   { value: "other", label: "Other", emoji: "📝" },
 ];
 
-export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName, context }: ReportModalProps) {
+export function ReportModal({
+  isOpen,
+  onClose,
+  reportedUserId,
+  reportedUserName,
+  context,
+}: ReportModalProps) {
   const [reportType, setReportType] = useState<ReportType | null>(null);
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -37,7 +51,9 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
 
     try {
       if (isSupabaseConfigured()) {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) throw new Error("You must be logged in to report");
 
         const { error: dbError } = await (supabase.from("reports") as any).insert({
@@ -79,22 +95,33 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
-
-      <div className="w-full max-w-md rounded-2xl border overflow-hidden"
-        style={{ borderColor: "var(--hairline)", background: "var(--bg-card)" }}>
-
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl border overflow-hidden"
+        style={{ borderColor: "var(--hairline)", background: "var(--bg-card)" }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "var(--hairline)" }}>
+        <div
+          className="flex items-center justify-between p-4 border-b"
+          style={{ borderColor: "var(--hairline)" }}
+        >
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5" style={{ color: "var(--crimson, #EF4444)" }} />
-            <h3 className="font-display font-bold text-base" style={{ color: "var(--text-primary)" }}>
+            <h3
+              className="font-display font-bold text-base"
+              style={{ color: "var(--text-primary)" }}
+            >
               Report {reportedUserName}
             </h3>
           </div>
-          <button onClick={handleClose} className="h-8 w-8 rounded-full flex items-center justify-center transition hover:opacity-70"
-            style={{ background: "var(--surface-2, rgba(255,255,255,0.05))" }}>
+          <button
+            onClick={handleClose}
+            className="h-8 w-8 rounded-full flex items-center justify-center transition hover:opacity-70"
+            style={{ background: "var(--surface-2, rgba(255,255,255,0.05))" }}
+          >
             <X className="h-4 w-4" style={{ color: "var(--text-muted)" }} />
           </button>
         </div>
@@ -102,20 +129,27 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
         {submitted ? (
           /* ── Success state ── */
           <div className="p-8 text-center">
-            <div className="h-16 w-16 rounded-full mx-auto flex items-center justify-center mb-4"
-              style={{ background: "rgba(16,185,129,0.15)" }}>
+            <div
+              className="h-16 w-16 rounded-full mx-auto flex items-center justify-center mb-4"
+              style={{ background: "rgba(16,185,129,0.15)" }}
+            >
               <Shield className="h-7 w-7" style={{ color: "#10B981" }} />
             </div>
-            <h4 className="font-display font-bold text-lg mb-2" style={{ color: "var(--text-primary)" }}>
+            <h4
+              className="font-display font-bold text-lg mb-2"
+              style={{ color: "var(--text-primary)" }}
+            >
               Report submitted
             </h4>
             <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
-              Our safety team will review this within <strong>24 hours</strong>. 
-              If we find a violation, we'll take action including temporary or permanent bans.
+              Our safety team will review this within <strong>24 hours</strong>. If we find a
+              violation, we'll take action including temporary or permanent bans.
             </p>
-            <button onClick={handleClose}
+            <button
+              onClick={handleClose}
               className="px-6 py-2.5 rounded-xl text-sm font-semibold transition"
-              style={{ background: "var(--rose-accent)", color: "#0B1120" }}>
+              style={{ background: "var(--rose-accent)", color: "#0B1120" }}
+            >
               Done
             </button>
           </div>
@@ -124,25 +158,32 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
           <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
             {/* Reason selection */}
             <div>
-              <span className="text-[10px] font-mono tracking-widest uppercase block mb-2"
-                style={{ color: "var(--text-muted)" }}>
+              <span
+                className="text-[10px] font-mono tracking-widest uppercase block mb-2"
+                style={{ color: "var(--text-muted)" }}
+              >
                 Why are you reporting?
               </span>
               <div className="space-y-1.5">
-                {REPORT_REASONS.map(r => {
+                {REPORT_REASONS.map((r) => {
                   const isActive = reportType === r.value;
                   return (
-                    <button key={r.value} onClick={() => setReportType(r.value)}
+                    <button
+                      key={r.value}
+                      onClick={() => setReportType(r.value)}
                       className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl border text-left text-sm transition"
                       style={{
                         background: isActive ? "rgba(201,165,78,0.1)" : "transparent",
                         borderColor: isActive ? "var(--rose-accent)" : "var(--hairline)",
                         color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
-                      }}>
+                      }}
+                    >
                       <span className="text-base">{r.emoji}</span>
                       <span className="font-medium">{r.label}</span>
                       {isActive && (
-                        <span className="ml-auto text-xs" style={{ color: "var(--rose-accent)" }}>✓</span>
+                        <span className="ml-auto text-xs" style={{ color: "var(--rose-accent)" }}>
+                          ✓
+                        </span>
                       )}
                     </button>
                   );
@@ -153,13 +194,16 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
             {/* Description */}
             {reportType && (
               <div>
-                <span className="text-[10px] font-mono tracking-widest uppercase block mb-2"
-                  style={{ color: "var(--text-muted)" }}>
-                  Tell us more <span style={{ color: "var(--text-muted)" }}>(min 10 characters)</span>
+                <span
+                  className="text-[10px] font-mono tracking-widest uppercase block mb-2"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Tell us more{" "}
+                  <span style={{ color: "var(--text-muted)" }}>(min 10 characters)</span>
                 </span>
                 <textarea
                   value={description}
-                  onChange={e => setDescription(e.target.value)}
+                  onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   maxLength={2000}
                   placeholder="Describe what happened so our team can investigate..."
@@ -185,20 +229,27 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
 
             {/* Error */}
             {error && (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
-                style={{ background: "rgba(239,68,68,0.1)", color: "#EF4444" }}>
+              <div
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
+                style={{ background: "rgba(239,68,68,0.1)", color: "#EF4444" }}
+              >
                 <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                 {error}
               </div>
             )}
 
             {/* Safety note */}
-            <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl text-[11px]"
-              style={{ background: "rgba(201,165,78,0.05)", color: "var(--text-muted)" }}>
-              <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" style={{ color: "var(--rose-accent)" }} />
+            <div
+              className="flex items-start gap-2 px-3 py-2.5 rounded-xl text-[11px]"
+              style={{ background: "rgba(201,165,78,0.05)", color: "var(--text-muted)" }}
+            >
+              <AlertTriangle
+                className="h-3.5 w-3.5 mt-0.5 flex-shrink-0"
+                style={{ color: "var(--rose-accent)" }}
+              />
               <span>
-                If you're in immediate danger, contact local authorities. 
-                False reports may result in action against your account.
+                If you're in immediate danger, contact local authorities. False reports may result
+                in action against your account.
               </span>
             </div>
 
@@ -208,11 +259,14 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
               disabled={!reportType || description.trim().length < 10 || submitting}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition"
               style={{
-                background: reportType && description.trim().length >= 10 ? "#EF4444" : "var(--hairline)",
-                color: reportType && description.trim().length >= 10 ? "white" : "var(--text-muted)",
+                background:
+                  reportType && description.trim().length >= 10 ? "#EF4444" : "var(--hairline)",
+                color:
+                  reportType && description.trim().length >= 10 ? "white" : "var(--text-muted)",
                 cursor: reportType && description.trim().length >= 10 ? "pointer" : "not-allowed",
                 opacity: submitting ? 0.7 : 1,
-              }}>
+              }}
+            >
               {submitting ? (
                 <span>Submitting...</span>
               ) : (

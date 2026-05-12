@@ -1,11 +1,28 @@
 import { useEffect, useRef, useState } from "react";
-import { Video, VideoOff, Mic, MicOff, MonitorUp, PhoneOff, Users, Maximize2, Minimize2, Settings, Clock, CheckCircle, Trophy, Zap } from "lucide-react";
+import {
+  Video,
+  VideoOff,
+  Mic,
+  MicOff,
+  MonitorUp,
+  PhoneOff,
+  Users,
+  Maximize2,
+  Minimize2,
+  Settings,
+  Clock,
+  CheckCircle,
+  Trophy,
+  Zap,
+} from "lucide-react";
 import { useSubscription } from "@/lib/useSubscription";
 
 type JitsiMeetProps = {
   roomName: string;
   displayName: string;
   categoryName?: string;
+  /** Allow microphone — true only for matched 1-on-1 Study Date rooms */
+  allowMic?: boolean;
 };
 
 // ─── Jitsi server config ───────────────────────────────────────────
@@ -21,7 +38,7 @@ declare global {
   }
 }
 
-export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProps) {
+export function JitsiMeet({ roomName, displayName, categoryName, allowMic = false }: JitsiMeetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
@@ -78,7 +95,7 @@ export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProp
           width: "100%",
           height: "100%",
           configOverwrite: {
-            startWithAudioMuted: true,
+            startWithAudioMuted: true,        // always start muted
             startWithVideoMuted: false,
             prejoinPageEnabled: false,
             disableDeepLinking: true,
@@ -86,14 +103,15 @@ export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProp
             disableThirdPartyRequests: true,
             enableClosePage: false,
             enableNoisyMicDetection: false,
+            // Lock mic entirely for category rooms
+            ...(allowMic ? {} : {
+              disableAudioLevels: true,
+            }),
             subject: categoryName ? `${categoryName} — StudyDate` : "StudyDate Study Room",
-            toolbarButtons: [
-              "camera",
-              "chat",
-              "raisehand",
-              "tileview",
-              "filmstrip",
-            ],
+            // Mic button only appears in toolbar for matched rooms
+            toolbarButtons: allowMic
+              ? ["microphone", "camera", "chat", "raisehand", "tileview", "filmstrip"]
+              : ["camera", "chat", "raisehand", "tileview", "filmstrip"],
             notifications: [],
             defaultLanguage: "en",
           },
@@ -139,7 +157,14 @@ export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProp
         });
 
         api.addEventListener("audioMuteStatusChanged", ({ muted }: { muted: boolean }) => {
-          if (mounted) setIsAudioMuted(muted);
+          if (mounted) {
+            setIsAudioMuted(muted);
+            // Category rooms: re-mute immediately if Jitsi somehow unmutes
+            if (!allowMic && !muted) {
+              api.executeCommand("muteEveryone");
+              api.executeCommand("toggleAudio"); // force self back to muted
+            }
+          }
         });
 
         api.addEventListener("videoMuteStatusChanged", ({ muted }: { muted: boolean }) => {
@@ -155,7 +180,6 @@ export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProp
         setTimeout(() => {
           if (mounted) setLoading(false);
         }, 15000);
-
       } catch (err) {
         if (mounted) {
           setError(err instanceof Error ? err.message : "Failed to connect to video");
@@ -169,7 +193,9 @@ export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProp
     return () => {
       mounted = false;
       if (apiRef.current) {
-        try { apiRef.current.dispose(); } catch {}
+        try {
+          apiRef.current.dispose();
+        } catch {}
         apiRef.current = null;
       }
     };
@@ -186,7 +212,7 @@ export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProp
   // Enforce 60-minute limit on Free plan
   useEffect(() => {
     if (plan !== "free" || !joinedAt || sessionEnded) return;
-    
+
     // Safety buffer: Start checking more aggressively when near 60 mins
     const interval = setInterval(() => {
       const elapsedMinutes = Math.floor((Date.now() - joinedAt) / 60000);
@@ -225,11 +251,15 @@ export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProp
 
   if (error) {
     return (
-      <div className="h-full rounded-2xl border border-[color:var(--hairline)] flex items-center justify-center"
-        style={{ background: "linear-gradient(135deg, var(--surface), #0F1729)" }}>
+      <div
+        className="h-full rounded-2xl border border-[color:var(--hairline)] flex items-center justify-center"
+        style={{ background: "linear-gradient(135deg, var(--surface), #0F1729)" }}
+      >
         <div className="text-center max-w-sm px-6">
-          <div className="mx-auto h-16 w-16 rounded-2xl flex items-center justify-center"
-            style={{ background: "color-mix(in oklab, var(--crimson) 15%, var(--surface-2))" }}>
+          <div
+            className="mx-auto h-16 w-16 rounded-2xl flex items-center justify-center"
+            style={{ background: "color-mix(in oklab, var(--crimson) 15%, var(--surface-2))" }}
+          >
             <VideoOff className="h-7 w-7" style={{ color: "var(--crimson)" }} />
           </div>
           <div className="mt-4 font-display font-bold text-xl">Connection failed</div>
@@ -247,149 +277,227 @@ export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProp
   }
 
   return (
-    <div className="h-full flex flex-col rounded-2xl overflow-hidden border border-[color:var(--hairline)] relative"
-      style={{ background: "#0B1120" }}>
-
+    <div
+      className="h-full flex flex-col rounded-2xl overflow-hidden border border-[color:var(--hairline)] relative"
+      style={{ background: "#0B1120" }}
+    >
       {/* ── Session Summary overlay (covers Jitsi promo) ── */}
-      {sessionEnded && (() => {
-        const { minutes, seconds } = getElapsedTime();
-        
-        if (limitReached) {
-          return (
-            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center"
-              style={{ background: "linear-gradient(135deg, #0B1120 0%, #2a0a18 40%, #0B1120 100%)" }}>
-              <div className="h-20 w-20 rounded-full flex items-center justify-center mb-6 shadow-2xl"
-                style={{ background: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.5)" }}>
-                <Clock className="h-8 w-8" style={{ color: "#FF3B30" }} />
+      {sessionEnded &&
+        (() => {
+          const { minutes, seconds } = getElapsedTime();
+
+          if (limitReached) {
+            return (
+              <div
+                className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center"
+                style={{
+                  background: "linear-gradient(135deg, #0B1120 0%, #2a0a18 40%, #0B1120 100%)",
+                }}
+              >
+                <div
+                  className="h-20 w-20 rounded-full flex items-center justify-center mb-6 shadow-2xl"
+                  style={{
+                    background: "rgba(255,59,48,0.1)",
+                    border: "1px solid rgba(255,59,48,0.5)",
+                  }}
+                >
+                  <Clock className="h-8 w-8" style={{ color: "#FF3B30" }} />
+                </div>
+                <h2
+                  className="font-display font-bold text-3xl mb-3"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Daily Limit Reached ⏱️
+                </h2>
+                <p
+                  className="text-base max-w-sm mb-8"
+                  style={{ color: "var(--text-muted)", lineHeight: 1.6 }}
+                >
+                  You've hit your 60-minute daily limit on the Free plan. Don't lose your momentum.
+                  Upgrade to Pro for unlimited study sessions.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={() => (window.location.href = "/pricing")}
+                    className="px-8 py-3.5 rounded-xl text-sm font-bold transition flex items-center gap-2"
+                    style={{
+                      background: "#FF6B9E",
+                      color: "#0B1120",
+                      boxShadow: "0 4px 20px rgba(201,165,78,0.3)",
+                    }}
+                  >
+                    <Zap className="h-4 w-4" /> Upgrade to Pro
+                  </button>
+                  <button
+                    onClick={() => window.history.back()}
+                    className="px-8 py-3.5 rounded-xl text-sm font-semibold border transition hover:bg-white/5"
+                    style={{ borderColor: "var(--hairline)", color: "var(--text-primary)" }}
+                  >
+                    Leave Room
+                  </button>
+                </div>
               </div>
-              <h2 className="font-display font-bold text-3xl mb-3" style={{ color: "var(--text-primary)" }}>
-                Daily Limit Reached ⏱️
+            );
+          }
+
+          return (
+            <div
+              className="absolute inset-0 z-30 flex flex-col items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, #0B1120 0%, #1a1a3e 50%, #0B1120 100%)",
+              }}
+            >
+              {/* Trophy icon */}
+              <div
+                className="h-20 w-20 rounded-full flex items-center justify-center mb-6"
+                style={{ background: "rgba(201,165,78,0.15)", border: "2px solid #FF6B9E" }}
+              >
+                <Trophy className="h-9 w-9" style={{ color: "#FF6B9E" }} />
+              </div>
+
+              <h2
+                className="font-display font-bold text-2xl mb-1"
+                style={{ color: "var(--text-primary)" }}
+              >
+                Session Complete! 🎉
               </h2>
-              <p className="text-base max-w-sm mb-8" style={{ color: "var(--text-muted)", lineHeight: 1.6 }}>
-                You've hit your 60-minute daily limit on the Free plan. 
-                Don't lose your momentum. Upgrade to Pro for unlimited study sessions.
+              <p className="text-sm mb-8 relative group" style={{ color: "var(--text-muted)" }}>
+                Great work staying focused.
+                {inReverseTrial && (
+                  <span className="block mt-1 text-xs font-bold" style={{ color: "#FF6B9E" }}>
+                    (Trial ends in {trialDaysLeft} days. Don't lose unlimited sessions!)
+                  </span>
+                )}
               </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                 <button onClick={() => window.location.href = "/pricing"}
-                  className="px-8 py-3.5 rounded-xl text-sm font-bold transition flex items-center gap-2"
-                  style={{ background: "#FF6B9E", color: "#0B1120", boxShadow: "0 4px 20px rgba(201,165,78,0.3)" }}>
-                  <Zap className="h-4 w-4" /> Upgrade to Pro
-                </button>
-                <button onClick={() => window.history.back()}
-                  className="px-8 py-3.5 rounded-xl text-sm font-semibold border transition hover:bg-white/5"
-                  style={{ borderColor: "var(--hairline)", color: "var(--text-primary)" }}>
-                  Leave Room
+
+              {/* Stats cards */}
+              <div className="flex gap-4 mb-8">
+                <div
+                  className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl border"
+                  style={{ borderColor: "var(--hairline)", background: "rgba(255,255,255,0.03)" }}
+                >
+                  <Clock className="h-5 w-5" style={{ color: "#FF6B9E" }} />
+                  <span
+                    className="font-display font-bold text-2xl"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {minutes}:{seconds.toString().padStart(2, "0")}
+                  </span>
+                  <span
+                    className="text-[10px] uppercase tracking-widest font-mono"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    Focus Time
+                  </span>
+                </div>
+
+                <div
+                  className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl border"
+                  style={{ borderColor: "var(--hairline)", background: "rgba(255,255,255,0.03)" }}
+                >
+                  <CheckCircle className="h-5 w-5" style={{ color: "#10B981" }} />
+                  <span
+                    className="font-display font-bold text-2xl"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    —
+                  </span>
+                  <span
+                    className="text-[10px] uppercase tracking-widest font-mono"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    Tasks Done
+                  </span>
+                </div>
+
+                <div
+                  className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl border"
+                  style={{ borderColor: "var(--hairline)", background: "rgba(255,255,255,0.03)" }}
+                >
+                  <Users className="h-5 w-5" style={{ color: "#8B5CF6" }} />
+                  <span
+                    className="font-display font-bold text-2xl"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {participantCount}
+                  </span>
+                  <span
+                    className="text-[10px] uppercase tracking-widest font-mono"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    Studied With
+                  </span>
+                </div>
+              </div>
+
+              {/* Motivational */}
+              <p
+                className="text-sm max-w-sm text-center mb-8"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                {minutes >= 25
+                  ? "🔥 You crushed a full focus session! Keep this streak going."
+                  : minutes >= 10
+                    ? "💪 Solid session! Every focused minute counts."
+                    : "📚 Short but sweet. Try a 25-min Pomodoro next time!"}
+              </p>
+
+              {/* Leave / Upgrade buttons */}
+              <div className="flex gap-4">
+                {inReverseTrial ? (
+                  <button
+                    onClick={() => (window.location.href = "/pricing")}
+                    className="px-8 py-3.5 rounded-xl text-sm font-bold transition flex items-center gap-2"
+                    style={{
+                      background: "transparent",
+                      color: "#FF6B9E",
+                      border: "1px solid #FF6B9E",
+                    }}
+                  >
+                    <Zap className="h-4 w-4" /> Lock in Pro Price
+                  </button>
+                ) : null}
+                <button
+                  onClick={() => window.history.back()}
+                  className="px-8 py-3.5 rounded-xl text-sm font-semibold transition hover:opacity-90"
+                  style={{
+                    background: !inReverseTrial ? "#FF6B9E" : "rgba(255,255,255,0.05)",
+                    color: !inReverseTrial ? "#0B1120" : "var(--text-primary)",
+                  }}
+                >
+                  ← Leave Room
                 </button>
               </div>
             </div>
           );
-        }
-
-        return (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #0B1120 0%, #1a1a3e 50%, #0B1120 100%)" }}>
-            
-            {/* Trophy icon */}
-            <div className="h-20 w-20 rounded-full flex items-center justify-center mb-6"
-              style={{ background: "rgba(201,165,78,0.15)", border: "2px solid #FF6B9E" }}>
-              <Trophy className="h-9 w-9" style={{ color: "#FF6B9E" }} />
-            </div>
-
-            <h2 className="font-display font-bold text-2xl mb-1" style={{ color: "var(--text-primary)" }}>
-              Session Complete! 🎉
-            </h2>
-            <p className="text-sm mb-8 relative group" style={{ color: "var(--text-muted)" }}>
-              Great work staying focused. 
-              {inReverseTrial && (
-                <span className="block mt-1 text-xs font-bold" style={{ color: "#FF6B9E" }}>
-                  (Trial ends in {trialDaysLeft} days. Don't lose unlimited sessions!)
-                </span>
-              )}
-            </p>
-
-            {/* Stats cards */}
-            <div className="flex gap-4 mb-8">
-              <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl border"
-                style={{ borderColor: "var(--hairline)", background: "rgba(255,255,255,0.03)" }}>
-                <Clock className="h-5 w-5" style={{ color: "#FF6B9E" }} />
-                <span className="font-display font-bold text-2xl" style={{ color: "var(--text-primary)" }}>
-                  {minutes}:{seconds.toString().padStart(2, "0")}
-                </span>
-                <span className="text-[10px] uppercase tracking-widest font-mono" style={{ color: "var(--text-muted)" }}>
-                  Focus Time
-                </span>
-              </div>
-
-              <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl border"
-                style={{ borderColor: "var(--hairline)", background: "rgba(255,255,255,0.03)" }}>
-                <CheckCircle className="h-5 w-5" style={{ color: "#10B981" }} />
-                <span className="font-display font-bold text-2xl" style={{ color: "var(--text-primary)" }}>
-                  —
-                </span>
-                <span className="text-[10px] uppercase tracking-widest font-mono" style={{ color: "var(--text-muted)" }}>
-                  Tasks Done
-                </span>
-              </div>
-
-              <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl border"
-                style={{ borderColor: "var(--hairline)", background: "rgba(255,255,255,0.03)" }}>
-                <Users className="h-5 w-5" style={{ color: "#8B5CF6" }} />
-                <span className="font-display font-bold text-2xl" style={{ color: "var(--text-primary)" }}>
-                  {participantCount}
-                </span>
-                <span className="text-[10px] uppercase tracking-widest font-mono" style={{ color: "var(--text-muted)" }}>
-                  Studied With
-                </span>
-              </div>
-            </div>
-
-            {/* Motivational */}
-            <p className="text-sm max-w-sm text-center mb-8" style={{ color: "var(--text-secondary)" }}>
-              {minutes >= 25
-                ? "🔥 You crushed a full focus session! Keep this streak going."
-                : minutes >= 10
-                  ? "💪 Solid session! Every focused minute counts."
-                  : "📚 Short but sweet. Try a 25-min Pomodoro next time!"}
-            </p>
-
-            {/* Leave / Upgrade buttons */}
-            <div className="flex gap-4">
-              {inReverseTrial ? (
-                <button
-                  onClick={() => window.location.href = "/pricing"}
-                  className="px-8 py-3.5 rounded-xl text-sm font-bold transition flex items-center gap-2"
-                  style={{ background: "transparent", color: "#FF6B9E", border: "1px solid #FF6B9E" }}>
-                  <Zap className="h-4 w-4" /> Lock in Pro Price
-                </button>
-              ) : null}
-              <button
-                onClick={() => window.history.back()}
-                className="px-8 py-3.5 rounded-xl text-sm font-semibold transition hover:opacity-90"
-                style={{ background: !inReverseTrial ? "#FF6B9E" : "rgba(255,255,255,0.05)", color: !inReverseTrial ? "#0B1120" : "var(--text-primary)" }}>
-                ← Leave Room
-              </button>
-            </div>
-          </div>
-        );
-      })()}
+        })()}
 
       {/* Loading overlay */}
       {loading && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center"
-          style={{ background: "linear-gradient(135deg, var(--surface), #0F1729)" }}>
+        <div
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center"
+          style={{ background: "linear-gradient(135deg, var(--surface), #0F1729)" }}
+        >
           <div className="relative h-20 w-20">
             <div className="absolute inset-0 rounded-full border-2 border-[color:var(--hairline)]" />
-            <div className="absolute inset-0 rounded-full border-2 border-transparent"
-              style={{ borderTopColor: "#FF6B9E", animation: "spin-slow 1.2s linear infinite" }} />
+            <div
+              className="absolute inset-0 rounded-full border-2 border-transparent"
+              style={{ borderTopColor: "#FF6B9E", animation: "spin-slow 1.2s linear infinite" }}
+            />
             <div className="absolute inset-0 flex items-center justify-center">
               <Video className="h-7 w-7" style={{ color: "#FF6B9E" }} />
             </div>
           </div>
           <div className="mt-5 font-display font-bold text-lg">Connecting to room…</div>
-          <div className="mt-1 text-sm text-[color:var(--text-secondary)]">Setting up your camera</div>
+          <div className="mt-1 text-sm text-[color:var(--text-secondary)]">
+            Setting up your camera
+          </div>
           <div className="mt-6 w-48 h-1 rounded-full overflow-hidden bg-[color:var(--surface-2)]">
-            <div className="h-full bg-pink-gradient" style={{ animation: "shimmer-bar 2s ease-in-out infinite", width: "40%" }} />
+            <div
+              className="h-full bg-pink-gradient"
+              style={{ animation: "shimmer-bar 2s ease-in-out infinite", width: "40%" }}
+            />
           </div>
         </div>
       )}
@@ -406,9 +514,10 @@ export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProp
       />
 
       {/* Custom bottom toolbar */}
-      <div className="h-16 px-4 flex items-center justify-between border-t border-[color:var(--hairline)]"
-        style={{ background: "color-mix(in oklab, var(--surface) 90%, transparent)" }}>
-
+      <div
+        className="h-16 px-4 flex items-center justify-between border-t border-[color:var(--hairline)]"
+        style={{ background: "color-mix(in oklab, var(--surface) 90%, transparent)" }}
+      >
         {/* Participant count */}
         <div className="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
           <Users className="h-4 w-4" style={{ color: "#FF6B9E" }} />
@@ -419,21 +528,44 @@ export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProp
 
         {/* Controls */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={toggleAudio}
-            className="h-10 w-10 rounded-full flex items-center justify-center transition"
-            style={{
-              background: isAudioMuted
-                ? "color-mix(in oklab, var(--crimson) 20%, var(--surface-2))"
-                : "var(--surface-2)",
-              border: `1px solid ${isAudioMuted ? "color-mix(in oklab, var(--crimson) 40%, transparent)" : "var(--hairline)"}`,
-            }}
-            aria-label={isAudioMuted ? "Unmute" : "Mute"}
-          >
-            {isAudioMuted
-              ? <MicOff className="h-4 w-4" style={{ color: "var(--crimson)" }} />
-              : <Mic className="h-4 w-4" />}
-          </button>
+          {/* Mic button — hidden for category rooms, shown for match rooms */}
+          {allowMic && (
+            <button
+              onClick={toggleAudio}
+              className="h-10 w-10 rounded-full flex items-center justify-center transition"
+              style={{
+                background: isAudioMuted
+                  ? "color-mix(in oklab, var(--crimson) 20%, var(--surface-2))"
+                  : "var(--surface-2)",
+                border: `1px solid ${
+                  isAudioMuted
+                    ? "color-mix(in oklab, var(--crimson) 40%, transparent)"
+                    : "var(--hairline)"
+                }`,
+              }}
+              aria-label={isAudioMuted ? "Unmute" : "Mute"}
+            >
+              {isAudioMuted ? (
+                <MicOff className="h-4 w-4" style={{ color: "var(--crimson)" }} />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </button>
+          )}
+          {/* Mic locked indicator for category rooms */}
+          {!allowMic && (
+            <div
+              className="h-10 w-10 rounded-full flex items-center justify-center cursor-not-allowed"
+              title="Mic disabled — silent study room"
+              style={{
+                background: "color-mix(in oklab, var(--surface-2) 80%, transparent)",
+                border: "1px solid var(--hairline)",
+                opacity: 0.4,
+              }}
+            >
+              <MicOff className="h-4 w-4" style={{ color: "var(--text-muted)" }} />
+            </div>
+          )}
 
           <button
             onClick={toggleVideo}
@@ -446,9 +578,11 @@ export function JitsiMeet({ roomName, displayName, categoryName }: JitsiMeetProp
             }}
             aria-label={isVideoMuted ? "Start Camera" : "Stop Camera"}
           >
-            {isVideoMuted
-              ? <VideoOff className="h-4 w-4" style={{ color: "var(--crimson)" }} />
-              : <Video className="h-4 w-4" />}
+            {isVideoMuted ? (
+              <VideoOff className="h-4 w-4" style={{ color: "var(--crimson)" }} />
+            ) : (
+              <Video className="h-4 w-4" />
+            )}
           </button>
 
           <button

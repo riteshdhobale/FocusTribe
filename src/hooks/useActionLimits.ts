@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { getTodaySwipeCounts, getMonthlyPromptCount } from '@/lib/profiles';
+import { useState, useEffect } from "react";
+import { getTodaySwipeCounts, getMonthlyPromptCount } from "@/lib/profiles";
 
 export const MAX_RIGHT_SWIPES = 5;
 export const MAX_LEFT_SWIPES = 20;

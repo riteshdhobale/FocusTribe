@@ -18,7 +18,8 @@ export function ReportButton({ userId, userName, context, variant = "icon" }: Re
         <button
           onClick={() => setIsOpen(true)}
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition hover:opacity-80"
-          style={{ color: "#EF4444" }}>
+          style={{ color: "#EF4444" }}
+        >
           <Flag className="h-4 w-4" />
           Report {userName}
         </button>
@@ -39,7 +40,8 @@ export function ReportButton({ userId, userName, context, variant = "icon" }: Re
         <button
           onClick={() => setIsOpen(true)}
           className="flex items-center gap-1.5 text-xs font-medium transition hover:opacity-80"
-          style={{ color: "var(--text-muted)" }}>
+          style={{ color: "var(--text-muted)" }}
+        >
           <Flag className="h-3 w-3" />
           Report
         </button>
@@ -58,11 +60,15 @@ export function ReportButton({ userId, userName, context, variant = "icon" }: Re
   return (
     <>
       <button
-        onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(true);
+        }}
         className="h-8 w-8 rounded-full flex items-center justify-center transition hover:opacity-80"
         style={{ background: "rgba(239,68,68,0.1)" }}
         aria-label={`Report ${userName}`}
-        title={`Report ${userName}`}>
+        title={`Report ${userName}`}
+      >
         <Flag className="h-3.5 w-3.5" style={{ color: "#EF4444" }} />
       </button>
       <ReportModal

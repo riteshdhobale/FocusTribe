@@ -7,16 +7,16 @@
 //   2. Map timezone → region (india, usa, uk, eu, sea, mena, row)
 //   3. Return pricing with correct currency symbol, amounts, and currency code
 
-export type PricingRegion = "india" | "usa" | "uk" | "eu" | "sea" | "mena" | "row";
+export type PricingRegion = "india" | "usa" | "uk" | "eu" | "sea" | "mena" | "anz" | "row";
 
 export type RegionPricing = {
   region: PricingRegion;
-  currency: string;        // ISO 4217 code for Razorpay: "INR", "USD", "GBP", "EUR"
-  currencySymbol: string;  // Display symbol: "₹", "$", "£", "€"
+  currency: string; // ISO 4217 code for Razorpay: "INR", "USD", "GBP", "EUR"
+  currencySymbol: string; // Display symbol: "₹", "$", "£", "€"
   plans: {
-    weekly:  { amount: number; mrp: number; perDay: string };
-    pro:     { amount: number; mrp: number; perDay: string };
-    campus:  { amount: number; mrp: number; perDay: string; perMonth: string };
+    weekly: { amount: number; mrp: number; perDay: string };
+    pro: { amount: number; mrp: number; perDay: string };
+    campus: { amount: number; mrp: number; perDay: string; perMonth: string };
   };
 };
 
@@ -83,10 +83,21 @@ const TIMEZONE_REGION_MAP: Record<string, PricingRegion> = {
   "Asia/Kuwait": "mena",
   "Africa/Cairo": "mena",
 
-  // Australia & NZ → treat as ROW (USD)
-  "Australia/Sydney": "row",
-  "Australia/Melbourne": "row",
-  "Pacific/Auckland": "row",
+  // Australia & New Zealand → own region (AUD-equivalent USD pricing)
+  "Australia/Sydney": "anz",
+  "Australia/Melbourne": "anz",
+  "Australia/Brisbane": "anz",
+  "Australia/Perth": "anz",
+  "Australia/Adelaide": "anz",
+  "Pacific/Auckland": "anz",
+
+  // Latin America → treat as ROW (USD)
+  "America/Sao_Paulo": "row",
+  "America/Argentina/Buenos_Aires": "row",
+  "America/Mexico_City": "row",
+  "America/Bogota": "row",
+  "America/Lima": "row",
+  "America/Santiago": "row",
 };
 
 // ─── Pricing tables per region ─────────────────────────────────────
@@ -96,9 +107,9 @@ const REGION_PRICING: Record<PricingRegion, RegionPricing> = {
     currency: "INR",
     currencySymbol: "₹",
     plans: {
-      weekly:  { amount: 5900,    mrp: 29900,    perDay: "₹8/day" },
-      pro:     { amount: 19900,   mrp: 79900,    perDay: "₹6.6/day" },
-      campus:  { amount: 149900,  mrp: 499900,   perDay: "₹4.1/day", perMonth: "₹125" },
+      weekly: { amount: 5900, mrp: 19900, perDay: "₹8/day" },
+      pro: { amount: 19900, mrp: 79900, perDay: "₹6.6/day" },
+      campus: { amount: 149900, mrp: 499900, perDay: "₹4.1/day", perMonth: "₹125" },
     },
   },
   usa: {
@@ -106,9 +117,9 @@ const REGION_PRICING: Record<PricingRegion, RegionPricing> = {
     currency: "USD",
     currencySymbol: "$",
     plans: {
-      weekly:  { amount: 299,    mrp: 799,    perDay: "$0.43/day" },
-      pro:     { amount: 999,    mrp: 2999,   perDay: "$0.33/day" },
-      campus:  { amount: 7999,   mrp: 19999,  perDay: "$0.22/day", perMonth: "$6.67" },
+      weekly: { amount: 299, mrp: 799, perDay: "$0.43/day" },
+      pro: { amount: 999, mrp: 2999, perDay: "$0.33/day" },
+      campus: { amount: 7999, mrp: 19999, perDay: "$0.22/day", perMonth: "$6.67" },
     },
   },
   uk: {
@@ -116,9 +127,9 @@ const REGION_PRICING: Record<PricingRegion, RegionPricing> = {
     currency: "GBP",
     currencySymbol: "£",
     plans: {
-      weekly:  { amount: 249,    mrp: 599,    perDay: "£0.36/day" },
-      pro:     { amount: 799,    mrp: 2499,   perDay: "£0.27/day" },
-      campus:  { amount: 5999,   mrp: 14999,  perDay: "£0.16/day", perMonth: "£5.00" },
+      weekly: { amount: 249, mrp: 699, perDay: "£0.36/day" },
+      pro: { amount: 799, mrp: 2999, perDay: "£0.27/day" },
+      campus: { amount: 5999, mrp: 17999, perDay: "£0.16/day", perMonth: "£5.00" },
     },
   },
   eu: {
@@ -126,9 +137,9 @@ const REGION_PRICING: Record<PricingRegion, RegionPricing> = {
     currency: "EUR",
     currencySymbol: "€",
     plans: {
-      weekly:  { amount: 299,    mrp: 699,    perDay: "€0.43/day" },
-      pro:     { amount: 999,    mrp: 2799,   perDay: "€0.33/day" },
-      campus:  { amount: 7999,   mrp: 16999,  perDay: "€0.22/day", perMonth: "€6.67" },
+      weekly: { amount: 299, mrp: 899, perDay: "€0.43/day" },
+      pro: { amount: 999, mrp: 3499, perDay: "€0.33/day" },
+      campus: { amount: 7999, mrp: 21999, perDay: "€0.22/day", perMonth: "€6.67" },
     },
   },
   sea: {
@@ -136,9 +147,9 @@ const REGION_PRICING: Record<PricingRegion, RegionPricing> = {
     currency: "USD",
     currencySymbol: "$",
     plans: {
-      weekly:  { amount: 199,    mrp: 499,    perDay: "$0.28/day" },
-      pro:     { amount: 599,    mrp: 1999,   perDay: "$0.20/day" },
-      campus:  { amount: 4999,   mrp: 11999,  perDay: "$0.14/day", perMonth: "$4.17" },
+      weekly: { amount: 199, mrp: 499, perDay: "$0.28/day" },
+      pro: { amount: 599, mrp: 1999, perDay: "$0.20/day" },
+      campus: { amount: 4999, mrp: 11999, perDay: "$0.14/day", perMonth: "$4.17" },
     },
   },
   mena: {
@@ -146,9 +157,19 @@ const REGION_PRICING: Record<PricingRegion, RegionPricing> = {
     currency: "USD",
     currencySymbol: "$",
     plans: {
-      weekly:  { amount: 249,    mrp: 599,    perDay: "$0.36/day" },
-      pro:     { amount: 799,    mrp: 2499,   perDay: "$0.27/day" },
-      campus:  { amount: 5999,   mrp: 14999,  perDay: "$0.16/day", perMonth: "$5.00" },
+      weekly: { amount: 249, mrp: 599, perDay: "$0.36/day" },
+      pro: { amount: 799, mrp: 2499, perDay: "$0.27/day" },
+      campus: { amount: 5999, mrp: 14999, perDay: "$0.16/day", perMonth: "$5.00" },
+    },
+  },
+  anz: {
+    region: "anz",
+    currency: "USD",
+    currencySymbol: "$",
+    plans: {
+      weekly: { amount: 349, mrp: 899, perDay: "$0.50/day" },
+      pro: { amount: 1299, mrp: 3499, perDay: "$0.43/day" },
+      campus: { amount: 9999, mrp: 24999, perDay: "$0.27/day", perMonth: "$8.33" },
     },
   },
   row: {
@@ -156,9 +177,9 @@ const REGION_PRICING: Record<PricingRegion, RegionPricing> = {
     currency: "USD",
     currencySymbol: "$",
     plans: {
-      weekly:  { amount: 299,    mrp: 799,    perDay: "$0.43/day" },
-      pro:     { amount: 999,    mrp: 2999,   perDay: "$0.33/day" },
-      campus:  { amount: 7999,   mrp: 19999,  perDay: "$0.22/day", perMonth: "$6.67" },
+      weekly: { amount: 299, mrp: 799, perDay: "$0.43/day" },
+      pro: { amount: 999, mrp: 2999, perDay: "$0.33/day" },
+      campus: { amount: 7999, mrp: 19999, perDay: "$0.22/day", perMonth: "$6.67" },
     },
   },
 };
@@ -183,7 +204,12 @@ export function detectRegion(): PricingRegion {
     if (tz?.startsWith("America/")) return "usa";
     if (tz?.startsWith("Europe/London") || tz?.startsWith("Europe/Dublin")) return "uk";
     if (tz?.startsWith("Europe/")) return "eu";
-    if (tz?.startsWith("Asia/Singapore") || tz?.startsWith("Asia/Jakarta") || tz?.startsWith("Asia/Bangkok")) return "sea";
+    if (
+      tz?.startsWith("Asia/Singapore") ||
+      tz?.startsWith("Asia/Jakarta") ||
+      tz?.startsWith("Asia/Bangkok")
+    )
+      return "sea";
     if (tz?.startsWith("Asia/Dubai") || tz?.startsWith("Asia/Riyadh")) return "mena";
 
     return "row";

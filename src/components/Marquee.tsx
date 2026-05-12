@@ -1,6 +1,17 @@
 const items = [
-  "NEET UG", "JEE Advanced", "UPSC CSE", "CAT 2025", "GATE CSE",
-  "CA Inter", "CLAT", "GMAT", "SSC CGL", "FMGE", "NEET PG", "Bank PO", "DSA Daily",
+  "NEET UG",
+  "JEE Advanced",
+  "UPSC CSE",
+  "CAT 2025",
+  "GATE CSE",
+  "CA Inter",
+  "CLAT",
+  "GMAT",
+  "SSC CGL",
+  "FMGE",
+  "NEET PG",
+  "Bank PO",
+  "DSA Daily",
 ];
 
 export function Marquee() {

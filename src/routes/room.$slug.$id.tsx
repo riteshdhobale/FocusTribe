@@ -2,7 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getCategory } from "@/lib/categories";
 import { fetchRoomById, joinRoom, leaveRoom, leaveRoomBeacon, type StudyRoom } from "@/lib/rooms";
-import { ArrowLeft, Pause, Play, RotateCcw, SkipForward, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  ArrowLeft,
+  Pause,
+  Play,
+  RotateCcw,
+  SkipForward,
+  Plus,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import { JitsiMeet } from "@/components/JitsiMeet";
 import { useAuth } from "@/lib/useAuth";
 
@@ -28,13 +38,13 @@ function StudyRoomView() {
   const { slug, id } = Route.useParams();
   const cat = getCategory(slug);
   const { user, isAuthenticated } = useAuth();
-  
+
   const [room, setRoom] = useState<StudyRoom | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Load room data
   useEffect(() => {
-    fetchRoomById(id).then(res => {
+    fetchRoomById(id).then((res) => {
       if (res) {
         setRoom(res);
       } else if (id.length > 10) {
@@ -48,7 +58,7 @@ function StudyRoomView() {
           capacity: 2,
           created_by: "system",
           is_active: true,
-          participantCount: 1
+          participantCount: 1,
         });
       }
       setLoading(false);
@@ -59,7 +69,9 @@ function StudyRoomView() {
   useEffect(() => {
     if (isAuthenticated) {
       joinRoom(id);
-      return () => { leaveRoom(id); };
+      return () => {
+        leaveRoom(id);
+      };
     }
   }, [id, isAuthenticated]);
 
@@ -82,11 +94,21 @@ function StudyRoomView() {
   // Generate a deterministic Jitsi room name
   const jitsiRoomName = `studydate-${slug}-${id}`.replace(/[^a-zA-Z0-9-]/g, "");
 
+  // Private 1-on-1 match rooms get mic enabled; category rooms are silent
+  const isPrivateRoom =
+    room?.name === "Private Study Date" ||
+    (room?.capacity === 2 && id.length > 20);
+
   // Pomodoro — with localStorage persistence
   const timerKey = `ft_timer_${slug}_${id}`;
   const [mode, setMode] = useState<Mode>(() => {
     if (typeof window === "undefined") return "focus";
-    try { const s = JSON.parse(localStorage.getItem(timerKey) || "{}"); return s.mode || "focus"; } catch { return "focus"; }
+    try {
+      const s = JSON.parse(localStorage.getItem(timerKey) || "{}");
+      return s.mode || "focus";
+    } catch {
+      return "focus";
+    }
   });
   const [secs, setSecs] = useState(() => {
     if (typeof window === "undefined") return DURATIONS.focus;
@@ -118,7 +140,9 @@ function StudyRoomView() {
         return s - 1;
       });
     }, 1000);
-    return () => { if (ref.current) clearInterval(ref.current); };
+    return () => {
+      if (ref.current) clearInterval(ref.current);
+    };
   }, [running]);
 
   // When mode changes manually (not from persistence), reset to full duration
@@ -139,7 +163,10 @@ function StudyRoomView() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const raw = localStorage.getItem(storeKey);
-    if (raw) try { setTasks(JSON.parse(raw)); } catch {}
+    if (raw)
+      try {
+        setTasks(JSON.parse(raw));
+      } catch {}
   }, [storeKey]);
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem(storeKey, JSON.stringify(tasks));
@@ -152,14 +179,28 @@ function StudyRoomView() {
     setInput("");
   };
 
-  if (loading) return <div className="h-screen w-screen flex items-center justify-center bg-[color:var(--background)]">Loading room...</div>;
-  if (!room) return <div className="h-screen w-screen flex items-center justify-center bg-[color:var(--background)]">Room not found.</div>;
+  if (loading)
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-[color:var(--background)]">
+        Loading room...
+      </div>
+    );
+  if (!room)
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-[color:var(--background)]">
+        Room not found.
+      </div>
+    );
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-[color:var(--background)]">
       {/* top bar */}
       <div className="h-14 px-5 flex items-center justify-between border-b border-[color:var(--hairline)] glass-nav">
-        <Link to="/rooms/$slug" params={{ slug }} className="inline-flex items-center gap-2 text-sm text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)] transition">
+        <Link
+          to="/rooms/$slug"
+          params={{ slug }}
+          className="inline-flex items-center gap-2 text-sm text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)] transition"
+        >
           <ArrowLeft className="h-4 w-4" /> Leave
         </Link>
         <div className="text-sm text-center min-w-0 px-4">
@@ -174,11 +215,7 @@ function StudyRoomView() {
       <div className="flex-1 flex overflow-hidden relative">
         {/* Jitsi video */}
         <div className="flex-1 p-3 lg:p-5">
-          <JitsiMeet
-            roomName={jitsiRoomName}
-            displayName={userName}
-            categoryName={cat?.name}
-          />
+          <JitsiMeet roomName={jitsiRoomName} displayName={userName} categoryName={cat?.name} allowMic={isPrivateRoom} />
         </div>
 
         {/* Desktop sidebar — hidden on mobile */}
@@ -186,12 +223,14 @@ function StudyRoomView() {
           {/* timer */}
           <div className="surface-card p-5">
             <div className="flex gap-2 mb-5">
-              {(["focus","short","long"] as Mode[]).map((m) => (
+              {(["focus", "short", "long"] as Mode[]).map((m) => (
                 <button
                   key={m}
                   onClick={() => handleModeChange(m)}
                   className={`flex-1 text-xs py-1.5 btn-pill font-semibold transition ${
-                    mode === m ? "bg-rose-gradient text-[color:var(--primary-foreground)]" : "border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
+                    mode === m
+                      ? "bg-rose-gradient text-[color:var(--primary-foreground)]"
+                      : "border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
                   }`}
                 >
                   {m === "focus" ? "Focus" : m === "short" ? "Short" : "Long"}
@@ -202,11 +241,17 @@ function StudyRoomView() {
               {mm}:{ss}
             </div>
             <div className="mt-4 h-1.5 rounded-full overflow-hidden bg-[color:var(--surface-2)]">
-              <div className="h-full bg-rose-gradient transition-all" style={{ width: `${pct * 100}%` }} />
+              <div
+                className="h-full bg-rose-gradient transition-all"
+                style={{ width: `${pct * 100}%` }}
+              />
             </div>
             <div className="mt-5 flex items-center justify-center gap-3">
               <button
-                onClick={() => { setSecs(DURATIONS[mode]); setRunning(false); }}
+                onClick={() => {
+                  setSecs(DURATIONS[mode]);
+                  setRunning(false);
+                }}
                 className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center hover:border-[color:var(--rose-accent)] transition"
                 aria-label="Reset"
               >
@@ -222,7 +267,7 @@ function StudyRoomView() {
               </button>
               <button
                 onClick={() => {
-                  const order: Mode[] = ["focus","short","focus","short","focus","long"];
+                  const order: Mode[] = ["focus", "short", "focus", "short", "focus", "long"];
                   const next = order[(order.indexOf(mode) + 1) % order.length];
                   handleModeChange(next);
                 }}
@@ -236,37 +281,45 @@ function StudyRoomView() {
 
           {/* tasks */}
           <div className="surface-card flex-1 min-h-[260px] flex flex-col relative overflow-hidden">
-            
             {/* Notepad Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--hairline)] bg-[color:var(--surface-2)]">
               <div className="flex items-center gap-2 font-display font-bold text-white tracking-wide">
                 📋 Session Tasks
               </div>
               <span className="text-xs font-bold text-[color:var(--text-muted)]">
-                {tasks.filter(t => t.done).length} / {tasks.length}
+                {tasks.filter((t) => t.done).length} / {tasks.length}
               </span>
             </div>
 
             <div className="flex-1 space-y-1 overflow-y-auto px-4 py-3 relative z-10">
               {tasks.map((t) => (
-                <div key={t.id} className="group flex items-start gap-3 p-2 rounded-xl hover:bg-[color:var(--surface-2)] transition-colors">
+                <div
+                  key={t.id}
+                  className="group flex items-start gap-3 p-2 rounded-xl hover:bg-[color:var(--surface-2)] transition-colors"
+                >
                   <div className="pt-0.5 relative z-10">
                     <button
-                      onClick={() => setTasks((arr) => arr.map(x => x.id === t.id ? { ...x, done: !x.done } : x))}
+                      onClick={() =>
+                        setTasks((arr) =>
+                          arr.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)),
+                        )
+                      }
                       className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
-                        t.done 
-                          ? "border-[color:var(--emerald-live)] bg-[color:var(--emerald-live)]" 
+                        t.done
+                          ? "border-[color:var(--emerald-live)] bg-[color:var(--emerald-live)]"
                           : "border-slate-500 bg-[color:var(--background)] hover:border-[color:var(--rose-accent)]"
                       }`}
                     >
                       {t.done && <span className="text-[10px] text-white font-bold">✓</span>}
                     </button>
                   </div>
-                  <span className={`flex-1 text-sm mt-0.5 transition-colors ${t.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-200"}`}>
+                  <span
+                    className={`flex-1 text-sm mt-0.5 transition-colors ${t.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-200"}`}
+                  >
                     {t.text}
                   </span>
                   <button
-                    onClick={() => setTasks((arr) => arr.filter(x => x.id !== t.id))}
+                    onClick={() => setTasks((arr) => arr.filter((x) => x.id !== t.id))}
                     className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg text-[color:var(--text-muted)] hover:bg-rose-500/10 hover:text-[color:var(--crimson)] mt-[-4px]"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -279,7 +332,7 @@ function StudyRoomView() {
                 </div>
               )}
             </div>
-            
+
             {/* Input area */}
             <div className="p-4 border-t border-[color:var(--hairline)] bg-[color:var(--surface-2)] relative z-10">
               <form onSubmit={addTask} className="flex gap-2 relative">
@@ -313,22 +366,28 @@ function StudyRoomView() {
             boxShadow: running ? "0 4px 20px rgba(255,107,158,0.3)" : "0 4px 20px rgba(0,0,0,0.3)",
           }}
         >
-          <span className="font-display font-bold text-lg tabular-nums text-rose-gradient">{mm}:{ss}</span>
+          <span className="font-display font-bold text-lg tabular-nums text-rose-gradient">
+            {mm}:{ss}
+          </span>
           {showPanel ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
         </button>
 
         {/* Mobile slide-up panel */}
         {showPanel && (
-          <div className="lg:hidden fixed inset-x-0 bottom-0 z-30 max-h-[70vh] overflow-y-auto rounded-t-3xl border-t p-5 space-y-4 animate-in slide-in-from-bottom duration-300"
-            style={{ background: "var(--bg-main)", borderColor: "var(--hairline)" }}>
+          <div
+            className="lg:hidden fixed inset-x-0 bottom-0 z-30 max-h-[70vh] overflow-y-auto rounded-t-3xl border-t p-5 space-y-4 animate-in slide-in-from-bottom duration-300"
+            style={{ background: "var(--bg-main)", borderColor: "var(--hairline)" }}
+          >
             {/* Timer controls */}
             <div className="flex gap-2 mb-3">
-              {(["focus","short","long"] as Mode[]).map((m) => (
+              {(["focus", "short", "long"] as Mode[]).map((m) => (
                 <button
                   key={m}
                   onClick={() => handleModeChange(m)}
                   className={`flex-1 text-xs py-1.5 btn-pill font-semibold transition ${
-                    mode === m ? "bg-rose-gradient text-[color:var(--primary-foreground)]" : "border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
+                    mode === m
+                      ? "bg-rose-gradient text-[color:var(--primary-foreground)]"
+                      : "border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
                   }`}
                 >
                   {m === "focus" ? "Focus" : m === "short" ? "Short" : "Long"}
@@ -339,20 +398,38 @@ function StudyRoomView() {
               {mm}:{ss}
             </div>
             <div className="h-1.5 rounded-full overflow-hidden bg-[color:var(--surface-2)]">
-              <div className="h-full bg-rose-gradient transition-all" style={{ width: `${pct * 100}%` }} />
+              <div
+                className="h-full bg-rose-gradient transition-all"
+                style={{ width: `${pct * 100}%` }}
+              />
             </div>
             <div className="flex items-center justify-center gap-3">
-              <button onClick={() => { setSecs(DURATIONS[mode]); setRunning(false); }}
-                className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center" aria-label="Reset">
+              <button
+                onClick={() => {
+                  setSecs(DURATIONS[mode]);
+                  setRunning(false);
+                }}
+                className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center"
+                aria-label="Reset"
+              >
                 <RotateCcw className="h-4 w-4" />
               </button>
-              <button onClick={() => setRunning((r) => !r)}
+              <button
+                onClick={() => setRunning((r) => !r)}
                 className="h-12 w-12 rounded-full bg-rose-gradient text-[color:var(--primary-foreground)] flex items-center justify-center"
-                style={{ boxShadow: "var(--shadow-rose)" }} aria-label={running ? "Pause" : "Play"}>
+                style={{ boxShadow: "var(--shadow-rose)" }}
+                aria-label={running ? "Pause" : "Play"}
+              >
                 {running ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
               </button>
-              <button onClick={() => { const order: Mode[] = ["focus","short","focus","short","focus","long"]; handleModeChange(order[(order.indexOf(mode) + 1) % order.length]); }}
-                className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center" aria-label="Skip">
+              <button
+                onClick={() => {
+                  const order: Mode[] = ["focus", "short", "focus", "short", "focus", "long"];
+                  handleModeChange(order[(order.indexOf(mode) + 1) % order.length]);
+                }}
+                className="h-10 w-10 rounded-full border border-[color:var(--hairline)] flex items-center justify-center"
+                aria-label="Skip"
+              >
                 <SkipForward className="h-4 w-4" />
               </button>
             </div>
@@ -360,33 +437,47 @@ function StudyRoomView() {
             {/* Tasks */}
             <div className="pt-5 mt-2">
               <div className="surface-card flex-1 min-h-[200px] flex flex-col relative overflow-hidden">
-                
                 {/* Notepad Header */}
                 <div className="flex items-center justify-between px-4 py-3 bg-[color:var(--surface-2)] border-b border-[color:var(--hairline)]">
                   <div className="flex items-center gap-2 font-display font-bold text-white text-sm">
                     📋 Tasks
                   </div>
                   <span className="text-xs font-bold text-[color:var(--text-muted)]">
-                    {tasks.filter(t => t.done).length} / {tasks.length}
+                    {tasks.filter((t) => t.done).length} / {tasks.length}
                   </span>
                 </div>
 
                 <div className="flex-1 space-y-1 max-h-48 overflow-y-auto px-3 py-2 relative z-10">
                   {tasks.map((t) => (
-                    <div key={t.id} className="flex items-start gap-3 p-2 rounded-xl hover:bg-[color:var(--surface-2)] transition-colors">
+                    <div
+                      key={t.id}
+                      className="flex items-start gap-3 p-2 rounded-xl hover:bg-[color:var(--surface-2)] transition-colors"
+                    >
                       <div className="pt-0.5 relative z-10">
-                        <button onClick={() => setTasks((arr) => arr.map(x => x.id === t.id ? { ...x, done: !x.done } : x))}
+                        <button
+                          onClick={() =>
+                            setTasks((arr) =>
+                              arr.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)),
+                            )
+                          }
                           className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                            t.done 
-                              ? "border-[color:var(--emerald-live)] bg-[color:var(--emerald-live)]" 
+                            t.done
+                              ? "border-[color:var(--emerald-live)] bg-[color:var(--emerald-live)]"
                               : "border-slate-500 bg-[color:var(--background)]"
                           }`}
                         >
                           {t.done && <span className="text-[10px] text-white font-bold">✓</span>}
                         </button>
                       </div>
-                      <span className={`flex-1 text-sm mt-0.5 ${t.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-200"}`}>{t.text}</span>
-                      <button onClick={() => setTasks((arr) => arr.filter(x => x.id !== t.id))} className="p-1 text-[color:var(--text-muted)] mt-[-2px]">
+                      <span
+                        className={`flex-1 text-sm mt-0.5 ${t.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-200"}`}
+                      >
+                        {t.text}
+                      </span>
+                      <button
+                        onClick={() => setTasks((arr) => arr.filter((x) => x.id !== t.id))}
+                        className="p-1 text-[color:var(--text-muted)] mt-[-2px]"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -397,13 +488,21 @@ function StudyRoomView() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Input area */}
                 <div className="p-3 border-t border-[color:var(--hairline)] bg-[color:var(--surface-2)]">
                   <form onSubmit={addTask} className="flex items-center gap-2">
-                    <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Add a task…"
-                      className="flex-1 bg-[color:var(--background)] border border-[color:var(--hairline)] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[color:var(--rose-accent)] transition-colors shadow-inner" />
-                    <button type="submit" disabled={!input.trim()} className="h-10 w-10 shrink-0 rounded-xl bg-rose-gradient text-white flex items-center justify-center hover:opacity-90 transition disabled:opacity-50 shadow-md">
+                    <input
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="Add a task…"
+                      className="flex-1 bg-[color:var(--background)] border border-[color:var(--hairline)] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[color:var(--rose-accent)] transition-colors shadow-inner"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!input.trim()}
+                      className="h-10 w-10 shrink-0 rounded-xl bg-rose-gradient text-white flex items-center justify-center hover:opacity-90 transition disabled:opacity-50 shadow-md"
+                    >
                       <Plus className="h-5 w-5" strokeWidth={2.5} />
                     </button>
                   </form>

@@ -16,9 +16,9 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const PLANS: Record<string, { amount: number; currency: string; period: string }> = {
-  pro:    { amount: 14900,  currency: "INR", period: "monthly" },
+  pro: { amount: 14900, currency: "INR", period: "monthly" },
   campus: { amount: 118800, currency: "INR", period: "yearly" },
-  weekly: { amount: 2900,   currency: "INR", period: "weekly" },
+  weekly: { amount: 2900, currency: "INR", period: "weekly" },
 };
 
 const corsHeaders = {
@@ -45,7 +45,10 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
@@ -65,8 +68,12 @@ serve(async (req) => {
     }
 
     // Use client-specified amount/currency for geo-pricing, fallback to server defaults
-    const orderAmount = clientAmount && typeof clientAmount === "number" && clientAmount > 0 ? clientAmount : planConfig.amount;
-    const orderCurrency = clientCurrency && typeof clientCurrency === "string" ? clientCurrency : planConfig.currency;
+    const orderAmount =
+      clientAmount && typeof clientAmount === "number" && clientAmount > 0
+        ? clientAmount
+        : planConfig.amount;
+    const orderCurrency =
+      clientCurrency && typeof clientCurrency === "string" ? clientCurrency : planConfig.currency;
 
     // Check if user already has an active subscription
     const { data: existingSub } = await supabase
@@ -77,10 +84,15 @@ serve(async (req) => {
       .single();
 
     if (existingSub && existingSub.plan !== "free") {
-      return new Response(JSON.stringify({ error: "You already have an active subscription. Manage it from your profile." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: "You already have an active subscription. Manage it from your profile.",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Create Razorpay order
@@ -89,7 +101,7 @@ serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Basic ${credentials}`,
+        Authorization: `Basic ${credentials}`,
       },
       body: JSON.stringify({
         amount: orderAmount,
@@ -126,15 +138,17 @@ serve(async (req) => {
       metadata: { razorpay_order: order },
     });
 
-    return new Response(JSON.stringify({
-      orderId: order.id,
-      amount: orderAmount,
-      currency: orderCurrency,
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-
+    return new Response(
+      JSON.stringify({
+        orderId: order.id,
+        amount: orderAmount,
+        currency: orderCurrency,
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   } catch (err) {
     console.error("Error:", err);
     return new Response(JSON.stringify({ error: "Internal server error" }), {

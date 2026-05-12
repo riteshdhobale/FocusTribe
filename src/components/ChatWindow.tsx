@@ -31,19 +31,31 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
     import("@/lib/supabase").then(({ supabase }) => {
       channel = supabase
         .channel(`chat:${match.id}`)
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${match.id}` }, payload => {
-          const newMsg = payload.new;
-          setMessages(prev => {
-            if (prev.find(m => m.id === newMsg.id)) return prev;
-            return [...prev, {
-              id: newMsg.id,
-              matchId: newMsg.match_id,
-              senderId: newMsg.sender_id,
-              text: newMsg.is_filtered ? "[Message blocked by filter]" : newMsg.text,
-              timestamp: new Date(newMsg.created_at).getTime(),
-            }];
-          });
-        })
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `match_id=eq.${match.id}`,
+          },
+          (payload) => {
+            const newMsg = payload.new;
+            setMessages((prev) => {
+              if (prev.find((m) => m.id === newMsg.id)) return prev;
+              return [
+                ...prev,
+                {
+                  id: newMsg.id,
+                  matchId: newMsg.match_id,
+                  senderId: newMsg.sender_id,
+                  text: newMsg.is_filtered ? "[Message blocked by filter]" : newMsg.text,
+                  timestamp: new Date(newMsg.created_at).getTime(),
+                },
+              ];
+            });
+          },
+        )
         .subscribe();
     });
 
@@ -75,13 +87,13 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
       text: text,
       timestamp: Date.now(),
     };
-    setMessages(prev => [...prev, tempMsg]);
+    setMessages((prev) => [...prev, tempMsg]);
 
     try {
       await sendMessage(match.id, text);
     } catch (error) {
       // If error, remove optimistic message
-      setMessages(prev => prev.filter(m => m.id !== tempMsg.id));
+      setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
     }
   };
 
@@ -100,8 +112,10 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
   return (
     <div className="flex-1 flex flex-col h-full">
       {/* Chat header */}
-      <div className="px-5 py-3 flex items-center justify-between border-b border-[color:var(--hairline)]"
-        style={{ background: "var(--surface)" }}>
+      <div
+        className="px-5 py-3 flex items-center justify-between border-b border-[color:var(--hairline)]"
+        style={{ background: "var(--surface)" }}
+      >
         <div className="flex items-center gap-3">
           <div
             className="h-10 w-10 rounded-full flex items-center justify-center text-xl"
@@ -137,26 +151,36 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-3">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="h-16 w-16 rounded-full flex items-center justify-center mb-4"
-              style={{ background: "color-mix(in oklab, #F472B6 12%, var(--surface-2))" }}>
+            <div
+              className="h-16 w-16 rounded-full flex items-center justify-center mb-4"
+              style={{ background: "color-mix(in oklab, #F472B6 12%, var(--surface-2))" }}
+            >
               <Sparkles className="h-7 w-7" style={{ color: "#F472B6" }} />
             </div>
-            <div className="font-display font-bold text-lg mb-1">You matched with {partner.name}!</div>
+            <div className="font-display font-bold text-lg mb-1">
+              You matched with {partner.name}!
+            </div>
             <p className="text-sm text-[color:var(--text-secondary)] max-w-xs">
               Say hi and plan your first study date together. You both have common interests!
             </p>
           </div>
         )}
 
-        {messages.map(msg => {
+        {messages.map((msg) => {
           const isMine = msg.senderId === me?.id;
           return (
             <div key={msg.id} className={`flex w-full ${isMine ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] md:max-w-[75%] flex flex-col ${isMine ? "items-end" : "items-start"}`}>
-                <div className={`chat-bubble inline-block ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}`}>
+              <div
+                className={`max-w-[85%] md:max-w-[75%] flex flex-col ${isMine ? "items-end" : "items-start"}`}
+              >
+                <div
+                  className={`chat-bubble inline-block ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}`}
+                >
                   {msg.text}
                 </div>
-                <div className={`text-[10px] text-[color:var(--text-muted)] mt-1.5 ${isMine ? "text-right" : "text-left"}`}>
+                <div
+                  className={`text-[10px] text-[color:var(--text-muted)] mt-1.5 ${isMine ? "text-right" : "text-left"}`}
+                >
                   {formatTime(msg.timestamp)}
                 </div>
               </div>
@@ -169,7 +193,7 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
           <div className="flex justify-start">
             <div className="chat-bubble chat-bubble-theirs flex items-center gap-1.5 py-3 px-4">
               <div className="flex gap-1">
-                {[0, 1, 2].map(i => (
+                {[0, 1, 2].map((i) => (
                   <div
                     key={i}
                     className="h-2 w-2 rounded-full bg-[color:var(--text-muted)]"
@@ -187,7 +211,9 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
       {/* Input */}
       {match.status === "pending" ? (
         <div className="p-5 border-t border-[color:var(--hairline)] flex flex-col items-center gap-3 bg-[color:var(--surface)] text-center">
-          <p className="text-sm text-[color:var(--text-secondary)]">Accept {partner.name}'s request to start chatting and studying together.</p>
+          <p className="text-sm text-[color:var(--text-secondary)]">
+            Accept {partner.name}'s request to start chatting and studying together.
+          </p>
           <div className="flex items-center gap-3">
             <button
               onClick={async () => {
@@ -213,12 +239,15 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSend} className="p-4 border-t border-[color:var(--hairline)] relative"
-          style={{ background: "var(--surface)" }}>
+        <form
+          onSubmit={handleSend}
+          className="p-4 border-t border-[color:var(--hairline)] relative"
+          style={{ background: "var(--surface)" }}
+        >
           <div className="relative flex items-center">
             <input
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={(e) => setInput(e.target.value)}
               placeholder="Type a message..."
               className="flex-1 bg-[color:var(--surface-2)] border border-[color:var(--hairline)] rounded-full pl-5 pr-12 py-3.5 text-sm outline-none transition focus:border-[color:var(--rose-accent)] focus:ring-1 focus:ring-[color:var(--rose-accent)] placeholder:text-[color:var(--text-muted)]"
             />

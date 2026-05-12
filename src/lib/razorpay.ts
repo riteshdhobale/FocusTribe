@@ -13,9 +13,9 @@ export type PlanId = "pro" | "campus" | "weekly";
 
 // Static config for display names (amounts come from geoPrice)
 const PLAN_LABELS: Record<PlanId, { name: string; period: string; description: string }> = {
-  pro:    { name: "Pro",    period: "monthly", description: "Unlimited swipes, study rooms & streaks" },
-  campus: { name: "Campus", period: "yearly",  description: "Annual plan for verified students" },
-  weekly: { name: "Weekly", period: "weekly",  description: "7-day full Pro access, no auto-renew" },
+  pro: { name: "Pro", period: "monthly", description: "Unlimited swipes, study rooms & streaks" },
+  campus: { name: "Campus", period: "yearly", description: "Annual plan for verified students" },
+  weekly: { name: "Weekly", period: "weekly", description: "7-day full Pro access, no auto-renew" },
 };
 
 /**
@@ -35,10 +35,22 @@ export function getPlanConfig(planId: PlanId, region?: PricingRegion) {
 }
 
 // Keep PLAN_CONFIG as a backward-compatible getter (defaults to detected region)
-export const PLAN_CONFIG: Record<PlanId, { name: string; amount: number; period: string; description: string }> = {
-  get pro() { const p = getPlanConfig("pro"); return { name: p.name, amount: p.amount, period: p.period, description: p.description }; },
-  get campus() { const p = getPlanConfig("campus"); return { name: p.name, amount: p.amount, period: p.period, description: p.description }; },
-  get weekly() { const p = getPlanConfig("weekly"); return { name: p.name, amount: p.amount, period: p.period, description: p.description }; },
+export const PLAN_CONFIG: Record<
+  PlanId,
+  { name: string; amount: number; period: string; description: string }
+> = {
+  get pro() {
+    const p = getPlanConfig("pro");
+    return { name: p.name, amount: p.amount, period: p.period, description: p.description };
+  },
+  get campus() {
+    const p = getPlanConfig("campus");
+    return { name: p.name, amount: p.amount, period: p.period, description: p.description };
+  },
+  get weekly() {
+    const p = getPlanConfig("weekly");
+    return { name: p.name, amount: p.amount, period: p.period, description: p.description };
+  },
 };
 
 // ─── Load Razorpay SDK ─────────────────────────────────────────────
@@ -46,13 +58,19 @@ let razorpayLoaded = false;
 
 export function loadRazorpayScript(): Promise<void> {
   if (razorpayLoaded || typeof window === "undefined") return Promise.resolve();
-  if ((window as any).Razorpay) { razorpayLoaded = true; return Promise.resolve(); }
+  if ((window as any).Razorpay) {
+    razorpayLoaded = true;
+    return Promise.resolve();
+  }
 
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
-    script.onload = () => { razorpayLoaded = true; resolve(); };
+    script.onload = () => {
+      razorpayLoaded = true;
+      resolve();
+    };
     script.onerror = () => reject(new Error("Failed to load Razorpay SDK"));
     document.head.appendChild(script);
   });
@@ -63,8 +81,12 @@ export function isRazorpayConfigured(): boolean {
 }
 
 // ─── Create Order (via Supabase Edge Function) ─────────────────────
-async function createOrder(planId: PlanId): Promise<{ orderId: string; amount: number; currency: string }> {
-  const { data: { session } } = await supabase.auth.getSession();
+async function createOrder(
+  planId: PlanId,
+): Promise<{ orderId: string; amount: number; currency: string }> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   if (!session) throw new Error("Not authenticated");
 
   const planConfig = getPlanConfig(planId);
@@ -73,7 +95,7 @@ async function createOrder(planId: PlanId): Promise<{ orderId: string; amount: n
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${session.access_token}`,
+      Authorization: `Bearer ${session.access_token}`,
     },
     body: JSON.stringify({
       plan: planId,
@@ -97,14 +119,16 @@ async function verifyPayment(data: {
   razorpay_signature: string;
   plan: PlanId;
 }): Promise<{ success: boolean }> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   if (!session) throw new Error("Not authenticated");
 
   const res = await fetch(`${SUPABASE_URL}/functions/v1/verify-razorpay-payment`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${session.access_token}`,
+      Authorization: `Bearer ${session.access_token}`,
     },
     body: JSON.stringify(data),
   });
@@ -131,7 +155,10 @@ export async function openCheckout(
 ): Promise<CheckoutResult> {
   // Pre-flight checks
   if (!isRazorpayConfigured()) {
-    return { success: false, error: "Razorpay is not configured. Add VITE_RAZORPAY_KEY_ID to your .env file." };
+    return {
+      success: false,
+      error: "Razorpay is not configured. Add VITE_RAZORPAY_KEY_ID to your .env file.",
+    };
   }
 
   if (!isSupabaseConfigured()) {
@@ -141,7 +168,10 @@ export async function openCheckout(
   await loadRazorpayScript();
   const RazorpayClass = (window as any).Razorpay;
   if (!RazorpayClass) {
-    return { success: false, error: "Razorpay SDK failed to load. Check your internet connection." };
+    return {
+      success: false,
+      error: "Razorpay SDK failed to load. Check your internet connection.",
+    };
   }
 
   const plan = PLAN_CONFIG[planId];

@@ -12,7 +12,8 @@ export function MatchCelebration({ profile, onMessage, onKeep }: Props) {
     <div
       className="fixed inset-0 z-[90] flex items-center justify-center px-4"
       style={{
-        background: "radial-gradient(ellipse at center, rgba(244,114,182,0.15), rgba(11,17,32,0.95) 70%)",
+        background:
+          "radial-gradient(ellipse at center, rgba(244,114,182,0.15), rgba(11,17,32,0.95) 70%)",
         backdropFilter: "blur(20px)",
       }}
     >
@@ -45,7 +46,10 @@ export function MatchCelebration({ profile, onMessage, onKeep }: Props) {
             📚
           </div>
           <div className="animate-celebrate" style={{ animationDelay: "0.3s" }}>
-            <Heart className="h-10 w-10 pulse-heart" style={{ color: "#F472B6", fill: "#F472B6" }} />
+            <Heart
+              className="h-10 w-10 pulse-heart"
+              style={{ color: "#F472B6", fill: "#F472B6" }}
+            />
           </div>
           <div
             className="h-24 w-24 rounded-full flex items-center justify-center text-5xl shadow-lg ring-4"
@@ -66,7 +70,9 @@ export function MatchCelebration({ profile, onMessage, onKeep }: Props) {
         </h2>
 
         <p className="text-[color:var(--text-secondary)] mb-2">
-          You and <span className="text-[color:var(--text-primary)] font-semibold">{profile.name}</span> want to study together!
+          You and{" "}
+          <span className="text-[color:var(--text-primary)] font-semibold">{profile.name}</span>{" "}
+          want to study together!
         </p>
 
         <p className="text-sm text-[color:var(--text-muted)] mb-8">

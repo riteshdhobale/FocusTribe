@@ -25,21 +25,22 @@ export function useSubscription(): SubscriptionData {
 
   useEffect(() => {
     if (typeof window === "undefined" || !isSupabaseConfigured()) {
-      setData(prev => ({ ...prev, loading: false }));
+      setData((prev) => ({ ...prev, loading: false }));
       return;
     }
 
     const fetchSubscription = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) {
-          setData(prev => ({ ...prev, loading: false }));
+          setData((prev) => ({ ...prev, loading: false }));
           return;
         }
 
         // Query the real subscriptions table
-        const { data: sub, error } = await (supabase
-          .from("subscriptions") as any)
+        const { data: sub, error } = await (supabase.from("subscriptions") as any)
           .select("*")
           .eq("user_id", user.id)
           .single();
@@ -69,11 +70,17 @@ export function useSubscription(): SubscriptionData {
 
         // Check for local demo override (only active when VITE_DEMO_MODE=true)
         const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
-        const isDemoPro = isDemoMode && typeof window !== "undefined" && localStorage.getItem(`demo_pro_${user.id}`) === "true";
-        const demoPlan = isDemoPro && typeof window !== "undefined" ? localStorage.getItem(`demo_plan_${user.id}`) as SubscriptionPlan || sub.plan : sub.plan;
+        const isDemoPro =
+          isDemoMode &&
+          typeof window !== "undefined" &&
+          localStorage.getItem(`demo_pro_${user.id}`) === "true";
+        const demoPlan =
+          isDemoPro && typeof window !== "undefined"
+            ? (localStorage.getItem(`demo_plan_${user.id}`) as SubscriptionPlan) || sub.plan
+            : sub.plan;
 
         // Determine if user has Pro access
-        const hasPro = 
+        const hasPro =
           isDemoPro ||
           // Active paid subscription
           (sub.status === "active" && sub.plan !== "free" && (!periodEnd || periodEnd > now)) ||
@@ -90,7 +97,7 @@ export function useSubscription(): SubscriptionData {
         });
       } catch (error) {
         console.error("Failed to fetch subscription:", error);
-        setData(prev => ({ ...prev, loading: false }));
+        setData((prev) => ({ ...prev, loading: false }));
       }
     };
 
