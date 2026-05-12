@@ -78,7 +78,14 @@ CREATE INDEX idx_bans_user_active ON bans(user_id, is_active) WHERE is_active = 
 CREATE INDEX idx_bans_ip ON bans(ip_address) WHERE ip_address IS NOT NULL AND is_active = true;
 
 -- ── Report counts view ──────────────────────────────────────────
-CREATE OR REPLACE VIEW user_report_summary AS
+-- SECURITY: security_invoker=on ensures RLS on the `reports` table
+-- is respected by the querying user. Without this, the view runs as
+-- the superuser and bypasses RLS entirely (Supabase security advisory).
+-- Access is also revoked from anon/authenticated — only service_role
+-- (admin dashboard) should ever query this view.
+CREATE OR REPLACE VIEW user_report_summary
+WITH (security_invoker = on)
+AS
 SELECT
   reported_user_id,
   COUNT(*) AS total_reports,
@@ -87,6 +94,9 @@ SELECT
   MAX(created_at) AS last_reported_at
 FROM reports
 GROUP BY reported_user_id;
+
+-- Revoke public API access (admins use service_role key only)
+REVOKE SELECT ON public.user_report_summary FROM anon, authenticated;
 
 -- ── Auto-flag trigger ───────────────────────────────────────────
 CREATE OR REPLACE FUNCTION check_report_threshold()

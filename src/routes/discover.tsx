@@ -10,12 +10,7 @@ import { AuthPage } from "@/components/AuthPage";
 import { BanScreen } from "@/components/BanScreen";
 import { useAuth } from "@/lib/useAuth";
 import { useBanCheck } from "@/lib/useBanCheck";
-import {
-  useActionLimits,
-  MAX_LEFT_SWIPES,
-  MAX_RIGHT_SWIPES,
-  MAX_MONTHLY_PROMPTS,
-} from "@/hooks/useActionLimits";
+import { useActionLimits, incrementSparksUsed, SWIPE_LIMITS } from "@/hooks/useActionLimits";
 import {
   getMyProfile,
   getFilteredDeck,
@@ -79,8 +74,9 @@ function DiscoverPage() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [celebration, setCelebration] = useState<Profile | null>(null);
   const limits = useActionLimits();
-  const [limitAlert, setLimitAlert] = useState<{ title: string; message: string } | null>(null);
+  const { canRightSwipe, rightRemaining, canSendSpark, sparkRemaining } = limits;
   const [showPromptModal, setShowPromptModal] = useState<Profile | null>(null);
+  const [showSparkModal, setShowSparkModal] = useState<Profile | null>(null);
 
   const refreshDeck = useCallback(async () => {
     const filtered = await getFilteredDeck(prefs);
@@ -212,11 +208,14 @@ function DiscoverPage() {
     <div className="min-h-screen" style={{ background: "var(--bg-main)" }}>
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 pt-6 pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+      <div className="max-w-7xl mx-auto px-4 pt-6 pb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
           {/* Left sidebar — Filters */}
           <aside className="hidden lg:block">
-            <MatchFilters prefs={prefs} onChange={handlePrefsChange} />
+            <MatchFilters
+              prefs={prefs}
+              onChange={handlePrefsChange}
+            />
           </aside>
 
           {/* Center — Swipe deck */}
@@ -251,7 +250,8 @@ function DiscoverPage() {
                 onLike={() => handleSwipe("like")}
                 onPass={() => handleSwipe("pass")}
                 onSuperLike={() => handleSwipe("super")}
-                onComment={() => setShowPromptModal(currentProfile)}
+                onSpark={canSendSpark ? () => setShowSparkModal(currentProfile) : undefined}
+                sparkRemaining={sparkRemaining}
               />
             ) : (
               <div
@@ -322,6 +322,8 @@ function DiscoverPage() {
               </div>
             )}
           </div>
+
+
         </div>
       </div>
 
@@ -334,18 +336,29 @@ function DiscoverPage() {
         />
       )}
 
-      {/* Send Prompt / Comment Modal */}
       {showPromptModal && (
         <SendPromptModal
           profile={showPromptModal}
+          likesRemaining={rightRemaining}
           onClose={() => setShowPromptModal(null)}
-          onSend={async (text) => {
+          onSend={async () => {
             setShowPromptModal(null);
-            // Swiping right with a comment counts as a like.
-            // The match will be auto-created if it's a mutual like, but for the demo we'll also manually send the message if they match.
-            // For now, we'll just handle the swipe. The real backend handles messages.
             await handleSwipe("like");
-            // If we matched instantly (demo mode), the celebration will pop up!
+          }}
+        />
+      )}
+
+      {showSparkModal && (
+        <SendPromptModal
+          profile={showSparkModal}
+          likesRemaining={rightRemaining}
+          isSpark
+          sparksRemaining={sparkRemaining}
+          onClose={() => setShowSparkModal(null)}
+          onSend={async () => {
+            setShowSparkModal(null);
+            incrementSparksUsed();
+            await handleSwipe("super"); // Spark counts as a super-like in the DB
           }}
         />
       )}

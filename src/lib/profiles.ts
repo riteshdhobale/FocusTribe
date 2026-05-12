@@ -4,6 +4,7 @@ type StoredSwipeCounts = {
   date: string;
   right: number;
   left: number;
+  superlike: number;
 };
 
 function safeParseJson<T>(raw: string | null): T | null {
@@ -103,21 +104,22 @@ export type MatchPreferences = {
   careerGoals: string[];
 };
 
-export function getTodaySwipeCounts(): { right: number; left: number } {
-  if (typeof window === "undefined") return { right: 0, left: 0 };
-
+export function getTodaySwipeCounts(): { right: number; left: number; superlike: number } {
+  if (typeof window === "undefined") return { right: 0, left: 0, superlike: 0 };
   const stored = safeParseJson<StoredSwipeCounts>(localStorage.getItem(SWIPE_COUNTS_KEY));
   const today = todayKey();
-  if (!stored || stored.date !== today) return { right: 0, left: 0 };
-  return { right: stored.right || 0, left: stored.left || 0 };
+  if (!stored || stored.date !== today) return { right: 0, left: 0, superlike: 0 };
+  return { right: stored.right || 0, left: stored.left || 0, superlike: stored.superlike || 0 };
 }
 
-function setTodaySwipeCounts(next: { right: number; left: number }) {
+function setTodaySwipeCounts(next: { right: number; left: number; superlike?: number }) {
   if (typeof window === "undefined") return;
+  const current = getTodaySwipeCounts();
   const payload: StoredSwipeCounts = {
     date: todayKey(),
     right: Math.max(0, next.right || 0),
     left: Math.max(0, next.left || 0),
+    superlike: Math.max(0, next.superlike ?? current.superlike),
   };
   localStorage.setItem(SWIPE_COUNTS_KEY, JSON.stringify(payload));
 }
@@ -462,10 +464,13 @@ export async function addToSwipeHistory(
   action: "left" | "right" | "super-like" = "right",
 ) {
   if (typeof window !== "undefined" && action) {
-    const { right, left } = getTodaySwipeCounts();
-    if (action === "right" || action === "super-like")
+    const { right, left, superlike } = getTodaySwipeCounts();
+    if (action === "super-like")
+      setTodaySwipeCounts({ right: right + 1, left, superlike: superlike + 1 });
+    else if (action === "right")
       setTodaySwipeCounts({ right: right + 1, left });
-    else setTodaySwipeCounts({ right, left: left + 1 });
+    else
+      setTodaySwipeCounts({ right, left: left + 1 });
   }
 
   const { data: session } = await supabase.auth.getSession();

@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useEffect } from "react";
-import { Heart, X, Star, MessageCircle } from "lucide-react";
+import { Heart, X, Star } from "lucide-react";
 import { INTENTS, ACADEMIC_FOCUS } from "@/lib/constants";
 import { ReportButton } from "./ReportButton";
 import type { Profile } from "@/lib/profiles";
@@ -10,7 +10,9 @@ type Props = {
   onLike: () => void;
   onPass: () => void;
   onSuperLike: () => void;
-  onComment: () => void;
+  /** Spark — rendered as floating overlay on card bottom-right */
+  onSpark?: () => void;
+  sparkRemaining?: number;
 };
 
 export function SwipeCard({
@@ -19,7 +21,8 @@ export function SwipeCard({
   onLike,
   onPass,
   onSuperLike,
-  onComment,
+  onSpark,
+  sparkRemaining = 0,
 }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
   const photoAreaRef = useRef<HTMLDivElement>(null);
@@ -361,61 +364,107 @@ export function SwipeCard({
         )}
       </div>
 
-      {/* Action buttons */}
-      <div className="flex items-center justify-center gap-4 mt-6 sm:mt-8">
-        <button
-          onClick={() => handleAction("left", onPass)}
-          className="w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90 group relative overflow-hidden border shadow-[0_8px_20px_rgba(0,0,0,0.3)]"
-          style={{ background: "#1E293B", borderColor: "#334155" }}
-        >
-          <div className="absolute inset-0 bg-rose-500 opacity-0 group-hover:opacity-10 transition-opacity"></div>
-          <X
-            className="w-6 h-6 transition-transform group-hover:rotate-90"
-            style={{ color: "#F43F5E" }}
-            strokeWidth={3}
-          />
-        </button>
+      {/* ⚡ Spark — floating overlay on card bottom-right */}
+      {onSpark !== undefined && (
+        <div className="absolute bottom-[108px] right-4 z-30">
+          <button
+            onClick={onSpark}
+            disabled={sparkRemaining === 0}
+            className="flex flex-col items-center gap-1 transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-40 disabled:pointer-events-none"
+            title={sparkRemaining > 0 ? "Send a Spark ⚡" : "No Sparks left this week"}
+          >
+            <div
+              className="w-11 h-11 rounded-full flex items-center justify-center relative"
+              style={{
+                background: sparkRemaining > 0
+                  ? "linear-gradient(135deg, #FFC107, #FF8F00)"
+                  : "rgba(30,40,60,0.85)",
+                boxShadow: sparkRemaining > 0
+                  ? "0 0 0 5px rgba(255,193,7,0.12), 0 6px 20px rgba(255,193,7,0.45)"
+                  : "0 2px 10px rgba(0,0,0,0.4)",
+                border: sparkRemaining === 0 ? "1.5px solid rgba(255,255,255,0.1)" : "none",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              {sparkRemaining > 0 && (
+                <div
+                  className="absolute inset-0 rounded-full animate-ping"
+                  style={{ background: "rgba(255,193,7,0.25)", animationDuration: "2.5s" }}
+                />
+              )}
+              <span className="text-lg relative z-10" style={{ filter: sparkRemaining === 0 ? "grayscale(1)" : "none" }}>⚡</span>
+            </div>
+            {/* Count pill */}
+            <div
+              className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+              style={{
+                background: sparkRemaining > 0 ? "rgba(255,193,7,0.9)" : "rgba(255,255,255,0.12)",
+                color: sparkRemaining > 0 ? "#0B1120" : "rgba(255,255,255,0.4)",
+              }}
+            >
+              {sparkRemaining} left
+            </div>
+          </button>
+        </div>
+      )}
 
-        <button
-          onClick={() => handleAction("up", onSuperLike)}
-          className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90 group relative overflow-hidden border shadow-[0_8px_20px_rgba(0,0,0,0.3)]"
-          style={{ background: "#1E293B", borderColor: "#334155" }}
-        >
-          <div className="absolute inset-0 bg-amber-400 opacity-0 group-hover:opacity-10 transition-opacity"></div>
-          <Star
-            className="w-5 h-5 transition-transform group-hover:scale-110"
-            style={{ color: "#FBBF24" }}
-            strokeWidth={2.5}
-          />
-        </button>
+      {/* ─── 3 ACTION BUTTONS ─────────────────────────────────────────────
+         Pass  |  Superlike  |  Like
+         Sizing: Pass=52px  Super=48px  Heart=76px (hero CTA)
+         Heart is raised -10px to create focal depth (visual hierarchy)
+      ──────────────────────────────────────────────────────────────────── */}
+      <div className="flex items-end justify-center gap-6 mt-5 px-4 pb-3" style={{ minHeight: 104 }}>
 
-        <button
-          onClick={() => handleAction("right", onLike)}
-          className="w-16 h-16 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90 group relative overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, #FF6B9E 0%, #FF3B5C 100%)",
-            boxShadow: "0 10px 30px rgba(255,107,158,0.4)",
-          }}
-        >
-          <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
-          <Heart
-            className="w-8 h-8 text-white drop-shadow-sm transition-transform group-hover:scale-110"
-            fill="currentColor"
-          />
-        </button>
+        {/* ✗ Pass */}
+        <div className="flex flex-col items-center gap-1.5">
+          <button
+            onClick={() => handleAction("left", onPass)}
+            className="w-[52px] h-[52px] rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-90 relative group"
+            style={{
+              background: "linear-gradient(145deg, #1c2537, #141e30)",
+              border: "1.5px solid rgba(244,63,94,0.22)",
+              boxShadow: "0 4px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
+            }}
+          >
+            <div className="absolute inset-0 rounded-full bg-rose-500/8 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <X className="w-5 h-5 transition-transform group-hover:rotate-90 duration-200" style={{ color: "#F43F5E" }} strokeWidth={2.5} />
+          </button>
+          <span className="text-[9px] font-semibold uppercase tracking-widest" style={{ color: "rgba(244,63,94,0.55)" }}>Pass</span>
+        </div>
 
-        <button
-          onClick={onComment}
-          className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90 group relative overflow-hidden border shadow-[0_8px_20px_rgba(0,0,0,0.3)]"
-          style={{ background: "#1E293B", borderColor: "#334155" }}
-        >
-          <div className="absolute inset-0 bg-blue-400 opacity-0 group-hover:opacity-10 transition-opacity"></div>
-          <MessageCircle
-            className="w-5 h-5 transition-transform group-hover:-rotate-12"
-            style={{ color: "#60A5FA" }}
-            strokeWidth={2.5}
-          />
-        </button>
+        {/* ❤️ Like — Hero CTA */}
+        <div className="flex flex-col items-center gap-1.5 -translate-y-2.5">
+          <button
+            onClick={() => handleAction("right", onLike)}
+            className="w-[76px] h-[76px] rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 relative group"
+            style={{
+              background: "linear-gradient(135deg, #FF6B9E 0%, #FF2D6F 100%)",
+              boxShadow: "0 0 0 8px rgba(255,107,158,0.10), 0 10px 36px rgba(255,107,158,0.55)",
+            }}
+          >
+            <div className="absolute inset-0 rounded-full bg-white/15 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Heart className="w-[34px] h-[34px] text-white drop-shadow transition-transform group-hover:scale-110 duration-200" fill="currentColor" />
+          </button>
+          <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,107,158,0.9)" }}>Like</span>
+        </div>
+
+        {/* ★ Superlike */}
+        <div className="flex flex-col items-center gap-1.5">
+          <button
+            onClick={() => handleAction("up", onSuperLike)}
+            className="w-[52px] h-[52px] rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-90 relative group"
+            style={{
+              background: "linear-gradient(145deg, #1c2537, #141e30)",
+              border: "1.5px solid rgba(251,191,36,0.28)",
+              boxShadow: "0 4px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
+            }}
+          >
+            <div className="absolute inset-0 rounded-full bg-amber-400/8 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Star className="w-5 h-5 transition-all group-hover:fill-amber-400 duration-200" style={{ color: "#FBBF24" }} strokeWidth={2} />
+          </button>
+          <span className="text-[9px] font-semibold uppercase tracking-widest" style={{ color: "rgba(251,191,36,0.55)" }}>Super</span>
+        </div>
+
       </div>
     </div>
   );
