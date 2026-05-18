@@ -23,6 +23,8 @@ type JitsiMeetProps = {
   categoryName?: string;
   /** Allow microphone — true only for matched 1-on-1 Study Date rooms */
   allowMic?: boolean;
+  /** Number of tasks marked done — shown on the session summary screen */
+  completedTasksCount?: number;
 };
 
 // ─── Jitsi server config ───────────────────────────────────────────
@@ -38,7 +40,7 @@ declare global {
   }
 }
 
-export function JitsiMeet({ roomName, displayName, categoryName, allowMic = false }: JitsiMeetProps) {
+export function JitsiMeet({ roomName, displayName, categoryName, allowMic = false, completedTasksCount = 0 }: JitsiMeetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,8 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
   const [sessionEnded, setSessionEnded] = useState(false);
   const [joinedAt, setJoinedAt] = useState<number | null>(null);
   const [limitReached, setLimitReached] = useState(false);
+  // Snapshot elapsed seconds when the session ends so the timer freezes on the summary
+  const [frozenElapsed, setFrozenElapsed] = useState<{ minutes: number; seconds: number } | null>(null);
   const { plan, inReverseTrial, trialDaysLeft } = useSubscription();
 
   useEffect(() => {
@@ -108,10 +112,8 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
               disableAudioLevels: true,
             }),
             subject: categoryName ? `${categoryName} — StudyDate` : "StudyDate Study Room",
-            // Mic button only appears in toolbar for matched rooms
-            toolbarButtons: allowMic
-              ? ["microphone", "camera", "chat", "raisehand", "tileview", "filmstrip"]
-              : ["camera", "chat", "raisehand", "tileview", "filmstrip"],
+            // We have our own custom toolbar — hide ALL Jitsi native buttons
+            toolbarButtons: [],
             notifications: [],
             defaultLanguage: "en",
           },
@@ -205,6 +207,8 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
   const toggleVideo = () => apiRef.current?.executeCommand("toggleVideo");
   const toggleScreenShare = () => apiRef.current?.executeCommand("toggleShareScreen");
   const hangup = () => {
+    // Snapshot elapsed time BEFORE ending — so the summary timer is frozen, not live
+    setFrozenElapsed(getElapsedTime());
     setSessionEnded(true); // Show summary overlay FIRST (covers promo)
     apiRef.current?.executeCommand("hangup");
   };
@@ -284,7 +288,8 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
       {/* ── Session Summary overlay (covers Jitsi promo) ── */}
       {sessionEnded &&
         (() => {
-          const { minutes, seconds } = getElapsedTime();
+          // Use frozen snapshot so the clock doesn't keep ticking on the summary
+          const { minutes, seconds } = frozenElapsed ?? getElapsedTime();
 
           if (limitReached) {
             return (
@@ -401,7 +406,7 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
                     className="font-display font-bold text-2xl"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    —
+                    {completedTasksCount}
                   </span>
                   <span
                     className="text-[10px] uppercase tracking-widest font-mono"

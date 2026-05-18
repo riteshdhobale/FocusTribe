@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { supabase } from "@/lib/supabase";
 import {
   INTENTS,
-  ACADEMIC_FOCUS,
   CAREER_GOALS,
+  getAcademicFocusForMarket,
   ALL_CITIES,
   AVAILABILITY,
   STUDY_FORMATS,
@@ -11,6 +12,7 @@ import {
   isStudentEmail,
   type IntentValue,
 } from "@/lib/constants";
+import { detectRegion } from "@/lib/geoPrice";
 import {
   saveMyProfile,
   savePreferences,
@@ -19,6 +21,8 @@ import {
   type GroupPref,
 } from "@/lib/profiles";
 import { ProfilePreview } from "./ProfilePreview";
+import { ProfileCardPreview } from "./ProfileCardPreview";
+import { ImageCropModal } from "./ImageCropModal";
 import * as Slider from "@radix-ui/react-slider";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
@@ -26,6 +30,7 @@ type Step = 1 | 2 | 3 | 4;
 
 export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState<Step>(1);
+  const [showCardPreview, setShowCardPreview] = useState(false);
   const maxPhotos = 6;
 
   // Step 1
@@ -38,6 +43,10 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoInput, setPhotoInput] = useState("");
   const [photoError, setPhotoError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Crop modal state
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
 
   // Step 2
   const [academicFocus, setAcademicFocus] = useState("");
@@ -75,23 +84,45 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
     setPhotoError("");
   };
 
+  // Called when user picks a file — open crop modal first
   const handlePhotoFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const remaining = Math.max(0, maxPhotos - photoUrls.length);
-    const selected = Array.from(files).slice(0, remaining);
-    if (files.length > remaining) {
-      setPhotoError(`Only ${remaining} more photo${remaining === 1 ? "" : "s"} can be added.`);
+    if (photoUrls.length >= maxPhotos) {
+      setPhotoError(`You can only add ${maxPhotos} photos.`);
+      return;
     }
-    selected.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        if (typeof result === "string") {
-          setPhotoUrls((prev) => (prev.length < maxPhotos ? [...prev, result] : prev));
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    const file = files[0]; // crop one at a time
+    const objectUrl = URL.createObjectURL(file);
+    setCropImageUrl(objectUrl);
+    // Reset input so the same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // Called from crop modal after the user confirms their crop
+  const uploadCroppedBlob = async (blob: Blob) => {
+    setCropImageUrl(null);
+    setUploading(true);
+    setPhotoError("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id ?? `anon_${Date.now()}`;
+      const path = `${userId}/${crypto.randomUUID()}.jpg`;
+
+      const { error } = await supabase.storage
+        .from("avatars")
+        .upload(path, blob, { upsert: true, contentType: "image/jpeg" });
+
+      if (error) {
+        setPhotoError(`Upload failed: ${error.message}`);
+      } else {
+        const { data: { publicUrl } } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(path);
+        setPhotoUrls((prev) => [...prev, publicUrl].slice(0, maxPhotos));
+      }
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removePhoto = (idx: number) => {
@@ -193,9 +224,13 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
   };
 
   const { title, subtitle, why } = titles[step];
+  const academicFocusOptions = getAcademicFocusForMarket(
+    detectRegion() === "india" ? "india" : "global",
+  );
 
   return (
-    <div
+    <>
+      <div
       className="min-h-screen flex items-center justify-center px-4 py-12"
       style={{ background: "var(--bg-main)" }}
     >
@@ -238,6 +273,20 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
             <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               {subtitle}
             </p>
+
+            {/* Preview card button */}
+            <button
+              type="button"
+              onClick={() => setShowCardPreview(true)}
+              className="mt-5 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border transition hover:opacity-80"
+              style={{
+                borderColor: "var(--rose-accent)",
+                color: "var(--rose-accent)",
+                background: "color-mix(in oklab, var(--rose-accent) 8%, transparent)",
+              }}
+            >
+              <span>👁</span> Preview my card
+            </button>
           </div>
 
           <div
@@ -414,47 +463,64 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label
-                    className="block text-sm font-medium"
-                    style={{ color: "var(--text-primary)" }}
-                  >
+                  <label className="block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                     Profile photos
                   </label>
                   <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    Add at least 2 · first is cover
+                    {uploading ? "⏳ Uploading..." : `${photoUrls.length}/${maxPhotos} · first is cover`}
                   </span>
                 </div>
 
+                {/* Single hidden file input — triggered programmatically */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  disabled={uploading}
+                  onChange={(e) => handlePhotoFiles(e.target.files)}
+                />
+
+                {/* Hinge-style tappable grid */}
                 <div className="grid grid-cols-3 gap-3">
                   {Array.from({ length: maxPhotos }).map((_, idx) => {
                     const url = photoUrls[idx];
                     return (
-                      <div
-                        key={`photo-slot-${idx}`}
-                        className="relative aspect-[3/4] rounded-xl border overflow-hidden"
-                        style={{ borderColor: "var(--hairline)", background: "var(--bg-main)" }}
-                      >
-                        {url ? (
-                          <img
-                            src={url}
-                            alt={`Profile ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div
-                            className="w-full h-full flex items-center justify-center text-xs"
-                            style={{ color: "var(--text-muted)" }}
-                          >
-                            + Add
-                          </div>
-                        )}
+                      <div key={`photo-slot-${idx}`} className="relative aspect-[3/4]">
+                        <div
+                          onClick={() => { if (!url && !uploading) fileInputRef.current?.click(); }}
+                          className="block w-full h-full rounded-xl border overflow-hidden transition-all"
+                          style={{
+                            borderColor: url ? "transparent" : "var(--hairline)",
+                            background: url ? "transparent" : "var(--bg-main)",
+                            cursor: url ? "default" : uploading ? "wait" : "pointer",
+                            borderStyle: url ? "solid" : "dashed",
+                          }}
+                        >
+                          {url ? (
+                            <img
+                              src={url}
+                              alt={`Profile ${idx + 1}`}
+                              className="w-full h-full object-cover rounded-xl"
+                            />
+                          ) : (
+                            <div
+                              className="w-full h-full flex flex-col items-center justify-center gap-1"
+                              style={{ color: "var(--text-muted)" }}
+                            >
+                              <span className="text-2xl font-light">+</span>
+                              <span className="text-[10px]">{uploading ? "Uploading..." : "Add photo"}</span>
+                            </div>
+                          )}
+                        </div>
 
+                        {/* Cover / remove controls */}
                         {url && (
-                          <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2">
+                          <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-1">
                             {idx === 0 ? (
                               <span
                                 className="text-[10px] px-2 py-1 rounded-full"
-                                style={{ background: "rgba(15,23,42,0.7)", color: "#fff" }}
+                                style={{ background: "rgba(15,23,42,0.75)", color: "#fff" }}
                               >
                                 Cover
                               </span>
@@ -462,8 +528,8 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
                               <button
                                 type="button"
                                 onClick={() => makePrimary(idx)}
-                                className="text-[10px] px-2 py-1 rounded-full"
-                                style={{ background: "rgba(15,23,42,0.7)", color: "#fff" }}
+                                className="text-[10px] px-2 py-1 rounded-full transition hover:opacity-80"
+                                style={{ background: "rgba(15,23,42,0.75)", color: "#fff" }}
                               >
                                 Make cover
                               </button>
@@ -471,10 +537,10 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
                             <button
                               type="button"
                               onClick={() => removePhoto(idx)}
-                              className="text-[10px] px-2 py-1 rounded-full"
+                              className="text-[10px] px-2 py-1 rounded-full transition hover:opacity-80"
                               style={{ background: "rgba(239,68,68,0.8)", color: "#fff" }}
                             >
-                              Remove
+                              ✕
                             </button>
                           </div>
                         )}
@@ -483,49 +549,13 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
                   })}
                 </div>
 
-                <div className="mt-3 flex gap-2">
-                  <input
-                    type="url"
-                    value={photoInput}
-                    onChange={(e) => setPhotoInput(e.target.value)}
-                    placeholder="Paste image URL"
-                    className="flex-1 px-4 py-3 rounded-xl border text-sm outline-none"
-                    style={{
-                      background: "var(--bg-main)",
-                      borderColor: "var(--hairline)",
-                      color: "var(--text-primary)",
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => addPhotoUrl(photoInput)}
-                    className="px-4 rounded-xl text-sm font-semibold transition"
-                    style={{ background: "var(--rose-accent)", color: "#0B1120" }}
-                  >
-                    Add
-                  </button>
-                </div>
-
-                <div className="mt-3">
-                  <label className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
-                    Upload photos
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => handlePhotoFiles(e.target.files)}
-                    className="mt-2 w-full text-xs"
-                    style={{ color: "var(--text-muted)" }}
-                  />
-                </div>
-
                 {photoError && (
                   <p className="text-xs mt-2" style={{ color: "#F97316" }}>
                     {photoError}
                   </p>
                 )}
               </div>
+
             </div>
           )}
 
@@ -540,9 +570,14 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
                     Academic focus
                   </label>
                   <input
+                    list="academic-focus-options"
                     value={academicFocus}
                     onChange={(e) => setAcademicFocus(e.target.value)}
-                    placeholder="e.g. B.Tech Sem 4, JEE, etc."
+                    placeholder={
+                      detectRegion() === "india"
+                        ? "e.g. JEE, NEET, UPSC, B.Tech Sem 4"
+                        : "e.g. GRE, GMAT, MCAT, finals, research"
+                    }
                     className="w-full px-4 py-3 rounded-xl border text-sm outline-none transition focus:ring-2"
                     style={
                       {
@@ -553,6 +588,11 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
                       } as React.CSSProperties
                     }
                   />
+                  <datalist id="academic-focus-options">
+                    {academicFocusOptions.map((focus) => (
+                      <option key={focus.value} value={focus.label} />
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <label
@@ -969,5 +1009,39 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
         </div>
       </div>
     </div>
+
+    {/* Profile card preview modal */}
+    {showCardPreview && (
+      <ProfileCardPreview
+        onClose={() => setShowCardPreview(false)}
+        name={name}
+        age={parseInt(age) || 21}
+        college={college}
+        city={city}
+        gender={gender}
+        bio={bio}
+        photoUrls={photoUrls}
+        examFocus={academicFocus}
+        careerGoal={careerGoal}
+        intent={intents}
+        studyFormats={studyFormats}
+        interests={interests}
+        lookingFor={lookingFor}
+        availability={availability}
+      />
+    )}
+
+    {/* Image crop modal */}
+    {cropImageUrl && (
+      <ImageCropModal
+        imageUrl={cropImageUrl}
+        onConfirm={uploadCroppedBlob}
+        onCancel={() => {
+          URL.revokeObjectURL(cropImageUrl);
+          setCropImageUrl(null);
+        }}
+      />
+    )}
+    </>
   );
 }

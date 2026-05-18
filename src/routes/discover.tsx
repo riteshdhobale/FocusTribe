@@ -11,6 +11,7 @@ import { BanScreen } from "@/components/BanScreen";
 import { useAuth } from "@/lib/useAuth";
 import { useBanCheck } from "@/lib/useBanCheck";
 import { useActionLimits, incrementSparksUsed, SWIPE_LIMITS } from "@/hooks/useActionLimits";
+import { Filter, Sparkles, UsersRound } from "lucide-react";
 import {
   getMyProfile,
   getFilteredDeck,
@@ -208,7 +209,7 @@ function DiscoverPage() {
     <div className="min-h-screen" style={{ background: "var(--bg-main)" }}>
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 pt-6 pb-24">
+      <div className="max-w-7xl mx-auto px-4 pt-4 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
           {/* Left sidebar — Filters */}
           <aside className="hidden lg:block">
@@ -220,27 +221,51 @@ function DiscoverPage() {
 
           {/* Center — Swipe deck */}
           <div className="flex flex-col items-center">
-            <div className="flex items-center justify-between w-full max-w-md mb-6">
-              <div>
+            <div className="w-full max-w-lg mb-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <span
+                    className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em]"
+                    style={{ color: "#FF8FB5" }}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Swipe deck
+                  </span>
+                  <h1
+                    className="mt-1 font-display text-2xl font-extrabold leading-tight"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    Find your next study date
+                  </h1>
+                </div>
                 <span
-                  className="text-xs font-mono tracking-widest uppercase mb-1 block"
-                  style={{ color: "#FF6B9E" }}
+                  className="shrink-0 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border"
+                  style={{ borderColor: "var(--hairline)", color: "var(--text-secondary)" }}
                 >
-                  Swipe Deck
+                  <UsersRound className="h-3.5 w-3.5" />
+                  {deck.length}
                 </span>
-                <h1
-                  className="font-display font-bold text-2xl"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  Find your next study date
-                </h1>
               </div>
-              <span
-                className="text-xs px-3 py-1.5 rounded-full border"
-                style={{ borderColor: "var(--hairline)", color: "var(--text-muted)" }}
-              >
-                {deck.length} curated profiles nearby
-              </span>
+
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span
+                  className="inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase"
+                  style={{
+                    borderColor: "rgba(255,107,158,0.24)",
+                    color: "#FF8FB5",
+                    background: "rgba(255,107,158,0.08)",
+                  }}
+                >
+                  {deck.length === 1 ? "1 profile ready" : `${deck.length} profiles ready`}
+                </span>
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold"
+                  style={{ borderColor: "var(--hairline)", color: "var(--text-muted)" }}
+                >
+                  <Filter className="h-3 w-3" />
+                  Tuned by your filters
+                </span>
+              </div>
             </div>
 
             {currentProfile ? (
@@ -250,7 +275,7 @@ function DiscoverPage() {
                 onLike={() => handleSwipe("like")}
                 onPass={() => handleSwipe("pass")}
                 onSuperLike={() => handleSwipe("super")}
-                onSpark={canSendSpark ? () => setShowSparkModal(currentProfile) : undefined}
+                onSpark={() => setShowSparkModal(currentProfile)}
                 sparkRemaining={sparkRemaining}
               />
             ) : (
@@ -283,15 +308,15 @@ function DiscoverPage() {
                   </div>
 
                   <h3 className="font-display font-extrabold text-2xl mb-3 text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B9E] to-[#FFA3C0]">
-                    You're all caught up!
+                    You have seen every match in this lane.
                   </h3>
                   <p
-                    className="text-sm mb-8 leading-relaxed"
+                    className="text-sm mb-8 leading-6"
                     style={{ color: "var(--text-secondary)" }}
                   >
                     {prefs.locationMode !== "global"
-                      ? "There are no more study profiles in your immediate area. Widen your horizon to connect with ambitious minds globally."
-                      : "You've seen everyone matching your specific academic goals. Adjust your filters to discover more people."}
+                      ? "Your local deck is clear for now. Switch to global discovery to meet students with similar goals beyond your city."
+                      : "Your current filters are very specific. Reset them to widen the deck and bring more study partners into view."}
                   </p>
 
                   <button
@@ -314,8 +339,8 @@ function DiscoverPage() {
                     <div className="absolute inset-0 bg-white/20 hover:bg-transparent transition-colors"></div>
                     <span className="relative z-10 flex items-center justify-center gap-2">
                       {prefs.locationMode !== "global"
-                        ? "🌍 Unlock Global Discovery"
-                        : "🔄 Reset Filters & Refresh"}
+                        ? "Explore global study partners"
+                        : "Reset filters and refresh"}
                     </span>
                   </button>
                 </div>

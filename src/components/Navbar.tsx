@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/useAuth";
 import { useSubscription } from "@/lib/useSubscription";
+import { ReferralModal } from "@/components/ReferralModal";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { User, LogOut, Settings, Sparkles, Menu, X } from "lucide-react";
+import { User, LogOut, Settings, Sparkles, Menu, X, Gift } from "lucide-react";
 
 export function Navbar() {
   const location = useLocation();
@@ -12,6 +13,7 @@ export function Navbar() {
   const { isAuthenticated, signOut } = useAuth();
   const { isPro, loading: subLoading } = useSubscription();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [referralOpen, setReferralOpen] = useState(false);
 
   const isActive = (path: string) => currentPath === path;
 
@@ -123,6 +125,21 @@ export function Navbar() {
                       </Link>
                     </DropdownMenu.Item>
 
+                    <DropdownMenu.Item asChild>
+                      <button
+                        onClick={() => { setReferralOpen(true); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium outline-none cursor-pointer transition-colors"
+                        style={{ color: "#FF6B9E" }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = "rgba(255,107,158,0.08)")
+                        }
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                      >
+                        <Gift size={16} style={{ color: "#FF6B9E" }} />
+                        Refer & Earn 3 days free
+                      </button>
+                    </DropdownMenu.Item>
+
                     <DropdownMenu.Separator
                       className="h-px my-1"
                       style={{ background: "var(--hairline)" }}
@@ -221,6 +238,9 @@ export function Navbar() {
           style={{ top: "64px" }}
         />
       )}
+
+      {/* Referral Modal */}
+      <ReferralModal open={referralOpen} onClose={() => setReferralOpen(false)} />
     </>
   );
 }

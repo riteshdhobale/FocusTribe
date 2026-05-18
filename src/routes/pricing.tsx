@@ -10,7 +10,6 @@ import {
   formatPrice,
   formatMrp,
   discountPercent,
-  detectRegion,
 } from "@/lib/geoPrice";
 import {
   Check,
@@ -490,6 +489,10 @@ function PricingPage() {
                   <Check className="w-5 h-5 shrink-0" style={{ color: "#FF6B9E" }} /> 5 Super Likes
                   daily
                 </li>
+                <li className="flex items-start gap-3 text-sm text-[color:var(--text-secondary)]">
+                  <span className="w-5 h-5 shrink-0 text-base leading-none">⚡</span>
+                  <span><strong>3 Sparks / month</strong> — priority highlighted likes</span>
+                </li>
               </ul>
               <button
                 onClick={() => handleUpgrade("pro")}
@@ -625,6 +628,103 @@ function PricingPage() {
             <div className="flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" style={{ color: "#FF6B9E" }} />
               <span>Founding member price locked forever</span>
+            </div>
+          </div>
+
+          {/* ── Gift a Subscription ── */}
+          <div
+            className="mt-16 rounded-[28px] border p-8 md:p-10 text-center relative overflow-hidden"
+            style={{
+              borderColor: "rgba(255,107,158,0.25)",
+              background: "linear-gradient(135deg, rgba(255,107,158,0.06) 0%, rgba(124,58,237,0.06) 100%)",
+            }}
+          >
+            <div className="absolute -top-16 right-0 w-64 h-64 rounded-full pointer-events-none"
+              style={{ background: "radial-gradient(circle, rgba(255,107,158,0.15), transparent 70%)", filter: "blur(30px)" }} />
+            <div className="relative">
+              <div className="text-3xl mb-3">🎁</div>
+              <h3 className="font-display font-extrabold text-2xl md:text-3xl mb-3">
+                Gift StudyDate Pro
+              </h3>
+              <p className="text-[color:var(--text-secondary)] max-w-xl mx-auto mb-6 text-sm md:text-base">
+                {pricing.region === "india"
+                  ? "Got a sibling grinding for JEE, NEET, or UPSC? Gift them a Pro subscription. They study unlimited — you feel proud."
+                  : "Know someone preparing for GRE, GMAT, MCAT, boards, or finals? Gift them Pro in their region's price. Practical support beats another generic gift."}
+              </p>
+              <div
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border cursor-pointer transition hover:opacity-90"
+                style={{
+                  background: "rgba(255,107,158,0.1)",
+                  borderColor: "rgba(255,107,158,0.3)",
+                  color: "#FF6B9E",
+                }}
+                onClick={() => window.open("mailto:support@studydate.in?subject=Gift%20a%20Subscription", "_blank")}
+              >
+                <Sparkles className="w-4 h-4" />
+                Email us to gift a subscription
+              </div>
+            </div>
+          </div>
+
+          {/* ── FAQ ── */}
+          <div className="mt-16">
+            <h3 className="font-display font-extrabold text-2xl text-center mb-8">
+              Frequently asked questions
+            </h3>
+            <div className="space-y-3 text-left max-w-3xl mx-auto">
+              {[
+                {
+                  q: "Is StudyDate free to start?",
+                  a: "Yes — you get a 7-day free Pro trial when you sign up. No credit card required. After the trial, you can stay on the free plan (3 hours/day) or upgrade to Pro for unlimited access.",
+                },
+                {
+                  q: "What payment methods do you support?",
+                  a: pricing.region === "india"
+                    ? "We accept UPI, credit/debit cards, net banking, and wallets through Razorpay — India's most trusted payment gateway."
+                    : "For international users: credit/debit cards (Visa, Mastercard, Amex) via Razorpay. Apple Pay and PayPal support coming soon.",
+                },
+                {
+                  q: "Can I cancel anytime?",
+                  a: "Absolutely. No lock-in, no hidden fees. Cancel from your profile settings. Your Pro access continues until the end of the billing period.",
+                },
+                {
+                  q: "Why is the price different based on my country?",
+                  a: `We use geo-based pricing to make StudyDate affordable everywhere. Your current region sees ${formatPrice(pricing.plans.pro.amount, sym)}/mo for Pro. You get the same product — priced for your market's purchasing power.`,
+                },
+                {
+                  q: "Is my data safe?",
+                  a: "Yes. All data is stored on Supabase (Postgres) with row-level security. Your profile is only visible to matched users. We never sell data to third parties. See our Privacy Policy for full details.",
+                },
+                {
+                  q: "Can I use StudyDate outside India?",
+                  a: "100%. StudyDate works globally. International users see globally relevant rooms and exam filters such as GRE, GMAT, MCAT, IELTS, TOEFL, finals, and research. Price automatically adapts to your region.",
+                },
+                {
+                  q: "How is StudyDate different from a Discord server?",
+                  a: "Discord is a chat platform. StudyDate is built for focused studying — swipe-based partner matching by exam type, built-in Pomodoro timers in every room, session goals, streak tracking, and a distraction-free environment. It's an accountability system, not a social network.",
+                },
+              ].map((faq) => (
+                <details
+                  key={faq.q}
+                  className="group rounded-2xl border p-5 cursor-pointer transition hover:border-[rgba(255,107,158,0.25)]"
+                  style={{ background: "rgba(255,255,255,0.02)", borderColor: "var(--hairline)" }}
+                >
+                  <summary className="flex items-center justify-between list-none gap-4">
+                    <span className="font-semibold text-sm md:text-base" style={{ color: "var(--text-primary)" }}>
+                      {faq.q}
+                    </span>
+                    <span
+                      className="shrink-0 w-6 h-6 rounded-full border flex items-center justify-center text-sm group-open:rotate-45 transition-transform duration-200"
+                      style={{ borderColor: "rgba(255,107,158,0.3)", color: "#FF6B9E" }}
+                    >
+                      +
+                    </span>
+                  </summary>
+                  <p className="mt-4 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                    {faq.a}
+                  </p>
+                </details>
+              ))}
             </div>
           </div>
         </div>

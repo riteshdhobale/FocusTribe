@@ -119,7 +119,7 @@ export function SwipeCard({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        className="rounded-[2rem] overflow-hidden cursor-grab active:cursor-grabbing select-none"
+        className="rounded-[2rem] overflow-hidden cursor-grab active:cursor-grabbing select-none border"
         style={{
           transform: `translateX(${dragX}px) translateY(${animatingOut === "up" ? -window.innerHeight : 0}px) rotate(${rotation}deg)`,
           opacity: animatingOut ? 0 : opacity,
@@ -127,20 +127,36 @@ export function SwipeCard({
             ? "none"
             : "transform 280ms cubic-bezier(0.175, 0.885, 0.32, 1.2), opacity 280ms ease",
           touchAction: "none",
+          borderColor: "rgba(255,255,255,0.08)",
           boxShadow: "0 30px 100px rgba(0,0,0,0.6)",
         }}
       >
         {/* Photo area */}
         <div ref={photoAreaRef} className="relative" style={{ background: profile.avatarColor }}>
-          <div className="relative h-[340px] sm:h-[400px]">
+          <div className="relative h-[330px] sm:h-[390px] lg:h-[42vh] lg:max-h-[410px] lg:min-h-[340px]">
             {activePhoto ? (
-              <img
-                src={activePhoto}
-                alt={`${profile.name} photo ${photoIndex + 1}`}
-                className="absolute inset-0 w-full h-full"
-                style={{ objectFit: "cover", objectPosition: "50% 22%" }}
-                draggable={false}
-              />
+              <>
+                <img
+                  src={activePhoto}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 h-full w-full scale-110"
+                  style={{
+                    objectFit: "cover",
+                    objectPosition: "center 32%",
+                    filter: "blur(18px)",
+                    opacity: 0.45,
+                  }}
+                  draggable={false}
+                />
+                <img
+                  src={activePhoto}
+                  alt={`${profile.name} photo ${photoIndex + 1}`}
+                  className="absolute inset-0 w-full h-full"
+                  style={{ objectFit: "contain", objectPosition: "center center" }}
+                  draggable={false}
+                />
+              </>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-sm" style={{ color: "rgba(255,255,255,0.8)" }}>
@@ -154,7 +170,7 @@ export function SwipeCard({
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(180deg, rgba(11,17,32,0.78) 0%, rgba(11,17,32,0.15) 40%, rgba(11,17,32,0.92) 100%)",
+                  "linear-gradient(180deg, rgba(11,17,32,0.54) 0%, rgba(11,17,32,0.06) 38%, rgba(11,17,32,0.92) 100%)",
               }}
             />
 
@@ -281,17 +297,17 @@ export function SwipeCard({
 
         {/* Details panel */}
         <div
-          className="px-6 pt-5 pb-6"
+          className="px-5 pt-4 pb-5"
           style={{
             background: "var(--bg-card)",
             borderTop: "1px solid var(--hairline)",
           }}
         >
-          <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-[15px] leading-6" style={{ color: "var(--text-secondary)" }}>
             {profile.bio}
           </p>
 
-          <div className="flex flex-wrap gap-1.5 mt-4">
+          <div className="flex flex-wrap gap-1.5 mt-3">
             {profile.studyFormats.slice(0, 3).map((f) => (
               <span
                 key={f}
@@ -314,7 +330,7 @@ export function SwipeCard({
 
           {profile.lookingForPrompt && (
             <div
-              className="mt-4 p-4 rounded-2xl border"
+              className="mt-4 p-3.5 rounded-2xl border"
               style={{ background: "var(--bg-card-2)", borderColor: "var(--hairline)" }}
             >
               <div className="flex items-center justify-between">
@@ -322,7 +338,7 @@ export function SwipeCard({
                   className="text-[10px] font-mono tracking-widest uppercase"
                   style={{ color: "var(--text-muted)" }}
                 >
-                  Looking for
+                  In their words
                 </span>
                 {photos.length > 1 && (
                   <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
@@ -364,14 +380,12 @@ export function SwipeCard({
         )}
       </div>
 
-      {/* ⚡ Spark — floating overlay on card bottom-right */}
       {onSpark !== undefined && (
         <div className="absolute bottom-[108px] right-4 z-30">
           <button
             onClick={onSpark}
-            disabled={sparkRemaining === 0}
-            className="flex flex-col items-center gap-1 transition-all duration-200 hover:scale-110 active:scale-90 disabled:opacity-40 disabled:pointer-events-none"
-            title={sparkRemaining > 0 ? "Send a Spark ⚡" : "No Sparks left this week"}
+            className="flex flex-col items-center gap-1 transition-all duration-200 hover:scale-110 active:scale-90"
+            title={sparkRemaining > 0 ? "Send a Spark ⚡" : "No Sparks left this month"}
           >
             <div
               className="w-11 h-11 rounded-full flex items-center justify-center relative"
@@ -392,7 +406,7 @@ export function SwipeCard({
                   style={{ background: "rgba(255,193,7,0.25)", animationDuration: "2.5s" }}
                 />
               )}
-              <span className="text-lg relative z-10" style={{ filter: sparkRemaining === 0 ? "grayscale(1)" : "none" }}>⚡</span>
+              <span className="text-lg relative z-10" style={{ filter: sparkRemaining === 0 ? "grayscale(1) opacity(0.5)" : "none" }}>⚡</span>
             </div>
             {/* Count pill */}
             <div

@@ -1,6 +1,6 @@
 // ─── Supabase Edge Function: Create Razorpay Order ─────────────────
 // POST /functions/v1/create-razorpay-order
-// Body: { plan: "pro" | "campus" | "weekly" }
+// Body: { plan: "pro" | "campus" | "weekly", region?: "india" | "usa" | "uk" | "eu" | "sea" | "mena" | "anz" | "row" }
 //
 // Deploy: supabase functions deploy create-razorpay-order
 // Set secrets:
@@ -15,10 +15,53 @@ const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const PLANS: Record<string, { amount: number; currency: string; period: string }> = {
-  pro: { amount: 14900, currency: "INR", period: "monthly" },
-  campus: { amount: 118800, currency: "INR", period: "yearly" },
-  weekly: { amount: 2900, currency: "INR", period: "weekly" },
+type PricingRegion = "india" | "usa" | "uk" | "eu" | "sea" | "mena" | "anz" | "row";
+type PlanId = "pro" | "campus" | "weekly";
+
+const REGION_PLANS: Record<
+  PricingRegion,
+  Record<PlanId, { amount: number; currency: string; period: string }>
+> = {
+  india: {
+    weekly: { amount: 5900, currency: "INR", period: "weekly" },
+    pro: { amount: 19900, currency: "INR", period: "monthly" },
+    campus: { amount: 149900, currency: "INR", period: "yearly" },
+  },
+  usa: {
+    weekly: { amount: 299, currency: "USD", period: "weekly" },
+    pro: { amount: 999, currency: "USD", period: "monthly" },
+    campus: { amount: 7999, currency: "USD", period: "yearly" },
+  },
+  uk: {
+    weekly: { amount: 249, currency: "GBP", period: "weekly" },
+    pro: { amount: 799, currency: "GBP", period: "monthly" },
+    campus: { amount: 5999, currency: "GBP", period: "yearly" },
+  },
+  eu: {
+    weekly: { amount: 299, currency: "EUR", period: "weekly" },
+    pro: { amount: 999, currency: "EUR", period: "monthly" },
+    campus: { amount: 7999, currency: "EUR", period: "yearly" },
+  },
+  sea: {
+    weekly: { amount: 199, currency: "USD", period: "weekly" },
+    pro: { amount: 599, currency: "USD", period: "monthly" },
+    campus: { amount: 4999, currency: "USD", period: "yearly" },
+  },
+  mena: {
+    weekly: { amount: 249, currency: "USD", period: "weekly" },
+    pro: { amount: 799, currency: "USD", period: "monthly" },
+    campus: { amount: 5999, currency: "USD", period: "yearly" },
+  },
+  anz: {
+    weekly: { amount: 349, currency: "USD", period: "weekly" },
+    pro: { amount: 1299, currency: "USD", period: "monthly" },
+    campus: { amount: 9999, currency: "USD", period: "yearly" },
+  },
+  row: {
+    weekly: { amount: 299, currency: "USD", period: "weekly" },
+    pro: { amount: 999, currency: "USD", period: "monthly" },
+    campus: { amount: 7999, currency: "USD", period: "yearly" },
+  },
 };
 
 const corsHeaders = {
@@ -58,22 +101,36 @@ serve(async (req) => {
     }
 
     // Parse request
-    const { plan, amount: clientAmount, currency: clientCurrency } = await req.json();
-    const planConfig = PLANS[plan];
+    const {
+      plan,
+      region: clientRegion,
+      expectedAmount,
+      expectedCurrency,
+    } = await req.json();
+    const region: PricingRegion =
+      clientRegion && REGION_PLANS[clientRegion as PricingRegion]
+        ? (clientRegion as PricingRegion)
+        : "row";
+    const planConfig = REGION_PLANS[region][plan as PlanId];
     if (!planConfig) {
       return new Response(JSON.stringify({ error: `Invalid plan: ${plan}` }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const amountMismatch =
+      typeof expectedAmount === "number" && expectedAmount !== planConfig.amount;
+    const currencyMismatch =
+      typeof expectedCurrency === "string" && expectedCurrency !== planConfig.currency;
+    if (amountMismatch || currencyMismatch) {
+      return new Response(JSON.stringify({ error: "Pricing changed. Refresh and try again." }), {
+        status: 409,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    // Use client-specified amount/currency for geo-pricing, fallback to server defaults
-    const orderAmount =
-      clientAmount && typeof clientAmount === "number" && clientAmount > 0
-        ? clientAmount
-        : planConfig.amount;
-    const orderCurrency =
-      clientCurrency && typeof clientCurrency === "string" ? clientCurrency : planConfig.currency;
+    const orderAmount = planConfig.amount;
+    const orderCurrency = planConfig.currency;
 
     // Check if user already has an active subscription
     const { data: existingSub } = await supabase
@@ -110,6 +167,7 @@ serve(async (req) => {
         notes: {
           user_id: user.id,
           plan: plan,
+          region,
           user_email: user.email,
         },
       }),
@@ -135,7 +193,7 @@ serve(async (req) => {
       provider_order_id: order.id,
       status: "pending",
       plan: plan,
-      metadata: { razorpay_order: order },
+      metadata: { razorpay_order: order, region },
     });
 
     return new Response(

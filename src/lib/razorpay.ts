@@ -89,7 +89,8 @@ async function createOrder(
   } = await supabase.auth.getSession();
   if (!session) throw new Error("Not authenticated");
 
-  const planConfig = getPlanConfig(planId);
+  const region = detectRegion();
+  const planConfig = getPlanConfig(planId, region);
 
   const res = await fetch(`${SUPABASE_URL}/functions/v1/create-razorpay-order`, {
     method: "POST",
@@ -99,8 +100,9 @@ async function createOrder(
     },
     body: JSON.stringify({
       plan: planId,
-      amount: planConfig.amount,
-      currency: planConfig.currency,
+      region,
+      expectedAmount: planConfig.amount,
+      expectedCurrency: planConfig.currency,
     }),
   });
 

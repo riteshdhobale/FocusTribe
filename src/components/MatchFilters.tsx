@@ -1,10 +1,11 @@
 import {
   LOCATION_MODES,
-  ACADEMIC_FOCUS,
   INTENTS,
   CAREER_GOALS,
+  getAcademicFocusForMarket,
   type LocationMode,
 } from "@/lib/constants";
+import { detectRegion } from "@/lib/geoPrice";
 import { getMyProfile, type MatchPreferences, type Profile } from "@/lib/profiles";
 import { useState, useEffect } from "react";
 import * as Slider from "@radix-ui/react-slider";
@@ -65,6 +66,8 @@ function FilterChip({
 export function MatchFilters({ prefs, onChange }: Props) {
   const [me, setMe] = useState<Profile | null>(null);
   useEffect(() => { getMyProfile().then(setMe); }, []);
+  const market = detectRegion() === "india" ? "india" : "global";
+  const academicFocusOptions = getAcademicFocusForMarket(market);
 
   const toggleExamFocus = (focus: string) => {
     const examFocus = prefs.examFocus.includes(focus)
@@ -281,7 +284,7 @@ export function MatchFilters({ prefs, onChange }: Props) {
           {/* ── Academic Focus ── */}
           <FilterSection label="Academic Focus" icon="📚">
             <div className="flex flex-wrap gap-1.5">
-              {ACADEMIC_FOCUS.slice(0, 12).map((f) => (
+              {academicFocusOptions.slice(0, 12).map((f) => (
                 <FilterChip
                   key={f.value}
                   label={f.label}

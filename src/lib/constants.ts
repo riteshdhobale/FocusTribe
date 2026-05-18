@@ -80,27 +80,36 @@ export const INTERESTS = [
 
 // ── Academic focus ───────────────────────────────────────────────
 export const ACADEMIC_FOCUS = [
-  { value: "neet", label: "NEET" },
-  { value: "jee", label: "JEE" },
-  { value: "upsc", label: "UPSC" },
-  { value: "cat", label: "CAT" },
-  { value: "ca", label: "CA" },
-  { value: "gate", label: "GATE" },
-  { value: "law", label: "Law" },
-  { value: "coding", label: "Coding" },
-  { value: "mba", label: "MBA" },
-  { value: "design", label: "Design" },
+  { value: "neet", label: "NEET", market: "india" },
+  { value: "jee", label: "JEE", market: "india" },
+  { value: "upsc", label: "UPSC", market: "india" },
+  { value: "cat", label: "CAT", market: "india" },
+  { value: "ca", label: "CA", market: "india" },
+  { value: "gate", label: "GATE", market: "india" },
+  { value: "law", label: "Law", market: "both" },
+  { value: "coding", label: "Coding", market: "both" },
+  { value: "mba", label: "MBA", market: "both" },
+  { value: "design", label: "Design", market: "both" },
   // International
-  { value: "gre", label: "GRE" },
-  { value: "gmat", label: "GMAT" },
-  { value: "mcat", label: "MCAT" },
-  { value: "usmle", label: "USMLE" },
-  { value: "bar-exam", label: "Bar Exam" },
-  { value: "cpa", label: "CPA" },
-  { value: "ielts", label: "IELTS/TOEFL" },
-  { value: "phd", label: "PhD Research" },
-  { value: "general", label: "General" },
+  { value: "gre", label: "GRE", market: "global" },
+  { value: "gmat", label: "GMAT", market: "global" },
+  { value: "mcat", label: "MCAT", market: "global" },
+  { value: "usmle", label: "USMLE", market: "global" },
+  { value: "bar-exam", label: "Bar Exam", market: "global" },
+  { value: "cpa", label: "CPA", market: "global" },
+  { value: "ielts", label: "IELTS/TOEFL", market: "global" },
+  { value: "phd", label: "PhD Research", market: "global" },
+  { value: "general", label: "General", market: "both" },
 ] as const;
+
+export type AcademicMarket = "india" | "global";
+
+export function getAcademicFocusForMarket(market: AcademicMarket) {
+  const priority = market === "india" ? ["india", "both", "global"] : ["global", "both", "india"];
+  return [...ACADEMIC_FOCUS].sort(
+    (a, b) => priority.indexOf(a.market) - priority.indexOf(b.market),
+  );
+}
 
 // ── Career goals ─────────────────────────────────────────────────
 export const CAREER_GOALS = [

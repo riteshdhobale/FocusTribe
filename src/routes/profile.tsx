@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Navbar } from "@/components/Navbar";
 import {
@@ -11,6 +11,9 @@ import {
 } from "@/lib/constants";
 import { getMyProfile, saveMyProfile, type Profile } from "@/lib/profiles";
 import { useSubscription } from "@/lib/useSubscription";
+import { ProfileCardPreview } from "@/components/ProfileCardPreview";
+import { ImageCropModal } from "@/components/ImageCropModal";
+import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -21,7 +24,15 @@ function ProfilePage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [saved, setSaved] = useState(false);
+  const [showCardPreview, setShowCardPreview] = useState(false);
   const { isPro, plan } = useSubscription();
+
+  // Photo management state
+  const maxPhotos = 6;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     getMyProfile().then((p) => setProfile(p));
@@ -59,6 +70,54 @@ function ProfilePage() {
     setSaved(false);
   };
 
+  // ── Photo handlers ──────────────────────────────────────────────
+  const handlePickFile = (files: FileList | null) => {
+    if (!files || files.length === 0 || !profile) return;
+    if ((profile.photoUrls || []).length >= maxPhotos) {
+      setPhotoError(`You can only add ${maxPhotos} photos.`);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(files[0]);
+    setCropImageUrl(objectUrl);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadCroppedPhoto = async (blob: Blob) => {
+    setCropImageUrl(null);
+    if (!profile) return;
+    setUploading(true);
+    setPhotoError("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id ?? `anon_${Date.now()}`;
+      const path = `${userId}/${crypto.randomUUID()}.jpg`;
+      const { error } = await supabase.storage
+        .from("avatars")
+        .upload(path, blob, { upsert: true, contentType: "image/jpeg" });
+      if (error) {
+        setPhotoError(`Upload failed: ${error.message}`);
+      } else {
+        const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+        update({ photoUrls: [...(profile.photoUrls || []), publicUrl].slice(0, maxPhotos) });
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePhoto = (idx: number) => {
+    if (!profile) return;
+    update({ photoUrls: (profile.photoUrls || []).filter((_, i) => i !== idx) });
+  };
+
+  const makeCover = (idx: number) => {
+    if (!profile) return;
+    const urls = [...(profile.photoUrls || [])];
+    const [moved] = urls.splice(idx, 1);
+    urls.unshift(moved);
+    update({ photoUrls: urls });
+  };
+
   const handleSave = () => {
     if (profile) {
       // Re-check verification on save
@@ -78,6 +137,7 @@ function ProfilePage() {
   const intentObj = INTENTS.find((i) => i.value === profile.intent);
 
   return (
+    <>
     <div className="min-h-screen" style={{ background: "var(--bg-main)" }}>
       <Navbar />
 
@@ -96,6 +156,17 @@ function ProfilePage() {
             >
               Shape how people discover you
             </h1>
+            <button
+              onClick={() => setShowCardPreview(true)}
+              className="mt-3 flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition hover:opacity-80"
+              style={{
+                borderColor: "var(--rose-accent)",
+                color: "var(--rose-accent)",
+                background: "color-mix(in oklab, var(--rose-accent) 8%, transparent)",
+              }}
+            >
+              <span>👁</span> Preview my card
+            </button>
           </div>
           {isPro && (
             <div
@@ -119,6 +190,68 @@ function ProfilePage() {
         </div>
 
         <div className="space-y-6">
+          {/* ── Photo grid ───────────────────────────────────── */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                Profile photos
+              </label>
+              <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                {uploading ? "⏳ Uploading…" : `${(profile.photoUrls || []).length}/${maxPhotos} · first is cover`}
+              </span>
+            </div>
+
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              disabled={uploading}
+              onChange={(e) => handlePickFile(e.target.files)}
+            />
+
+            <div className="grid grid-cols-3 gap-3">
+              {Array.from({ length: maxPhotos }).map((_, idx) => {
+                const url = (profile.photoUrls || [])[idx];
+                return (
+                  <div key={`photo-${idx}`} className="relative aspect-[3/4]">
+                    <div
+                      onClick={() => { if (!url && !uploading) fileInputRef.current?.click(); }}
+                      className="block w-full h-full rounded-xl border overflow-hidden transition-all"
+                      style={{
+                        borderColor: url ? "transparent" : "var(--hairline)",
+                        background: url ? "transparent" : "var(--bg-card)",
+                        cursor: url ? "default" : uploading ? "wait" : "pointer",
+                        borderStyle: url ? "solid" : "dashed",
+                      }}
+                    >
+                      {url ? (
+                        <img src={url} alt={`Profile ${idx + 1}`} className="w-full h-full object-cover rounded-xl" />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-1" style={{ color: "var(--text-muted)" }}>
+                          <span className="text-2xl font-light">+</span>
+                          <span className="text-[10px]">{uploading ? "Uploading…" : "Add photo"}</span>
+                        </div>
+                      )}
+                    </div>
+                    {url && (
+                      <div className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-1">
+                        {idx === 0 ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "rgba(15,23,42,0.75)", color: "#fff" }}>Cover</span>
+                        ) : (
+                          <button type="button" onClick={() => makeCover(idx)} className="text-[10px] px-2 py-0.5 rounded-full transition hover:opacity-80" style={{ background: "rgba(15,23,42,0.75)", color: "#fff" }}>Make cover</button>
+                        )}
+                        <button type="button" onClick={() => removePhoto(idx)} className="text-[10px] px-2 py-0.5 rounded-full transition hover:opacity-80" style={{ background: "rgba(239,68,68,0.8)", color: "#fff" }}>✕</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {photoError && <p className="text-xs mt-2" style={{ color: "#F97316" }}>{photoError}</p>}
+          </div>
+
           {/* Basic info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -388,6 +521,39 @@ function ProfilePage() {
           </button>
         </div>
       </div>
+      
+      {showCardPreview && profile && (
+        <ProfileCardPreview
+          onClose={() => setShowCardPreview(false)}
+          name={profile.name}
+          age={profile.age}
+          college={profile.college}
+          city={profile.city}
+          gender={profile.gender || "any"}
+          bio={profile.bio || ""}
+          photoUrls={profile.photoUrls || []}
+          examFocus={profile.examFocus?.[0] || ""}
+          careerGoal={profile.careerGoal || ""}
+          intent={profile.intent ? [profile.intent] : []}
+          studyFormats={profile.studyFormats || []}
+          interests={profile.interests || []}
+          lookingFor={profile.lookingForPrompt || ""}
+          availability={profile.availability || ""}
+        />
+      )}
+
+      {/* Image crop modal */}
+      {cropImageUrl && (
+        <ImageCropModal
+          imageUrl={cropImageUrl}
+          onConfirm={uploadCroppedPhoto}
+          onCancel={() => {
+            URL.revokeObjectURL(cropImageUrl);
+            setCropImageUrl(null);
+          }}
+        />
+      )}
     </div>
+    </>
   );
 }

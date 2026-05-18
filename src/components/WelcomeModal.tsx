@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/useAuth";
+import { captureRefParam } from "@/lib/useReferral";
 
 type Props = {
   open: boolean;
@@ -22,6 +23,8 @@ export function WelcomeModal({ open, onClose, redirectTo }: Props) {
   if (!open) return null;
 
   const handleGoogleLogin = async () => {
+    // Save ?ref= param before OAuth redirects clear the URL
+    captureRefParam();
     await signInWithGoogle();
     onClose();
     if (redirectTo) navigate({ to: redirectTo });

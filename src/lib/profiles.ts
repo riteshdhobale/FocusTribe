@@ -81,6 +81,8 @@ export type Match = {
   timestamp: number;
   lastMessage?: string;
   unread: number;
+  /** Which user ID is "me" in this match — set by getMatches() for safe partner resolution */
+  _myId?: string;
 };
 
 export type Message = {
@@ -295,6 +297,7 @@ export async function getMatches(): Promise<Match[]> {
     .from("matches")
     .select("*")
     .or(`profile_a.eq.${uid},profile_b.eq.${uid}`)
+    .neq("status", "unmatched")          // ← never show unmatched rows
     .order("updated_at", { ascending: false });
 
   if (error || !data) return [];
@@ -307,6 +310,8 @@ export async function getMatches(): Promise<Match[]> {
     timestamp: new Date(m.updated_at).getTime(),
     lastMessage: m.last_message || undefined,
     unread: m.profile_a === uid ? m.unread_a : m.unread_b,
+    // Store which side the current user is on so getPartnerId is always correct
+    _myId: uid,
   }));
 }
 
@@ -491,19 +496,20 @@ export async function addToSwipeHistory(
     return;
   }
 
-  // DEMO MODE INVESTOR FIX:
-  // If we swiped right on a mock user (UUIDs like 11111111-... to 88888888-...),
-  // we simulate an instant match! We insert directly into `matches` because
-  // inserting into `swipe_history` for another user is blocked by RLS.
+  // DEMO MODE — instant match for mock users (UUIDs like 11111111-... to 88888888-...)
+  // Use LEAST/GREATEST ordering to match what the DB trigger `check_mutual_like` would do,
+  // preventing duplicate/conflicting rows from two different orderings.
   if (
     (dbAction === "like" || dbAction === "super-like") &&
     /^[1-8]{8}-[1-8]{4}-[1-8]{4}-[1-8]{4}-[1-8]{12}$/.test(profileId)
   ) {
-    await supabase.from("matches").insert({
-      profile_a: uid, // Our RLS policy allows inserting if profile_a == auth.uid()
-      profile_b: profileId,
-      status: "matched",
-    });
+    const a = uid < profileId ? uid : profileId;   // LEAST
+    const b = uid < profileId ? profileId : uid;   // GREATEST
+    await supabase
+      .from("matches")
+      .insert({ profile_a: a, profile_b: b, status: "matched" })
+      .select()  // avoids a 406 on some Supabase versions
+      .maybeSingle();  // silently ignore UNIQUE conflicts
   }
 }
 

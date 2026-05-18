@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { applyReferralFromUrl } from "@/lib/useReferral";
 
 export const Route = createFileRoute("/auth/callback")({
   component: AuthCallback,
@@ -26,6 +27,8 @@ function AuthCallback() {
         }
 
         if (data.session) {
+          // Apply any pending referral code (stored before OAuth redirect)
+          await applyReferralFromUrl().catch(() => {/* silent fail */});
           // Session established — go to discover
           navigate({ to: "/discover" });
         } else {

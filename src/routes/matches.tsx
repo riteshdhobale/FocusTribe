@@ -233,8 +233,12 @@ function MatchesPage() {
     );
   }
 
-  const getPartnerId = (m: Match) =>
-    m.profileA === "me" || m.profileA === myProfile.id ? m.profileB : m.profileA;
+  const getPartnerId = (m: Match) => {
+    // Use the stored _myId when available (set by getMatches) for reliable resolution.
+    // Falls back to myProfile.id comparison for any legacy / optimistically-updated records.
+    const myId = m._myId ?? myProfile.id;
+    return m.profileA === myId ? m.profileB : m.profileA;
+  };
 
   const matchCards = matches
     .map((m) => {

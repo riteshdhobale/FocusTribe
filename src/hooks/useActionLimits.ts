@@ -23,7 +23,7 @@ export const SWIPE_LIMITS = {
 // Spark = Hinge's Rose for StudyDate. A highlighted like that:
 //   1. Requires a message (can't send silently)
 //   2. Goes to the TOP of the receiver's "Likes You" queue with a ⚡ badge
-//   3. Is severely limited (1/week free) — creates scarcity + intentionality
+//   3. Severely limited (1 free / 3 pro per MONTH) — creates scarcity + intentionality
 //   4. Converts at 3x the rate of regular likes (Hinge data)
 // ──────────────────────────────────────────────────────────────────────────
 
@@ -33,26 +33,24 @@ export const MAX_RIGHT_SWIPES = SWIPE_LIMITS.free.right;
 export const MAX_LEFT_SWIPES = 999;
 export const MAX_MONTHLY_PROMPTS = SWIPE_LIMITS.free.prompts;
 
-// Weekly key for Spark tracking (resets every Monday)
-function thisWeekKey() {
+// Monthly key for Spark tracking (resets 1st of each month)
+function thisMonthKey() {
   const now = new Date();
-  const day = now.getDay(); // 0=Sun, 1=Mon...
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((day + 6) % 7));
-  return `spark_week_${monday.getFullYear()}_${monday.getMonth()}_${monday.getDate()}`;
+  return `spark_month_${now.getFullYear()}_${now.getMonth()}`;
 }
 
-function getSparksUsedThisWeek(): number {
+function getSparksUsedThisMonth(): number {
   if (typeof window === "undefined") return 0;
-  return parseInt(localStorage.getItem(thisWeekKey()) || "0", 10);
+  return parseInt(localStorage.getItem(thisMonthKey()) || "0", 10);
 }
 
 export function incrementSparksUsed() {
   if (typeof window === "undefined") return;
-  const key = thisWeekKey();
+  const key = thisMonthKey();
   const current = parseInt(localStorage.getItem(key) || "0", 10);
   localStorage.setItem(key, String(current + 1));
 }
+
 
 export function useActionLimits() {
   const [rightSwipes, setRightSwipes] = useState(0);
@@ -70,7 +68,7 @@ export function useActionLimits() {
     setRightSwipes(right);
     setLeftSwipes(left);
     setSuperlikes(superlike ?? 0);
-    setSparksUsed(getSparksUsedThisWeek());
+    setSparksUsed(getSparksUsedThisMonth());
     setMonthlyPrompts(getMonthlyPromptCount());
   };
 

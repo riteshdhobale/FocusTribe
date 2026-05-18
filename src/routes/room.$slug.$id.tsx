@@ -12,8 +12,11 @@ import {
   Trash2,
   ChevronUp,
   ChevronDown,
+  Target,
 } from "lucide-react";
 import { JitsiMeet } from "@/components/JitsiMeet";
+import { TaskGate } from "@/components/TaskGate";
+import { useSessionGoalSync } from "@/lib/useSessionGoalSync";
 import { useAuth } from "@/lib/useAuth";
 
 export const Route = createFileRoute("/room/$slug/$id")({
@@ -160,6 +163,45 @@ function StudyRoomView() {
   const storeKey = `ft_tasks_${slug}_${id}`;
   const [tasks, setTasks] = useState<Task[]>([]);
   const [input, setInput] = useState("");
+
+  // ── Task Gate state ──────────────────────────────────────────────
+  // sessionGoal: the one-sentence commitment the user makes before joining
+  // gateKey is per-room so refreshing the same room re-shows the gate
+  const gateKey = `ft_gate_${slug}_${id}`;
+  const [sessionGoal, setSessionGoal] = useState<string | null>(() => {
+    try { return sessionStorage.getItem(gateKey); } catch { return null; }
+  });
+
+  // ── Sync session goal with partner via Supabase Realtime Broadcast ────
+  // Called here (before any early returns) to satisfy React Rules of Hooks.
+  // The hook silently no-ops when Supabase isn't configured or goal is null.
+  const { partnerGoal } = useSessionGoalSync({
+    roomId: id,
+    userId: user?.id,
+    displayName: userName,
+    myGoal: sessionGoal,
+  });
+
+  const handleGateCommit = (goal: string, durationMinutes: number) => {
+    setSessionGoal(goal);
+    // Map chosen duration to a Pomodoro mode and pre-set the timer
+    if (durationMinutes <= 25) {
+      handleModeChange("short"); // treat ≤25 as a short break-length focus
+    } else if (durationMinutes >= 60) {
+      handleModeChange("long");
+    } else {
+      handleModeChange("focus"); // 50 min → standard focus (2× pomodoro)
+    }
+    // Override to exact minutes chosen
+    setSecs(durationMinutes * 60);
+    // Persist for this browser tab session only (cleared on tab close)
+    try { sessionStorage.setItem(gateKey, goal); } catch {}
+    // Also pre-populate the task list with the goal if it isn't there already
+    setTasks((prev) => {
+      if (prev.some((t) => t.text === goal)) return prev;
+      return [{ id: crypto.randomUUID(), text: goal, done: false }, ...prev];
+    });
+  };
   useEffect(() => {
     if (typeof window === "undefined") return;
     const raw = localStorage.getItem(storeKey);
@@ -192,6 +234,17 @@ function StudyRoomView() {
       </div>
     );
 
+  // ── Show Task Gate before Jitsi connects ───────────────────────
+  if (!sessionGoal) {
+    return (
+      <TaskGate
+        storeKey={storeKey}
+        partnerName={isPrivateRoom ? "your study partner" : undefined}
+        onCommit={handleGateCommit}
+      />
+    );
+  }
+
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-[color:var(--background)]">
       {/* top bar */}
@@ -203,10 +256,49 @@ function StudyRoomView() {
         >
           <ArrowLeft className="h-4 w-4" /> Leave
         </Link>
-        <div className="text-sm text-center min-w-0 px-4">
-          <span className="font-display font-bold truncate">{room.name}</span>
-          <span className="text-[color:var(--text-muted)]"> · {cat?.name}</span>
+
+        {/* Dual goal bar — shows both users' commitments */}
+        <div className="flex-1 flex items-center justify-center gap-3 min-w-0 px-3">
+          {/* My goal */}
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Target className="h-3 w-3 shrink-0" style={{ color: "#FF6B9E" }} />
+            <span
+              className="text-xs font-semibold truncate max-w-[160px]"
+              style={{ color: "#FF6B9E" }}
+              title={`You: ${sessionGoal}`}
+            >
+              {sessionGoal}
+            </span>
+          </div>
+
+          {/* Partner goal — only shown in private 1-on-1 rooms once received */}
+          {isPrivateRoom && partnerGoal && (
+            <>
+              <div className="w-px h-4 shrink-0" style={{ background: "var(--hairline)" }} />
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Target className="h-3 w-3 shrink-0" style={{ color: "#8B5CF6" }} />
+                <span
+                  className="text-xs font-semibold truncate max-w-[160px]"
+                  style={{ color: "#8B5CF6" }}
+                  title={`${partnerGoal.displayName}: ${partnerGoal.goal}`}
+                >
+                  {partnerGoal.goal}
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* Waiting indicator for private rooms before partner connects */}
+          {isPrivateRoom && !partnerGoal && (
+            <>
+              <div className="w-px h-4 shrink-0" style={{ background: "var(--hairline)" }} />
+              <span className="text-xs italic" style={{ color: "var(--text-muted)" }}>
+                waiting for partner…
+              </span>
+            </>
+          )}
         </div>
+
         <div className="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
           <span className="live-dot" /> {room.participantCount || 1} live
         </div>
@@ -215,7 +307,13 @@ function StudyRoomView() {
       <div className="flex-1 flex overflow-hidden relative">
         {/* Jitsi video */}
         <div className="flex-1 p-3 lg:p-5">
-          <JitsiMeet roomName={jitsiRoomName} displayName={userName} categoryName={cat?.name} allowMic={isPrivateRoom} />
+          <JitsiMeet
+            roomName={jitsiRoomName}
+            displayName={userName}
+            categoryName={cat?.name}
+            allowMic={isPrivateRoom}
+            completedTasksCount={tasks.filter((t) => t.done).length}
+          />
         </div>
 
         {/* Desktop sidebar — hidden on mobile */}

@@ -33,21 +33,33 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Join live, exam-specific study rooms with built-in Pomodoro timers. Study alongside students preparing for NEET, JEE, UPSC, and more.",
+          "Find study partners, join focused rooms, and build momentum with students preparing for exams, finals, certifications, and research goals.",
       },
       { name: "author", content: "StudyDate" },
       { name: "theme-color", content: "#FF6B9E" },
-      { property: "og:title", content: "StudyDate — Live study rooms & Pomodoro" },
+      { property: "og:title", content: "StudyDate — Find your perfect study partner" },
       {
         property: "og:description",
         content:
-          "Join live, exam-specific study rooms with built-in Pomodoro timers. Stay accountable and hit your goals.",
+          "Swipe on ambition, not just looks. Match by goal, exam focus, and availability, then study in focused rooms. Free to start.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "/favicon.png" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@StudyDate" },
-      { name: "twitter:image", content: "/favicon.png" },
+      { property: "og:url", content: "https://studydate.in" },
+      { property: "og:image", content: "https://studydate.in/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "StudyDate — Find your perfect study partner" },
+      { property: "og:site_name", content: "StudyDate" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@StudyDateApp" },
+      { name: "twitter:creator", content: "@StudyDateApp" },
+      { name: "twitter:title", content: "StudyDate — Tinder for study partners" },
+      {
+        name: "twitter:description",
+        content:
+          "Swipe on ambition, not just looks. Match by goal, exam focus, and availability. Free to start.",
+      },
+      { name: "twitter:image", content: "https://studydate.in/og-image.png" },
     ],
     links: [
       {

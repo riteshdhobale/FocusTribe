@@ -1,5 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/lib/useAuth";
+import { formatPrice, getRegionPricing } from "@/lib/geoPrice";
+import {
+  ArrowRight,
+  CalendarClock,
+  CheckCircle2,
+  Flame,
+  GraduationCap,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 
 type Mode = "signin" | "signup" | "forgot";
 
@@ -12,19 +22,28 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
   const [name, setName] = useState("");
   const [localError, setLocalError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const pricing = useMemo(() => getRegionPricing(), []);
+  const proPrice = formatPrice(pricing.plans.pro.amount, pricing.currencySymbol);
+  const priceAnchor =
+    pricing.region === "india"
+      ? `Price check: StudyDate Pro (${proPrice}/mo) is less than a Netflix plan — and it pays back in consistency.`
+      : `Price check: StudyDate Pro (${proPrice}/mo) is less than a typical streaming plan — and it pays back in consistency.`;
 
   const pillars = [
     {
-      title: "Less friction → more starts",
-      copy: "No endless browsing. You match by exam + intent, then jump into a room.",
+      title: "Match by intent",
+      copy: "Find people studying for the same exam, goal, or weekly routine.",
+      icon: GraduationCap,
     },
     {
-      title: "Accountability without awkwardness",
-      copy: "A partner + a timebox turns “later” into “done”.",
+      title: "Start a real session",
+      copy: "Move from chat to a focused room instead of collecting matches.",
+      icon: CalendarClock,
     },
     {
-      title: "Progress cues that keep you coming back",
-      copy: "Streaks and tiny wins make consistency feel natural.",
+      title: "Keep momentum visible",
+      copy: "Streaks, sparks, and small wins make consistency easier to repeat.",
+      icon: Flame,
     },
   ];
 
@@ -53,9 +72,9 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
   ];
 
   const examPitch = [
-    "Got exams ahead? Match with people on the same grind.",
-    "Study 1:1 or in small groups — built for real sessions, not texting forever.",
-    "Turn screen time into score time: quick starts, clear structure, consistent streaks.",
+    "Match with people on the same grind.",
+    "Study 1:1 or in small groups built for real sessions.",
+    "Turn screen time into score time with quick starts and visible progress.",
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,176 +117,242 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
   };
 
   return (
-    <div className="min-h-screen px-4 py-12" style={{ background: "var(--bg-main)" }}>
-      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-6 items-start">
+    <div
+      className="min-h-screen px-4 py-8 sm:py-10"
+      style={{
+        background:
+          "linear-gradient(135deg, #070d1d 0%, #0b1120 46%, #100b1f 100%)",
+      }}
+    >
+      <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_500px] lg:gap-14">
         {/* Onboarding */}
-        <div className="space-y-6">
-          <div
-            className="p-8 rounded-2xl border"
-            style={{ borderColor: "var(--hairline)", background: "var(--bg-card)" }}
-          >
-            <div className="inline-flex items-center gap-2.5 mb-5">
-              <span
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold"
-                style={{ background: "var(--rose-accent)", color: "var(--primary-foreground)" }}
-              >
-                S
-              </span>
-              <span className="font-display font-bold text-2xl">
-                <span style={{ color: "var(--rose-accent)" }}>Study</span>
-                <span style={{ color: "var(--text-primary)" }}>Date</span>
-              </span>
-            </div>
-            <h1
-              className="font-display font-extrabold text-3xl mb-3"
-              style={{ color: "var(--text-primary)" }}
+        <div className="pt-2 lg:pt-6">
+          <div className="inline-flex items-center gap-3">
+            <span
+              className="flex h-11 w-11 items-center justify-center rounded-2xl text-lg font-extrabold"
+              style={{ background: "var(--rose-accent)", color: "var(--primary-foreground)" }}
             >
-              The productive alternative to swiping + streaming
-            </h1>
-            <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-              StudyDate pairs chemistry with structure: match by intent and exam focus, then
-              actually study. It’s the “Netflix & chill” energy — but for your future.
-            </p>
+              S
+            </span>
+            <span className="font-display text-3xl font-extrabold">
+              <span style={{ color: "var(--rose-accent)" }}>Study</span>
+              <span style={{ color: "var(--text-primary)" }}>Date</span>
+            </span>
+          </div>
 
-            <button
-              onClick={handleGoogle}
-              disabled={loading}
-              className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition"
+          <div className="mt-12 max-w-3xl">
+            <span
+              className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-extrabold uppercase"
               style={{
-                background: "var(--rose-accent)",
-                color: "var(--primary-foreground)",
-                opacity: loading ? 0.7 : 1,
-                boxShadow: "var(--shadow-rose-soft)",
+                borderColor: "rgba(255,107,158,0.28)",
+                background: "rgba(255,107,158,0.08)",
+                color: "#FF8FB5",
               }}
             >
-              Continue with Google
-            </button>
+              <Sparkles className="h-3.5 w-3.5" />
+              Built for students who need momentum
+            </span>
+            <h1
+              className="mt-5 max-w-4xl font-display text-5xl font-extrabold leading-[1.05] sm:text-6xl"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Stop collecting matches. Start finishing study sessions.
+            </h1>
+            <p
+              className="mt-5 max-w-2xl text-lg leading-8"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              StudyDate matches you by exam focus, intent, and availability, then nudges both of
+              you into a real study room before motivation fades.
+            </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
-              {pillars.map((p) => (
-                <div
-                  key={p.title}
-                  className="p-4 rounded-xl border"
-                  style={{ borderColor: "var(--hairline)", background: "var(--bg-card-2)" }}
-                >
-                  <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                    {p.title}
-                  </p>
-                  <p
-                    className="text-sm mt-2 leading-relaxed"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    {p.copy}
-                  </p>
-                </div>
-              ))}
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <button
+                onClick={handleGoogle}
+                disabled={loading}
+                className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-extrabold transition hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: "var(--rose-accent)",
+                  color: "var(--primary-foreground)",
+                  opacity: loading ? 0.7 : 1,
+                  boxShadow: "0 18px 42px rgba(255,107,158,0.28)",
+                }}
+              >
+                Continue with Google
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <span
+                className="inline-flex items-center gap-2 text-sm"
+                style={{ color: "var(--text-muted)" }}
+              >
+                <ShieldCheck className="h-4 w-4" style={{ color: "var(--emerald-live)" }} />
+                Free to start. Student-first matching.
+              </span>
             </div>
           </div>
 
+          <div className="mt-11 grid grid-cols-1 gap-3 md:grid-cols-3">
+            {pillars.map((p) => {
+              const Icon = p.icon;
+              return (
+                <div
+                  key={p.title}
+                  className="rounded-2xl border p-5"
+                  style={{
+                    borderColor: "rgba(255,255,255,0.08)",
+                    background:
+                      "linear-gradient(180deg, rgba(30,40,62,0.88), rgba(18,27,47,0.72))",
+                  }}
+                >
+                  <Icon className="mb-5 h-5 w-5" style={{ color: "#FF8FB5" }} />
+                  <p className="text-base font-extrabold" style={{ color: "var(--text-primary)" }}>
+                    {p.title}
+                  </p>
+                  <p className="mt-2 text-sm leading-6" style={{ color: "var(--text-secondary)" }}>
+                    {p.copy}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
           <div
-            className="p-6 rounded-2xl border"
-            style={{ borderColor: "var(--hairline)", background: "var(--bg-card)" }}
+            className="mt-8 rounded-[1.75rem] border p-5 sm:p-6"
+            style={{
+              borderColor: "rgba(255,255,255,0.08)",
+              background: "rgba(18,27,47,0.78)",
+            }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <span
-                className="text-xs font-mono tracking-widest uppercase"
-                style={{ color: "var(--rose-accent)" }}
-              >
-                Why it wins
-              </span>
-              <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Designed around behavior, not willpower
-              </span>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <span
+                  className="text-[11px] font-extrabold uppercase"
+                  style={{ color: "#FF8FB5" }}
+                >
+                  Why it wins
+                </span>
+                <h2
+                  className="mt-1 font-display text-2xl font-extrabold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Designed around follow-through.
+                </h2>
+              </div>
+              <p className="max-w-sm text-sm" style={{ color: "var(--text-muted)" }}>
+                Chemistry gets you interested. Structure gets you studying.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
               {alternatives.map((a) => (
                 <div
                   key={a.label}
-                  className="p-4 rounded-xl border"
+                  className="rounded-2xl border p-4"
                   style={{
                     borderColor: a.featured
-                      ? "color-mix(in oklab, var(--rose-accent) 55%, transparent)"
-                      : "var(--hairline)",
+                      ? "color-mix(in oklab, var(--rose-accent) 62%, transparent)"
+                      : "rgba(255,255,255,0.08)",
                     background: a.featured
-                      ? "color-mix(in oklab, var(--rose-accent) 10%, var(--bg-card-2))"
-                      : "var(--bg-card-2)",
-                    boxShadow: a.featured ? "var(--shadow-rose-soft)" : undefined,
+                      ? "linear-gradient(145deg, rgba(255,107,158,0.2), rgba(37,30,58,0.95))"
+                      : "rgba(255,255,255,0.035)",
                   }}
                 >
                   <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                     {a.label}
                   </p>
                   <p
-                    className="text-xl font-extrabold mt-1"
+                    className="mt-2 text-2xl font-extrabold"
                     style={{ color: "var(--text-primary)" }}
                   >
                     {a.headline}
                   </p>
-                  <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+                  <p className="mt-1 text-xs leading-5" style={{ color: "var(--text-secondary)" }}>
                     {a.sub}
                   </p>
                 </div>
               ))}
             </div>
 
-            <div
-              className="mt-4 p-4 rounded-2xl border"
-              style={{ borderColor: "var(--hairline)", background: "var(--bg-card-2)" }}
-            >
-              <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                Got exams ahead?
-              </p>
-              <div className="mt-2 space-y-2">
-                {examPitch.map((line) => (
-                  <p
-                    key={line}
-                    className="text-sm leading-relaxed"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
+            <div className="mt-5 grid gap-2">
+              {examPitch.map((line) => (
+                <div key={line} className="flex items-center gap-3">
+                  <CheckCircle2
+                    className="h-4 w-4 shrink-0"
+                    style={{ color: "var(--emerald-live)" }}
+                  />
+                  <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
                     {line}
                   </p>
-                ))}
-              </div>
-              <div className="rose-divider mt-4" />
-              <p className="text-xs mt-4" style={{ color: "var(--text-muted)" }}>
-                Price check: StudyDate Pro (₹199/mo) is less than a Netflix plan — and it pays back
-                in consistency.
+                </div>
+              ))}
+            </div>
+            <div
+              className="mt-5 rounded-2xl border px-4 py-3"
+              style={{
+                borderColor: "rgba(255,107,158,0.24)",
+                background: "rgba(255,107,158,0.08)",
+              }}
+            >
+              <p className="text-sm font-bold leading-6" style={{ color: "var(--text-primary)" }}>
+                {priceAnchor}
               </p>
             </div>
           </div>
         </div>
 
         {/* Auth */}
-        <div className="w-full max-w-md justify-self-center">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2.5 mb-4">
-              <span
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold"
-                style={{ background: "var(--rose-accent)", color: "var(--primary-foreground)" }}
-              >
-                S
-              </span>
-              <span className="font-display font-bold text-2xl">
-                <span style={{ color: "var(--rose-accent)" }}>Study</span>
-                <span style={{ color: "var(--text-primary)" }}>Date</span>
-              </span>
-            </div>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              {mode === "signup"
-                ? "Create your account to start matching"
-                : mode === "signin"
-                  ? "Welcome back! Sign in to continue"
-                  : "Enter your email to reset your password"}
-            </p>
-          </div>
-
+        <div className="w-full justify-self-center lg:sticky lg:top-8">
           {/* Card */}
           <div
-            className="p-6 rounded-2xl border"
-            style={{ borderColor: "var(--gold-soft)", background: "var(--bg-card)" }}
+            className="overflow-hidden rounded-[2rem] border"
+            style={{
+              borderColor: "rgba(255,107,158,0.38)",
+              background:
+                "linear-gradient(180deg, rgba(23,34,56,0.96) 0%, rgba(15,23,42,0.98) 100%)",
+              boxShadow: "0 28px 90px rgba(0,0,0,0.36)",
+            }}
           >
+            <div className="border-b px-7 py-7" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="inline-flex items-center gap-2.5">
+                  <span
+                    className="flex h-10 w-10 items-center justify-center rounded-2xl text-lg font-extrabold"
+                    style={{ background: "var(--rose-accent)", color: "var(--primary-foreground)" }}
+                  >
+                    S
+                  </span>
+                  <span className="font-display text-2xl font-extrabold">
+                    <span style={{ color: "var(--rose-accent)" }}>Study</span>
+                    <span style={{ color: "var(--text-primary)" }}>Date</span>
+                  </span>
+                </div>
+                <span
+                  className="rounded-full border px-3 py-1 text-[11px] font-bold"
+                  style={{ borderColor: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
+                >
+                  2 min setup
+                </span>
+              </div>
+              <h2
+                className="mt-7 font-display text-3xl font-extrabold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {mode === "signup"
+                  ? "Create your study profile"
+                  : mode === "signin"
+                    ? "Welcome back"
+                    : "Reset your password"}
+              </h2>
+              <p className="mt-2 text-sm leading-6" style={{ color: "var(--text-secondary)" }}>
+                {mode === "signup"
+                  ? "Join with Google or email, then tell us what you are studying for."
+                  : mode === "signin"
+                    ? "Pick up your matches, rooms, and progress where you left off."
+                    : "Enter your email and we will send a reset link."}
+              </p>
+            </div>
+
+            <div className="p-7">
             {/* Google Sign In */}
             {mode !== "forgot" && (
               <>
@@ -487,6 +572,7 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
                 </p>
               )}
             </div>
+          </div>
           </div>
           {/* Demo mode */}
           {!isSupabaseMode && (
