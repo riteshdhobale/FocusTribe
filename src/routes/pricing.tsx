@@ -10,7 +10,9 @@ import {
   formatPrice,
   formatMrp,
   discountPercent,
+  getPaymentProvider,
 } from "@/lib/geoPrice";
+import { toast } from "sonner";
 import {
   Check,
   Sparkles,
@@ -55,19 +57,37 @@ function PricingPage() {
   } = usePayment();
   const { plan: currentPlan, isPro, inReverseTrial, trialDaysLeft } = useSubscription();
 
-  // Detect pricing region
+  // Detect pricing region & payment provider
   const pricing = useMemo(() => getRegionPricing(), []);
   const sym = pricing.currencySymbol;
+  const provider = useMemo(() => getPaymentProvider(), []);
 
   const handleUpgrade = async (planId: PlanId) => {
+    console.log("[Pricing] handleUpgrade called:", { planId, isAuthenticated, isConfigured, provider });
+
     if (!isAuthenticated) {
+      toast.error("Please sign in first to upgrade your plan.");
       navigate({ to: "/discover" });
       return;
     }
 
-    const result = await checkout(planId);
-    if (result.success) {
-      setTimeout(() => window.location.reload(), 2000);
+    toast.loading("Opening checkout...", { id: "payment-loading" });
+
+    try {
+      const result = await checkout(planId);
+      toast.dismiss("payment-loading");
+      console.log("[Pricing] checkout result:", result);
+
+      if (result.success) {
+        toast.success("Payment successful! Welcome to StudyDate Pro 🎉");
+        setTimeout(() => window.location.reload(), 2000);
+      } else if (result.error && result.error !== "Payment cancelled") {
+        toast.error(result.error || "Payment failed. Please try again.");
+      }
+    } catch (err: any) {
+      toast.dismiss("payment-loading");
+      console.error("[Pricing] checkout error:", err);
+      toast.error(err.message || "Something went wrong. Please try again.");
     }
   };
 
@@ -619,7 +639,7 @@ function PricingPage() {
           >
             <div className="flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" style={{ color: "#10B981" }} />
-              <span>Razorpay Secure Payment</span>
+              <span>{provider === "razorpay" ? "Razorpay Secure Payment" : "Dodo Secure Payment"}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" style={{ color: "#10B981" }} />
@@ -681,7 +701,7 @@ function PricingPage() {
                   q: "What payment methods do you support?",
                   a: pricing.region === "india"
                     ? "We accept UPI, credit/debit cards, net banking, and wallets through Razorpay — India's most trusted payment gateway."
-                    : "For international users: credit/debit cards (Visa, Mastercard, Amex) via Razorpay. Apple Pay and PayPal support coming soon.",
+                    : "For international users: credit/debit cards (Visa, Mastercard, Amex), Apple Pay, and Google Pay via Dodo Payments — a secure global payment platform.",
                 },
                 {
                   q: "Can I cancel anytime?",

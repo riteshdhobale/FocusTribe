@@ -27,6 +27,18 @@ const TIMEZONE_REGION_MAP: Record<string, PricingRegion> = {
   "Asia/Calcutta": "india",
   "Asia/Chennai": "india",
 
+  // Pakistan (Razorpay region — same pricing tier as India)
+  "Asia/Karachi": "india",
+
+  // Bangladesh (Razorpay region)
+  "Asia/Dhaka": "india",
+
+  // Nepal (Razorpay region)
+  "Asia/Kathmandu": "india",
+
+  // Sri Lanka (Razorpay region)
+  "Asia/Colombo": "india",
+
   // USA & Canada
   "America/New_York": "usa",
   "America/Chicago": "usa",
@@ -184,6 +196,32 @@ const REGION_PRICING: Record<PricingRegion, RegionPricing> = {
   },
 };
 
+// ─── Payment Provider Routing ──────────────────────────────────────
+// Razorpay  → India, Pakistan, Bangladesh, Nepal, Sri Lanka
+// Dodo      → All other regions (global)
+
+export type PaymentProvider = "razorpay" | "dodo";
+
+/** Regions that should use Razorpay for payment processing. */
+const RAZORPAY_REGIONS: Set<PricingRegion> = new Set(["india"]);
+
+/**
+ * Check if a region should use Razorpay.
+ */
+export function isRazorpayRegion(region?: PricingRegion): boolean {
+  const r = region || detectRegion();
+  return RAZORPAY_REGIONS.has(r);
+}
+
+/**
+ * Get the payment provider for a given region.
+ * South Asia (IN/PK/BD/NP/LK) → Razorpay
+ * All other regions → Dodo Payments
+ */
+export function getPaymentProvider(region?: PricingRegion): PaymentProvider {
+  return isRazorpayRegion(region) ? "razorpay" : "dodo";
+}
+
 // ─── Public API ────────────────────────────────────────────────────
 
 /**
@@ -201,6 +239,10 @@ export function detectRegion(): PricingRegion {
 
     // Fallback: check timezone prefix for broader matching
     if (tz?.startsWith("Asia/Kolkata") || tz?.startsWith("Asia/Calcutta")) return "india";
+    if (tz?.startsWith("Asia/Karachi")) return "india"; // Pakistan → Razorpay region
+    if (tz?.startsWith("Asia/Dhaka")) return "india"; // Bangladesh → Razorpay region
+    if (tz?.startsWith("Asia/Kathmandu")) return "india"; // Nepal → Razorpay region
+    if (tz?.startsWith("Asia/Colombo")) return "india"; // Sri Lanka → Razorpay region
     if (tz?.startsWith("America/")) return "usa";
     if (tz?.startsWith("Europe/London") || tz?.startsWith("Europe/Dublin")) return "uk";
     if (tz?.startsWith("Europe/")) return "eu";

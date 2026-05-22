@@ -1,23 +1,30 @@
-// ─── Supabase Edge Function: Create Razorpay Order ─────────────────
-// POST /functions/v1/create-razorpay-order
-// Body: { plan: "pro" | "campus" | "weekly", region?: "india" | "usa" | "uk" | "eu" | "sea" | "mena" | "anz" | "row" }
+// ─── Supabase Edge Function: Create Stripe Checkout Session ────────
+// POST /functions/v1/create-stripe-session
+// Body: { plan, region, customerEmail, customerName, successUrl, cancelUrl }
 //
-// Deploy: supabase functions deploy create-razorpay-order
+// ⚠️  CURRENTLY UNUSED — Dodo Payments handles international users instead.
+//     Kept for potential future use. To re-enable:
+//       1. Set STRIPE_SECRET_KEY in Supabase secrets
+//       2. Deploy: supabase functions deploy create-stripe-session
+//       3. Route international users to this function in usePayment.ts
+//
+// Deploy: supabase functions deploy create-stripe-session
 // Set secrets:
-//   supabase secrets set RAZORPAY_KEY_ID=rzp_live_xxx
-//   supabase secrets set RAZORPAY_KEY_SECRET=xxx
+//   supabase secrets set STRIPE_SECRET_KEY=sk_live_xxx
+//   supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_xxx
 
+/*
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
-const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID")!;
-const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET")!;
+const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-type PricingRegion = "india" | "usa" | "uk" | "eu" | "sea" | "mena" | "anz" | "row";
 type PlanId = "pro" | "campus" | "weekly";
+type PricingRegion = "india" | "usa" | "uk" | "eu" | "sea" | "mena" | "anz" | "row";
 
+// ─── Pricing per region (mirrors geoPrice.ts — server-side source of truth)
 const REGION_PLANS: Record<
   PricingRegion,
   Record<PlanId, { amount: number; currency: string; period: string }>
@@ -64,6 +71,13 @@ const REGION_PLANS: Record<
   },
 };
 
+// Plan display names
+const PLAN_LABELS: Record<PlanId, { name: string; description: string }> = {
+  pro: { name: "StudyDate Pro — Monthly", description: "Unlimited swipes, study rooms & streaks" },
+  campus: { name: "StudyDate Campus — Annual", description: "Annual plan for verified students" },
+  weekly: { name: "StudyDate Weekly Pass", description: "7-day full Pro access, no auto-renew" },
+};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -104,9 +118,12 @@ serve(async (req) => {
     const {
       plan,
       region: clientRegion,
-      expectedAmount,
-      expectedCurrency,
+      customerEmail,
+      customerName,
+      successUrl,
+      cancelUrl,
     } = await req.json();
+
     const region: PricingRegion =
       clientRegion && REGION_PLANS[clientRegion as PricingRegion]
         ? (clientRegion as PricingRegion)
@@ -118,19 +135,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const amountMismatch =
-      typeof expectedAmount === "number" && expectedAmount !== planConfig.amount;
-    const currencyMismatch =
-      typeof expectedCurrency === "string" && expectedCurrency !== planConfig.currency;
-    if (amountMismatch || currencyMismatch) {
-      return new Response(JSON.stringify({ error: "Pricing changed. Refresh and try again." }), {
-        status: 409,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const orderAmount = planConfig.amount;
-    const orderCurrency = planConfig.currency;
 
     // Check if user already has an active subscription
     const { data: existingSub } = await supabase
@@ -152,69 +156,73 @@ serve(async (req) => {
       );
     }
 
-    // Create Razorpay order
-    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
-      console.error("Razorpay credentials missing. RAZORPAY_KEY_ID:", !!RAZORPAY_KEY_ID, "RAZORPAY_KEY_SECRET:", !!RAZORPAY_KEY_SECRET);
-      return new Response(JSON.stringify({ error: "Payment gateway not configured. Contact support." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const planLabel = PLAN_LABELS[plan as PlanId];
 
-    const credentials = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
-    const orderRes = await fetch("https://api.razorpay.com/v1/orders", {
+    // ─── Create Stripe Checkout Session via REST API ───────────
+    // Docs: https://stripe.com/docs/api/checkout/sessions/create
+    const stripeParams = new URLSearchParams();
+    stripeParams.append("mode", "payment");
+    stripeParams.append("line_items[0][price_data][currency]", planConfig.currency.toLowerCase());
+    stripeParams.append("line_items[0][price_data][unit_amount]", String(planConfig.amount));
+    stripeParams.append("line_items[0][price_data][product_data][name]", planLabel.name);
+    stripeParams.append("line_items[0][price_data][product_data][description]", planLabel.description);
+    stripeParams.append("line_items[0][quantity]", "1");
+    stripeParams.append("customer_email", customerEmail || user.email || "");
+    stripeParams.append("success_url", successUrl || "https://studydate.in/pricing?payment=success");
+    stripeParams.append("cancel_url", cancelUrl || "https://studydate.in/pricing?payment=cancelled");
+    stripeParams.append("metadata[user_id]", user.id);
+    stripeParams.append("metadata[plan]", plan);
+    stripeParams.append("metadata[region]", region);
+    stripeParams.append("metadata[user_email]", user.email || "");
+    stripeParams.append("payment_intent_data[metadata][user_id]", user.id);
+    stripeParams.append("payment_intent_data[metadata][plan]", plan);
+    stripeParams.append("payment_intent_data[metadata][region]", region);
+    // Set statement descriptor so user sees "STUDYDATE" on their bank statement
+    stripeParams.append("payment_intent_data[statement_descriptor]", "STUDYDATE PRO");
+
+    const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${credentials}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${btoa(`${STRIPE_SECRET_KEY}:`)}`,
       },
-      body: JSON.stringify({
-        amount: orderAmount,
-        currency: orderCurrency,
-        receipt: `sd_${user.id.slice(0, 8)}_${Date.now()}`,
-        notes: {
-          user_id: user.id,
-          plan: plan,
-          region,
-          user_email: user.email,
-        },
-      }),
+      body: stripeParams.toString(),
     });
 
-    if (!orderRes.ok) {
-      const errBody = await orderRes.text();
-      console.error("Razorpay order creation failed:", orderRes.status, errBody);
-      // Parse Razorpay error for a user-friendly message
-      let razorpayMsg = "Failed to create payment order";
-      try {
-        const parsed = JSON.parse(errBody);
-        razorpayMsg = parsed?.error?.description || parsed?.error?.message || razorpayMsg;
-      } catch {}
-      return new Response(JSON.stringify({ error: razorpayMsg, details: errBody }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!stripeRes.ok) {
+      const errBody = await stripeRes.text();
+      console.error("Stripe session creation failed:", errBody);
+      return new Response(
+        JSON.stringify({ error: "Failed to create checkout session" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
-    const order = await orderRes.json();
+    const stripeSession = await stripeRes.json();
 
     // Log order in payments table as pending
     await supabase.from("payments").insert({
       user_id: user.id,
-      amount_cents: orderAmount,
-      currency: orderCurrency,
-      payment_provider: "razorpay",
-      provider_order_id: order.id,
+      amount_cents: planConfig.amount,
+      currency: planConfig.currency,
+      payment_provider: "stripe",
+      provider_order_id: stripeSession.id,
       status: "pending",
       plan: plan,
-      metadata: { razorpay_order: order, region },
+      metadata: {
+        stripe_session_id: stripeSession.id,
+        region,
+        checkout_url: stripeSession.url,
+      },
     });
 
     return new Response(
       JSON.stringify({
-        orderId: order.id,
-        amount: orderAmount,
-        currency: orderCurrency,
+        checkoutUrl: stripeSession.url,
+        sessionId: stripeSession.id,
       }),
       {
         status: 200,
@@ -229,3 +237,4 @@ serve(async (req) => {
     });
   }
 });
+*/
