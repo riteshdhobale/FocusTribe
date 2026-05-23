@@ -59,7 +59,7 @@ function SafetyPage() {
               18+ and respectful
             </h3>
             <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-              Dating flows are adult-only with clear conduct expectations and profile controls. Zero
+              All features are built for 18+ users with clear conduct expectations and profile controls. Zero
               tolerance for harassment.
             </p>
           </div>
@@ -97,8 +97,8 @@ function SafetyPage() {
               Intent-forward matching
             </h3>
             <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-              Users declare whether they want study partners, accountability buddies, friends-first
-              chemistry, or meaningful dating.
+              Users declare whether they want study partners, accountability buddies, or focused study
+              sessions — matching is always intent-driven.
             </p>
           </div>
         </div>
@@ -135,7 +135,7 @@ function SafetyPage() {
             },
             {
               title: "Camera-on accountability",
-              desc: "Study date rooms default to camera-on, microphone-muted. This creates a library-like atmosphere of focused, silent study.",
+              desc: "Study rooms default to camera-on, microphone-muted. This creates a library-like atmosphere of focused, silent study.",
               icon: "📸",
             },
             {
@@ -179,7 +179,7 @@ function SafetyPage() {
           <a
             href="/discover"
             className="inline-block px-8 py-3.5 rounded-xl text-sm font-semibold"
-            style={{ background: "var(--rose-accent)", color: "#0B1120" }}
+            style={{ background: "var(--ft-primary)", color: "#fff" }}
           >
             Start matching →
           </a>

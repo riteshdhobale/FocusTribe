@@ -57,7 +57,7 @@ export function useReferral() {
 
       // Fetch referral stats
       const { data: referrals, error: statsError } = await (supabase
-        .from("referrals") as any)
+        .from as any)("referrals")
         .select("reward_granted")
         .eq("referrer_id", user.id);
 
@@ -102,7 +102,7 @@ export function useReferral() {
   const shareOnTwitter = useCallback(() => {
     if (!shareUrl) return;
     const text = encodeURIComponent(
-      `I've been using FocusTribe to find serious study partners — it's like Tinder but for your academic goals 🎯\n\nJoin free (+ 3 days Pro): ${shareUrl}`
+      `I've been using FocusTribe to find serious study partners — accountability that actually works 🎯\n\nJoin free (+ 3 days Pro): ${shareUrl}`
     );
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
   }, [shareUrl]);

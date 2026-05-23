@@ -60,7 +60,9 @@ export function useActionLimits() {
   const [monthlyPrompts, setMonthlyPrompts] = useState(0);
   const { plan } = useSubscription();
 
-  const tier = plan === "pro" ? "pro" : plan === "annual" ? "annual" : "free";
+  // Map subscription plans to swipe-limit tiers:
+  //   free → free,  pro/weekly → pro,  campus → annual (unlimited)
+  const tier = (plan === "pro" || plan === "weekly") ? "pro" : plan === "campus" ? "annual" : "free";
   const limits = SWIPE_LIMITS[tier];
 
   const refreshLimits = () => {

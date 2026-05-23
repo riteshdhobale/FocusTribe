@@ -110,26 +110,14 @@ function PricingPage() {
     pricing.region === "india"
       ? [
           {
-            app: "Dating Apps",
+            app: "Streaming Apps",
             price: "₹500+",
             icon: (
-              <div className="flex justify-center items-center gap-2 -ml-2">
-                <img
-                  src="https://cdn.simpleicons.org/tinder/FE3C72"
-                  alt="Tinder"
-                  className="w-7 h-7 drop-shadow-md"
-                />
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-7 h-7 drop-shadow-md"
-                  fill="#FFC629"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M12 0a12 12 0 1 0 12 12A12.013 12.013 0 0 0 12 0zm5.176 17.525a.863.863 0 0 1-.863.863H7.688a.863.863 0 0 1-.863-.863v-1.638a.863.863 0 0 1 .863-.863h8.625a.863.863 0 0 1 .863.863v1.638zm1.962-4.088a.863.863 0 0 1-.863.863H5.725a.863.863 0 0 1-.863-.863v-1.638a.863.863 0 0 1 .863-.863h12.55a.863.863 0 0 1 .863.863v1.638zm-2.887-4.088a.863.863 0 0 1-.863.863H8.612a.863.863 0 0 1-.863-.863V7.71a.863.863 0 0 1 .863-.863h6.775a.863.863 0 0 1 .863.863v1.639z" />
-                </svg>
+              <div className="flex justify-center items-center gap-2">
+                <Tv className="w-9 h-9 text-purple-400 drop-shadow-md" />
               </div>
             ),
-            note: "Swipes that go nowhere",
+            note: "Hours lost to binging",
             per: "/mo",
             type: "waste" as const,
           },
@@ -178,26 +166,14 @@ function PricingPage() {
         ]
       : [
           {
-            app: "Dating Apps",
+            app: "Streaming Apps",
             price: "$25+",
             icon: (
-              <div className="flex justify-center items-center gap-2 -ml-2">
-                <img
-                  src="https://cdn.simpleicons.org/tinder/FE3C72"
-                  alt="Tinder"
-                  className="w-7 h-7 drop-shadow-md"
-                />
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-7 h-7 drop-shadow-md"
-                  fill="#FFC629"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M12 0a12 12 0 1 0 12 12A12.013 12.013 0 0 0 12 0zm5.176 17.525a.863.863 0 0 1-.863.863H7.688a.863.863 0 0 1-.863-.863v-1.638a.863.863 0 0 1 .863-.863h8.625a.863.863 0 0 1 .863.863v1.638zm1.962-4.088a.863.863 0 0 1-.863.863H5.725a.863.863 0 0 1-.863-.863v-1.638a.863.863 0 0 1 .863-.863h12.55a.863.863 0 0 1 .863.863v1.638zm-2.887-4.088a.863.863 0 0 1-.863.863H8.612a.863.863 0 0 1-.863-.863V7.71a.863.863 0 0 1 .863-.863h6.775a.863.863 0 0 1 .863.863v1.639z" />
-                </svg>
+              <div className="flex justify-center items-center gap-2">
+                <Tv className="w-9 h-9 text-purple-400 drop-shadow-md" />
               </div>
             ),
-            note: "Swipes that go nowhere",
+            note: "Hours lost to binging",
             per: "/mo",
             type: "waste" as const,
           },
@@ -318,8 +294,8 @@ function PricingPage() {
           </h1>
           <p className="text-lg text-[color:var(--text-secondary)] max-w-2xl mx-auto mb-12">
             {pricing.region === "india"
-              ? "You're paying ₹500+/mo on dating apps to swipe on people with no direction. For less than that, find someone who makes you smarter, sharper, and more consistent."
-              : "You're paying $25+/mo on dating apps to swipe on people with no direction. For a fraction of that, find someone who makes you smarter, sharper, and more consistent."}
+              ? "You're paying ₹500+/mo on streaming apps you binge instead of study. For less than that, get matched with people who push you to actually show up."
+              : "You're paying $25+/mo on streaming apps you binge instead of study. For a fraction of that, get matched with people who push you to actually show up."}
           </p>
 
           {/* Psychological price comparison (Anchoring effect) */}

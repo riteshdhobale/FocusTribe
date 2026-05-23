@@ -10,7 +10,7 @@ export interface Starter {
 }
 
 const GENERAL_STARTERS: Starter[] = [
-  { text: "What does your ideal library date actually look like?", category: "general" },
+  { text: "What does your ideal library session actually look like?", category: "general" },
   {
     text: "If we did one 90-minute focus sprint this week, what would you want to finish?",
     category: "general",
@@ -20,7 +20,7 @@ const GENERAL_STARTERS: Starter[] = [
     category: "general",
   },
   {
-    text: "What career goal are you romantic enough to keep chasing even on your bad days?",
+    text: "What career goal are you passionate enough to keep chasing even on your bad days?",
     category: "general",
   },
   {
@@ -176,7 +176,7 @@ export function getStartersForMatch(matchExamFocus?: string[]): Starter[] {
 export function getBestNextMove(): { title: string; body: string } {
   const moves = [
     {
-      title: "Invite them to a focused first date",
+      title: "Invite them to a focused first session",
       body: "Coffee + a 90-minute study sprint beats endless texting. Keep it light, specific, and time-bound.",
     },
     {

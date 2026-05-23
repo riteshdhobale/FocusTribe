@@ -41,7 +41,7 @@ export function useSessionGoalSync({
 
   useEffect(() => {
     // Silently no-op if Supabase isn't configured (localhost without .env)
-    if (!isSupabaseConfigured() || !roomId) return;
+    if (!isSupabaseConfigured() || !roomId || !userId) return;
 
     const channelName = `room-goals:${roomId}`;
 
@@ -62,7 +62,7 @@ export function useSessionGoalSync({
           channel.send({
             type: "broadcast",
             event: "goal",
-            payload: { userId, displayName, goal: myGoal } satisfies PartnerGoal,
+            payload: { userId: userId!, displayName, goal: myGoal } satisfies PartnerGoal,
           });
           broadcastedGoal.current = myGoal;
         }
@@ -85,7 +85,7 @@ export function useSessionGoalSync({
     channelRef.current.send({
       type: "broadcast",
       event: "goal",
-      payload: { userId, displayName, goal: myGoal } satisfies PartnerGoal,
+      payload: { userId: userId!, displayName, goal: myGoal } satisfies PartnerGoal,
     });
     broadcastedGoal.current = myGoal;
   }, [myGoal, userId, displayName]);

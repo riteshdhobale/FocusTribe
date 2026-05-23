@@ -81,6 +81,8 @@ export type Match = {
   timestamp: number;
   lastMessage?: string;
   unread: number;
+  /** Like type: regular like vs super-like — set during swipe */
+  type?: "like" | "super-like";
   /** Which user ID is "me" in this match — set by getMatches() for safe partner resolution */
   _myId?: string;
 };

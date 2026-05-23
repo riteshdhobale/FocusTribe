@@ -653,7 +653,7 @@ function Landing() {
 
           {/* price anchor */}
           <div className="mt-10 surface-card p-6 flex flex-wrap items-center justify-center gap-4 text-sm">
-            <span className="text-[color:var(--text-muted)]">Tinder Gold: ₹500</span>
+            <span className="text-[color:var(--text-muted)]">Hotstar: ₹299</span>
             <span className="text-[color:var(--text-muted)]">·</span>
             <span className="text-[color:var(--text-muted)]">Netflix: ₹199</span>
             <span className="text-[color:var(--text-muted)]">·</span>
@@ -790,7 +790,7 @@ function Landing() {
               Pricing
             </Link>
             <a
-              href="mailto:support@studydate.in"
+              href="mailto:support@focustribe.in"
               className="hover:text-[color:var(--text-primary)] transition"
             >
               Contact

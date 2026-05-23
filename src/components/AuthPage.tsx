@@ -49,9 +49,9 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
 
   const alternatives = [
     {
-      label: "Tinder / Hinge",
-      headline: "Chemistry",
-      sub: "…but often no follow-through",
+      label: "Discord Servers",
+      headline: "Community",
+      sub: "…but no structured accountability",
     },
     {
       label: "Netflix",
@@ -130,13 +130,13 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
           <div className="inline-flex items-center gap-3">
             <span
               className="flex h-11 w-11 items-center justify-center rounded-2xl text-lg font-extrabold"
-              style={{ background: "var(--rose-accent)", color: "var(--primary-foreground)" }}
+              style={{ background: "var(--ft-primary)", color: "#fff" }}
             >
-              S
+              FT
             </span>
             <span className="font-display text-3xl font-extrabold">
-              <span style={{ color: "var(--rose-accent)" }}>Study</span>
-              <span style={{ color: "var(--text-primary)" }}>Date</span>
+              <span style={{ color: "#818CF8" }}>Focus</span>
+              <span style={{ color: "var(--text-primary)" }}>Tribe</span>
             </span>
           </div>
 
@@ -144,9 +144,9 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
             <span
               className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-extrabold uppercase"
               style={{
-                borderColor: "rgba(255,107,158,0.28)",
-                background: "rgba(255,107,158,0.08)",
-                color: "#FF8FB5",
+                borderColor: "rgba(99,102,241,0.28)",
+                background: "rgba(99,102,241,0.08)",
+                color: "#818CF8",
               }}
             >
               <Sparkles className="h-3.5 w-3.5" />
@@ -172,10 +172,10 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
                 disabled={loading}
                 className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-extrabold transition hover:scale-[1.02] active:scale-[0.98]"
                 style={{
-                  background: "var(--rose-accent)",
-                  color: "var(--primary-foreground)",
+                  background: "var(--ft-primary)",
+                  color: "#fff",
                   opacity: loading ? 0.7 : 1,
-                  boxShadow: "0 18px 42px rgba(255,107,158,0.28)",
+                  boxShadow: "0 18px 42px rgba(99,102,241,0.28)",
                 }}
               >
                 Continue with Google
@@ -204,7 +204,7 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
                       "linear-gradient(180deg, rgba(30,40,62,0.88), rgba(18,27,47,0.72))",
                   }}
                 >
-                  <Icon className="mb-5 h-5 w-5" style={{ color: "#FF8FB5" }} />
+                  <Icon className="mb-5 h-5 w-5" style={{ color: "#818CF8" }} />
                   <p className="text-base font-extrabold" style={{ color: "var(--text-primary)" }}>
                     {p.title}
                   </p>
@@ -227,7 +227,7 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
               <div>
                 <span
                   className="text-[11px] font-extrabold uppercase"
-                  style={{ color: "#FF8FB5" }}
+                  style={{ color: "#818CF8" }}
                 >
                   Why it wins
                 </span>
@@ -317,13 +317,13 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
                 <div className="inline-flex items-center gap-2.5">
                   <span
                     className="flex h-10 w-10 items-center justify-center rounded-2xl text-lg font-extrabold"
-                    style={{ background: "var(--rose-accent)", color: "var(--primary-foreground)" }}
+                    style={{ background: "var(--ft-primary)", color: "#fff" }}
                   >
-                    S
+                    FT
                   </span>
                   <span className="font-display text-2xl font-extrabold">
-                    <span style={{ color: "var(--rose-accent)" }}>Study</span>
-                    <span style={{ color: "var(--text-primary)" }}>Date</span>
+                    <span style={{ color: "#818CF8" }}>Focus</span>
+                    <span style={{ color: "var(--text-primary)" }}>Tribe</span>
                   </span>
                 </div>
                 <span
