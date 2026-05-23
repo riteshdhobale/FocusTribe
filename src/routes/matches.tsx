@@ -15,7 +15,16 @@ import {
 
 export const Route = createFileRoute("/matches")({
   component: MatchesPage,
-  head: () => ({ meta: [{ title: "Matches — StudyDate" }] }),
+  head: () => ({
+    meta: [
+      { title: "Matches — StudyDate" },
+      { name: "robots", content: "noindex" },
+      {
+        name: "description",
+        content: "Your study partner matches. Chat, schedule sessions, and study together.",
+      },
+    ],
+  }),
 });
 
 // ─── Likes You Card (Hinge-style) ────────────────────────────────────────────

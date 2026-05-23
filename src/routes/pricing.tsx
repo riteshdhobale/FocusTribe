@@ -33,11 +33,25 @@ export const Route = createFileRoute("/pricing")({
   component: PricingPage,
   head: () => ({
     meta: [
-      { title: "Pricing — StudyDate" },
+      { title: "Pricing — StudyDate | Plans from ₹59/week" },
       {
         name: "description",
         content:
-          "StudyDate Pro: Unlimited study rooms, streaks, and matching. Half the price of the competition.",
+          "StudyDate Pro: Unlimited study rooms, streaks, and matching. Half the price of the competition. Plans starting at ₹59/week.",
+      },
+      { property: "og:title", content: "StudyDate Pricing — Unlock Unlimited Study Partners" },
+      {
+        property: "og:description",
+        content:
+          "Less than a coffee. Unlimited swiping, study rooms, and streak shields. Free 24-hour Pro trial.",
+      },
+      { property: "og:url", content: "https://studydate.in/pricing" },
+      { property: "og:image", content: "https://studydate.in/og-image.png" },
+      { name: "twitter:title", content: "StudyDate Pricing — Plans from ₹59/week" },
+      {
+        name: "twitter:description",
+        content:
+          "Unlimited study rooms, matching, and streaks. Less than a coffee per day. Free to start.",
       },
     ],
   }),
@@ -695,7 +709,7 @@ function PricingPage() {
               {[
                 {
                   q: "Is StudyDate free to start?",
-                  a: "Yes — you get a 7-day free Pro trial when you sign up. No credit card required. After the trial, you can stay on the free plan (3 hours/day) or upgrade to Pro for unlimited access.",
+                  a: "Yes — you get a free 24-hour Pro trial when you sign up. No credit card required. After the trial, you can stay on the free plan (3 hours/day) or upgrade to Pro for unlimited access. Invite friends to earn 3 extra days Pro!",
                 },
                 {
                   q: "What payment methods do you support?",

@@ -148,9 +148,11 @@ function TermsPage() {
               6. Free Trial
             </h2>
             <p>
-              New users receive a 7-day free trial with Pro features ("Reverse Trial"). After the
+              New users receive a 24-hour free trial with Pro features ("Reverse Trial"). After the
               trial period, your account will automatically revert to the Free tier unless you
-              subscribe to a paid plan. No payment information is required for the trial.
+              subscribe to a paid plan. No payment information is required for the trial. You can
+              earn additional Pro days by inviting friends — each successful referral earns both
+              you and your friend 3 extra days of Pro access.
             </p>
           </section>
 

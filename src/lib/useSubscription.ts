@@ -18,7 +18,7 @@ export function useSubscription(): SubscriptionData {
     plan: "free",
     status: "trial",
     inReverseTrial: true,
-    trialDaysLeft: 7,
+    trialDaysLeft: 1,
     isPro: false,
     loading: true,
   });

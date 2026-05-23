@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase, isSupabaseConfigured } from "./supabase";
+import { identify, resetIdentity, analytics } from "./analytics";
 import type { User, Session } from "@supabase/supabase-js";
 
 export type AuthState = {
@@ -56,6 +57,14 @@ export function useAuth() {
         session,
         loading: false,
       }));
+
+      // Identify user in analytics
+      if (session?.user) {
+        identify(session.user.id, {
+          email: session.user.email,
+          name: session.user.user_metadata?.full_name,
+        });
+      }
     });
 
     return () => data?.subscription?.unsubscribe();
@@ -80,6 +89,7 @@ export function useAuth() {
       loading: false,
       error: error?.message ?? null,
     }));
+    if (data.user) analytics.signup("email");
     return { data, error };
   }, []);
 
@@ -96,6 +106,7 @@ export function useAuth() {
       loading: false,
       error: error?.message ?? null,
     }));
+    if (data.user) analytics.login("email");
     return { data, error };
   }, []);
 
@@ -116,6 +127,7 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     setState((prev) => ({ ...prev, loading: true }));
     const { error } = await supabase.auth.signOut();
+    resetIdentity();
     setState({
       user: null,
       session: null,

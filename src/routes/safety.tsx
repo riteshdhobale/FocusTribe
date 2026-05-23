@@ -4,7 +4,16 @@ import { Shield, Lock, Heart } from "lucide-react";
 
 export const Route = createFileRoute("/safety")({
   component: SafetyPage,
-  head: () => ({ meta: [{ title: "Safety & Trust — StudyDate" }] }),
+  head: () => ({
+    meta: [
+      { title: "Safety & Trust — StudyDate" },
+      {
+        name: "description",
+        content:
+          "Your safety matters. Learn about StudyDate's moderation, reporting, and community standards.",
+      },
+    ],
+  }),
 });
 
 function SafetyPage() {

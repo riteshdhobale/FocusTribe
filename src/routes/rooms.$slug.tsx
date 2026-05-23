@@ -12,16 +12,18 @@ export const Route = createFileRoute("/rooms/$slug")({
   head: ({ params }) => {
     const c = getCategory(params.slug);
     const title = c ? `${c.name} study rooms — StudyDate` : "Study rooms — StudyDate";
+    const desc = c
+      ? `Live ${c.name} study rooms. ${c.description}`
+      : "Live study rooms on StudyDate.";
     return {
       meta: [
         { title },
-        {
-          name: "description",
-          content: c
-            ? `Live ${c.name} study rooms. ${c.description}`
-            : "Live study rooms on StudyDate.",
-        },
+        { name: "description", content: desc },
         { property: "og:title", content: title },
+        { property: "og:description", content: desc },
+        { property: "og:image", content: "https://studydate.in/og-image.png" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: desc },
       ],
     };
   },

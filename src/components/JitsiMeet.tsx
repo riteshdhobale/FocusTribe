@@ -16,6 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useSubscription } from "@/lib/useSubscription";
+import { saveStudySession } from "@/lib/saveStudySession";
 
 type JitsiMeetProps = {
   roomName: string;
@@ -175,7 +176,17 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
 
         // When Jitsi is ready to close, show our summary overlay instead of promo
         api.addEventListener("readyToClose", () => {
-          if (mounted) setSessionEnded(true);
+          if (mounted) {
+            setSessionEnded(true);
+            // Persist session to DB
+            if (joinedAt) {
+              const elapsed = Math.floor((Date.now() - joinedAt) / 1000 / 60);
+              saveStudySession({
+                durationMinutes: elapsed,
+                tasksCompleted: completedTasksCount,
+              });
+            }
+          }
         });
 
         // Fallback — clear loading state after 15s even if event didn't fire
@@ -208,9 +219,16 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
   const toggleScreenShare = () => apiRef.current?.executeCommand("toggleShareScreen");
   const hangup = () => {
     // Snapshot elapsed time BEFORE ending — so the summary timer is frozen, not live
-    setFrozenElapsed(getElapsedTime());
+    const elapsed = getElapsedTime();
+    setFrozenElapsed(elapsed);
     setSessionEnded(true); // Show summary overlay FIRST (covers promo)
     apiRef.current?.executeCommand("hangup");
+
+    // Persist session to DB
+    saveStudySession({
+      durationMinutes: elapsed.minutes,
+      tasksCompleted: completedTasksCount,
+    });
   };
 
   // Enforce 60-minute limit on Free plan
@@ -371,7 +389,9 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
                 Great work staying focused.
                 {inReverseTrial && (
                   <span className="block mt-1 text-xs font-bold" style={{ color: "#FF6B9E" }}>
-                    (Trial ends in {trialDaysLeft} days. Don't lose unlimited sessions!)
+                    {trialDaysLeft <= 1
+                      ? "(Your Pro trial ends today! Invite friends for 3 free days →)"
+                      : `(Trial ends in ${trialDaysLeft} days. Invite friends to extend!)`}
                   </span>
                 )}
               </p>

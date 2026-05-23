@@ -6,6 +6,7 @@
 // (search: "OLD_RAZORPAY_INTERNATIONAL") for easy restoration.
 
 import { useState, useCallback, useMemo } from "react";
+import { analytics } from "@/lib/analytics";
 import {
   openCheckout as openRazorpayCheckout,
   isRazorpayConfigured,
@@ -48,6 +49,9 @@ export function usePayment() {
       // Reset state
       setState({ loading: true, error: null, success: false, paymentId: null });
 
+      // Track payment start
+      analytics.paymentStarted(planId, provider);
+
       // Auth guard
       if (!isAuthenticated || !user?.email) {
         const err = "Please sign in first to upgrade your plan.";
@@ -87,6 +91,7 @@ export function usePayment() {
               success: true,
               paymentId: result.paymentId || null,
             });
+            analytics.paymentCompleted(planId, "razorpay");
           } else {
             setState({
               loading: false,
@@ -124,14 +129,13 @@ export function usePayment() {
               localStorage.setItem(`demo_plan_${user.id}`, planId);
             }
 
-            // Note: For Dodo, the overlay checkout handles the full flow.
-            // Actual payment confirmation comes via webhook.
             setState({
               loading: false,
               error: null,
               success: true,
               paymentId: result.paymentId || null,
             });
+            analytics.paymentCompleted(planId, "dodo");
           } else {
             setState({
               loading: false,

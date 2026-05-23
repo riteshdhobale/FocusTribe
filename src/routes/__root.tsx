@@ -1,6 +1,9 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { Toaster } from "sonner";
+import { useEffect } from "react";
 
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { loadPostHog } from "@/lib/analytics";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -76,6 +79,10 @@ export const Route = createRootRoute({
         rel: "apple-touch-icon",
         href: "/favicon.png",
       },
+      {
+        rel: "manifest",
+        href: "/manifest.json",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -98,8 +105,20 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  // Initialize analytics + register service worker on mount
+  useEffect(() => {
+    loadPostHog();
+
+    // Register PWA service worker
+    if ("serviceWorker" in navigator && !import.meta.env.DEV) {
+      navigator.serviceWorker.register("/sw.js").catch((err) => {
+        console.warn("[SW] Registration failed:", err);
+      });
+    }
+  }, []);
+
   return (
-    <>
+    <ErrorBoundary>
       <Outlet />
       <Toaster
         position="top-center"
@@ -113,6 +132,6 @@ function RootComponent() {
           },
         }}
       />
-    </>
+    </ErrorBoundary>
   );
 }

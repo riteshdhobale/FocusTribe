@@ -1,0 +1,22 @@
+{
+  "name": "StudyDate",
+  "short_name": "StudyDate",
+  "description": "Find your perfect study partner. Match by goal, exam focus, and availability.",
+  "start_url": "/discover",
+  "display": "standalone",
+  "background_color": "#0B1120",
+  "theme_color": "#FF6B9E",
+  "orientation": "portrait-primary",
+  "categories": ["education", "social"],
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

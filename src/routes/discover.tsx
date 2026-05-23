@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { analytics } from "@/lib/analytics";
 import { Navbar } from "@/components/Navbar";
 import { SwipeCard } from "@/components/SwipeCard";
 import { MatchFilters } from "@/components/MatchFilters";
@@ -119,6 +120,9 @@ function DiscoverPage() {
     const dbAction = action === "pass" ? "left" : action === "super" ? "super-like" : "right";
     await addToSwipeHistory(profile.id, dbAction);
 
+    // Track swipe event
+    analytics.swipe(action, profile.id);
+
     // Check if the trigger auto-created a match (meaning it was a mutual like)
     if (action === "like" || action === "super") {
       import("@/lib/supabase").then(async ({ supabase }) => {
@@ -133,6 +137,7 @@ function DiscoverPage() {
 
         if (data) {
           setCelebration(profile);
+          analytics.matchCreated(profile.id, compatibilityScore(myProfile, profile));
         }
       });
     }
