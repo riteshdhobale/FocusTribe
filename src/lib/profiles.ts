@@ -440,13 +440,21 @@ export async function getFilteredDeck(prefs: MatchPreferences): Promise<Profile[
   if (!session?.session?.user) return [];
   const uid = session.session.user.id;
 
+  let cityFilter: string[] | undefined = prefs.cities.length ? prefs.cities : undefined;
+  if (prefs.locationMode === "my-city") {
+    const me = await getMyProfile();
+    if (me?.city) {
+      cityFilter = [me.city];
+    }
+  }
+
   const { data, error } = await supabase.rpc("get_filtered_deck", {
     p_user_id: uid,
     p_age_min: prefs.ageRange?.min || 18,
     p_age_max: prefs.ageRange?.max || 99,
     p_gender_filter: prefs.genderPref || "any",
     p_exam_filter: prefs.examFocus.length ? prefs.examFocus : undefined,
-    p_city_filter: prefs.cities.length ? prefs.cities : undefined,
+    p_city_filter: cityFilter,
     p_college_filter: prefs.colleges.length ? prefs.colleges : undefined,
   });
 

@@ -13,11 +13,16 @@ import {
   ChevronUp,
   ChevronDown,
   Target,
+  Loader2,
+  Scroll,
+  Sparkles,
+  BookOpen,
 } from "lucide-react";
 import { JitsiMeet } from "@/components/JitsiMeet";
 import { TaskGate } from "@/components/TaskGate";
 import { useSessionGoalSync } from "@/lib/useSessionGoalSync";
 import { useAuth } from "@/lib/useAuth";
+import { useStudyContract } from "@/lib/useStudyContract";
 
 export const Route = createFileRoute("/room/$slug/$id")({
   head: ({ params }) => {
@@ -181,6 +186,25 @@ function StudyRoomView() {
     displayName: userName,
     myGoal: sessionGoal,
   });
+
+  // ── AI Study Contract Setup ─────────────────────────────────────
+  const {
+    contract,
+    generating,
+    generateAndShareContract,
+    toggleMilestone,
+    resetContract,
+  } = useStudyContract({
+    roomId: id,
+    userId: user?.id,
+    userName: userName,
+  });
+
+  const [sidebarTab, setSidebarTab] = useState<"tasks" | "contract">(() => {
+    return isPrivateRoom ? "contract" : "tasks";
+  });
+
+  const [contractMode, setContractMode] = useState<"silent" | "collaborative" | "quizzing">("collaborative");
 
   const handleGateCommit = (goal: string, durationMinutes: number) => {
     setSessionGoal(goal);
@@ -377,79 +401,282 @@ function StudyRoomView() {
             </div>
           </div>
 
-          {/* tasks */}
+          {/* tabbed container */}
           <div className="surface-card flex-1 min-h-[260px] flex flex-col relative overflow-hidden">
-            {/* Notepad Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--hairline)] bg-[color:var(--surface-2)]">
-              <div className="flex items-center gap-2 font-display font-bold text-white tracking-wide">
-                📋 Session Tasks
-              </div>
-              <span className="text-xs font-bold text-[color:var(--text-muted)]">
-                {tasks.filter((t) => t.done).length} / {tasks.length}
-              </span>
-            </div>
-
-            <div className="flex-1 space-y-1 overflow-y-auto px-4 py-3 relative z-10">
-              {tasks.map((t) => (
-                <div
-                  key={t.id}
-                  className="group flex items-start gap-3 p-2 rounded-xl hover:bg-[color:var(--surface-2)] transition-colors"
+            {/* Header Tabs */}
+            <div className="flex border-b border-[color:var(--hairline)] bg-[color:var(--surface-2)] shrink-0">
+              <button
+                onClick={() => setSidebarTab("tasks")}
+                className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-1.5 transition border-b-2 ${
+                  sidebarTab === "tasks"
+                    ? "border-[#FF6B9E] text-[#FF6B9E]"
+                    : "border-transparent text-[color:var(--text-muted)] hover:text-white"
+                }`}
+              >
+                📋 Tasks
+              </button>
+              {isPrivateRoom && (
+                <button
+                  onClick={() => setSidebarTab("contract")}
+                  className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-1.5 transition border-b-2 ${
+                    sidebarTab === "contract"
+                      ? "border-[#FF6B9E] text-[#FF6B9E]"
+                      : "border-transparent text-[color:var(--text-muted)] hover:text-white"
+                  }`}
                 >
-                  <div className="pt-0.5 relative z-10">
-                    <button
-                      onClick={() =>
-                        setTasks((arr) =>
-                          arr.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)),
-                        )
-                      }
-                      className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
-                        t.done
-                          ? "border-[color:var(--emerald-live)] bg-[color:var(--emerald-live)]"
-                          : "border-slate-500 bg-[color:var(--background)] hover:border-[color:var(--rose-accent)]"
-                      }`}
-                    >
-                      {t.done && <span className="text-[10px] text-white font-bold">✓</span>}
-                    </button>
-                  </div>
-                  <span
-                    className={`flex-1 text-sm mt-0.5 transition-colors ${t.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-200"}`}
-                  >
-                    {t.text}
-                  </span>
-                  <button
-                    onClick={() => setTasks((arr) => arr.filter((x) => x.id !== t.id))}
-                    className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg text-[color:var(--text-muted)] hover:bg-rose-500/10 hover:text-[color:var(--crimson)] mt-[-4px]"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-              {tasks.length === 0 && (
-                <div className="text-sm text-[color:var(--text-muted)] py-8 text-center italic font-light">
-                  Empty slate. Add a task below.
-                </div>
+                  📜 AI Contract
+                </button>
               )}
             </div>
 
-            {/* Input area */}
-            <div className="p-4 border-t border-[color:var(--hairline)] bg-[color:var(--surface-2)] relative z-10">
-              <form onSubmit={addTask} className="flex gap-2 relative">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="What are we focusing on?"
-                  className="flex-1 bg-[color:var(--background)] border border-[color:var(--hairline)] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[color:var(--rose-accent)] transition-colors shadow-inner"
-                />
-                <button
-                  type="submit"
-                  disabled={!input.trim()}
-                  className="h-10 w-10 shrink-0 rounded-xl bg-rose-gradient text-white flex items-center justify-center hover:opacity-90 transition disabled:opacity-50 shadow-md"
-                >
-                  <Plus className="h-5 w-5" strokeWidth={2.5} />
-                </button>
-              </form>
-            </div>
+            {sidebarTab === "tasks" ? (
+              <>
+                <div className="flex-1 space-y-1 overflow-y-auto px-4 py-3 relative z-10">
+                  {tasks.map((t) => (
+                    <div
+                      key={t.id}
+                      className="group flex items-start gap-3 p-2 rounded-xl hover:bg-[color:var(--surface-2)] transition-colors"
+                    >
+                      <div className="pt-0.5 relative z-10">
+                        <button
+                          onClick={() =>
+                            setTasks((arr) =>
+                              arr.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)),
+                            )
+                          }
+                          className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
+                            t.done
+                              ? "border-[color:var(--emerald-live)] bg-[color:var(--emerald-live)]"
+                              : "border-slate-500 bg-[color:var(--background)] hover:border-[color:var(--rose-accent)]"
+                          }`}
+                        >
+                          {t.done && <span className="text-[10px] text-white font-bold">✓</span>}
+                        </button>
+                      </div>
+                      <span
+                        className={`flex-1 text-sm mt-0.5 transition-colors ${t.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-200"}`}
+                      >
+                        {t.text}
+                      </span>
+                      <button
+                        onClick={() => setTasks((arr) => arr.filter((x) => x.id !== t.id))}
+                        className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg text-[color:var(--text-muted)] hover:bg-rose-500/10 hover:text-[color:var(--crimson)] mt-[-4px]"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {tasks.length === 0 && (
+                    <div className="text-sm text-[color:var(--text-muted)] py-8 text-center italic font-light">
+                      Empty slate. Add a task below.
+                    </div>
+                  )}
+                </div>
+
+                {/* Input area */}
+                <div className="p-4 border-t border-[color:var(--hairline)] bg-[color:var(--surface-2)] relative z-10">
+                  <form onSubmit={addTask} className="flex gap-2 relative">
+                    <input
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="What are we focusing on?"
+                      className="flex-1 bg-[color:var(--background)] border border-[color:var(--hairline)] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[color:var(--rose-accent)] transition-colors shadow-inner"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!input.trim()}
+                      className="h-10 w-10 shrink-0 rounded-xl bg-rose-gradient text-white flex items-center justify-center hover:opacity-90 transition disabled:opacity-50 shadow-md"
+                    >
+                      <Plus className="h-5 w-5" strokeWidth={2.5} />
+                    </button>
+                  </form>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col overflow-y-auto p-4 relative z-10 text-left">
+                {!contract ? (
+                  <div className="flex-1 flex flex-col justify-center text-center py-6">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: "rgba(255,107,158,0.12)" }}>
+                      <Sparkles className="h-5 w-5" style={{ color: "#FF6B9E" }} />
+                    </div>
+                    <h3 className="font-display font-bold text-sm text-white mb-1">
+                      Collaborative Study Contract
+                    </h3>
+                    <p className="text-xs text-[color:var(--text-muted)] max-w-xs mx-auto mb-5 leading-relaxed">
+                      Align your study goals. The AI Coach will structure a tailored study schedule for this session.
+                    </p>
+
+                    {/* Mode Selector */}
+                    <div className="mb-5 text-left">
+                      <label className="text-[10px] font-semibold text-[color:var(--text-muted)] uppercase tracking-wider mb-2 block">
+                        Choose Session Mode
+                      </label>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {(["silent", "collaborative", "quizzing"] as const).map((m) => (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => setContractMode(m)}
+                            className={`py-2 rounded-xl text-[10px] font-bold border transition flex flex-col items-center gap-1 ${
+                              contractMode === m
+                                ? "bg-rose-gradient text-white border-transparent"
+                                : "border-[color:var(--hairline)] text-[color:var(--text-secondary)] hover:text-white"
+                            }`}
+                          >
+                            <span>{m === "silent" ? "🤫" : m === "collaborative" ? "💬" : "❓"}</span>
+                            <span className="capitalize">{m}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Generate Button / Status message */}
+                    {!sessionGoal || !partnerGoal ? (
+                      <div className="text-center p-3 rounded-xl border border-dashed border-[color:var(--hairline)] bg-[color:var(--surface-2)]/30">
+                        <p className="text-[11px] text-[color:var(--text-muted)] leading-relaxed">
+                          ⚠️ Both study goals must be set to generate the contract.
+                          <br />
+                          <span className="text-[10px] italic">
+                            {!sessionGoal && "Waiting for you to set your goal. "}
+                            {!partnerGoal && "Waiting for partner to set their goal."}
+                          </span>
+                        </p>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          generateAndShareContract(
+                            sessionGoal,
+                            partnerGoal.goal,
+                            Math.round(secs / 60) || 50,
+                            contractMode
+                          )
+                        }
+                        disabled={generating}
+                        className="w-full btn-pill bg-rose-gradient text-[color:var(--primary-foreground)] py-3 font-semibold text-xs flex items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                        style={{ boxShadow: "var(--shadow-rose)" }}
+                      >
+                        {generating ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Consulting AI Coach...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-3.5 w-3.5" />
+                            Generate AI Contract
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4 text-left">
+                    {/* Contract Header */}
+                    <div className="pb-3 border-b border-[color:var(--hairline)]">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-[#FF6B9E] bg-[#FF6B9E]/10 px-2 py-0.5 rounded-full capitalize">
+                          {contractMode} Session
+                        </span>
+                        <button
+                          onClick={resetContract}
+                          className="text-[10px] text-[color:var(--text-muted)] hover:text-red-400 transition"
+                        >
+                          Reset Plan
+                        </button>
+                      </div>
+                      <h4 className="font-display font-extrabold text-base text-rose-gradient mt-1 leading-snug">
+                        {contract.title}
+                      </h4>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] font-semibold text-[color:var(--text-muted)]">
+                        <span>CONTRACT PROGRESS</span>
+                        <span>
+                          {Math.round(
+                            (contract.milestones.filter((m) => m.done).length /
+                              contract.milestones.length) *
+                              100
+                          )}
+                          %
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full overflow-hidden bg-[color:var(--surface-2)]">
+                        <div
+                          className="h-full transition-all duration-300"
+                          style={{
+                            width: `${
+                              (contract.milestones.filter((m) => m.done).length /
+                                contract.milestones.length) *
+                              100
+                            }%`,
+                            background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Milestones Checklist */}
+                    <div className="space-y-3.5">
+                      {contract.milestones.map((m) => (
+                        <div
+                          key={m.id}
+                          className="flex items-start gap-2.5 p-2 rounded-xl bg-[color:var(--surface-2)]/40 hover:bg-[color:var(--surface-2)] transition-colors border border-[color:var(--hairline)]"
+                        >
+                          <button
+                            onClick={() => toggleMilestone(m.id)}
+                            className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${
+                              m.done
+                                ? "border-emerald-500 bg-emerald-500"
+                                : "border-slate-500 hover:border-[#FF6B9E]"
+                            }`}
+                          >
+                            {m.done && <span className="text-[10px] text-white font-bold">✓</span>}
+                          </button>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex justify-between items-baseline mb-0.5 gap-2">
+                              <span
+                                className={`text-xs font-bold leading-tight ${
+                                  m.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-100"
+                                }`}
+                              >
+                                {m.label}
+                              </span>
+                              <span className="text-[9px] font-bold text-[color:var(--text-muted)] shrink-0">
+                                {m.durationMinutes} min
+                              </span>
+                            </div>
+                            <p
+                              className={`text-[10px] leading-relaxed ${
+                                m.done ? "text-[color:var(--text-muted)]" : "text-slate-350"
+                              }`}
+                            >
+                              {m.description}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Coach Tip */}
+                    {contract.coachTip && (
+                      <div className="p-3.5 rounded-xl border border-[color:var(--hairline)] bg-[color:var(--surface-2)]/20">
+                        <div className="flex items-center gap-1.5 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-[#FFC107]">
+                          <Sparkles className="h-3 w-3" />
+                          AI Focus Coach
+                        </div>
+                        <p className="text-[10px] leading-relaxed text-slate-300 italic">
+                          "{contract.coachTip}"
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </aside>
 
@@ -532,79 +759,273 @@ function StudyRoomView() {
               </button>
             </div>
 
-            {/* Tasks */}
+            {/* Tasks / Contract Tabs */}
             <div className="pt-5 mt-2">
               <div className="surface-card flex-1 min-h-[200px] flex flex-col relative overflow-hidden">
-                {/* Notepad Header */}
-                <div className="flex items-center justify-between px-4 py-3 bg-[color:var(--surface-2)] border-b border-[color:var(--hairline)]">
-                  <div className="flex items-center gap-2 font-display font-bold text-white text-sm">
+                {/* Header Tabs */}
+                <div className="flex border-b border-[color:var(--hairline)] bg-[color:var(--surface-2)] shrink-0">
+                  <button
+                    onClick={() => setSidebarTab("tasks")}
+                    className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-1.5 transition border-b-2 ${
+                      sidebarTab === "tasks"
+                        ? "border-[#FF6B9E] text-[#FF6B9E]"
+                        : "border-transparent text-[color:var(--text-muted)] hover:text-white"
+                    }`}
+                  >
                     📋 Tasks
-                  </div>
-                  <span className="text-xs font-bold text-[color:var(--text-muted)]">
-                    {tasks.filter((t) => t.done).length} / {tasks.length}
-                  </span>
-                </div>
-
-                <div className="flex-1 space-y-1 max-h-48 overflow-y-auto px-3 py-2 relative z-10">
-                  {tasks.map((t) => (
-                    <div
-                      key={t.id}
-                      className="flex items-start gap-3 p-2 rounded-xl hover:bg-[color:var(--surface-2)] transition-colors"
+                  </button>
+                  {isPrivateRoom && (
+                    <button
+                      onClick={() => setSidebarTab("contract")}
+                      className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-1.5 transition border-b-2 ${
+                        sidebarTab === "contract"
+                          ? "border-[#FF6B9E] text-[#FF6B9E]"
+                          : "border-transparent text-[color:var(--text-muted)] hover:text-white"
+                      }`}
                     >
-                      <div className="pt-0.5 relative z-10">
-                        <button
-                          onClick={() =>
-                            setTasks((arr) =>
-                              arr.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)),
-                            )
-                          }
-                          className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                            t.done
-                              ? "border-[color:var(--emerald-live)] bg-[color:var(--emerald-live)]"
-                              : "border-slate-500 bg-[color:var(--background)]"
-                          }`}
-                        >
-                          {t.done && <span className="text-[10px] text-white font-bold">✓</span>}
-                        </button>
-                      </div>
-                      <span
-                        className={`flex-1 text-sm mt-0.5 ${t.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-200"}`}
-                      >
-                        {t.text}
-                      </span>
-                      <button
-                        onClick={() => setTasks((arr) => arr.filter((x) => x.id !== t.id))}
-                        className="p-1 text-[color:var(--text-muted)] mt-[-2px]"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                  {tasks.length === 0 && (
-                    <div className="text-xs text-[color:var(--text-muted)] py-6 text-center italic">
-                      Empty slate.
-                    </div>
+                      📜 AI Contract
+                    </button>
                   )}
                 </div>
 
-                {/* Input area */}
-                <div className="p-3 border-t border-[color:var(--hairline)] bg-[color:var(--surface-2)]">
-                  <form onSubmit={addTask} className="flex items-center gap-2">
-                    <input
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="Add a task…"
-                      className="flex-1 bg-[color:var(--background)] border border-[color:var(--hairline)] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[color:var(--rose-accent)] transition-colors shadow-inner"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!input.trim()}
-                      className="h-10 w-10 shrink-0 rounded-xl bg-rose-gradient text-white flex items-center justify-center hover:opacity-90 transition disabled:opacity-50 shadow-md"
-                    >
-                      <Plus className="h-5 w-5" strokeWidth={2.5} />
-                    </button>
-                  </form>
-                </div>
+                {sidebarTab === "tasks" ? (
+                  <>
+                    <div className="flex-1 space-y-1 max-h-48 overflow-y-auto px-3 py-2 relative z-10">
+                      {tasks.map((t) => (
+                        <div
+                          key={t.id}
+                          className="flex items-start gap-3 p-2 rounded-xl hover:bg-[color:var(--surface-2)] transition-colors"
+                        >
+                          <div className="pt-0.5 relative z-10">
+                            <button
+                              onClick={() =>
+                                setTasks((arr) =>
+                                  arr.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)),
+                                )
+                              }
+                              className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                                t.done
+                                  ? "border-[color:var(--emerald-live)] bg-[color:var(--emerald-live)]"
+                                  : "border-slate-500 bg-[color:var(--background)]"
+                              }`}
+                            >
+                              {t.done && <span className="text-[10px] text-white font-bold">✓</span>}
+                            </button>
+                          </div>
+                          <span
+                            className={`flex-1 text-sm mt-0.5 ${t.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-200"}`}
+                          >
+                            {t.text}
+                          </span>
+                          <button
+                            onClick={() => setTasks((arr) => arr.filter((x) => x.id !== t.id))}
+                            className="p-1 text-[color:var(--text-muted)] mt-[-2px]"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                      {tasks.length === 0 && (
+                        <div className="text-xs text-[color:var(--text-muted)] py-6 text-center italic">
+                          Empty slate.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Input area */}
+                    <div className="p-3 border-t border-[color:var(--hairline)] bg-[color:var(--surface-2)]">
+                      <form onSubmit={addTask} className="flex items-center gap-2">
+                        <input
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          placeholder="Add a task…"
+                          className="flex-1 bg-[color:var(--background)] border border-[color:var(--hairline)] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[color:var(--rose-accent)] transition-colors shadow-inner"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!input.trim()}
+                          className="h-10 w-10 shrink-0 rounded-xl bg-rose-gradient text-white flex items-center justify-center hover:opacity-90 transition disabled:opacity-50 shadow-md"
+                        >
+                          <Plus className="h-5 w-5" strokeWidth={2.5} />
+                        </button>
+                      </form>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col max-h-72 overflow-y-auto p-3.5 relative z-10 text-left">
+                    {!contract ? (
+                      <div className="flex-1 flex flex-col justify-center text-center py-4">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2" style={{ background: "rgba(255,107,158,0.12)" }}>
+                          <Sparkles className="h-4 w-4" style={{ color: "#FF6B9E" }} />
+                        </div>
+                        <h3 className="font-display font-bold text-xs text-white mb-0.5">
+                          Collaborative Study Contract
+                        </h3>
+                        <p className="text-[10px] text-[color:var(--text-muted)] max-w-xs mx-auto mb-4 leading-relaxed">
+                          AI will structure a customized study checklist.
+                        </p>
+
+                        {/* Mode Selector */}
+                        <div className="mb-4 text-left">
+                          <label className="text-[9px] font-semibold text-[color:var(--text-muted)] uppercase tracking-wider mb-1 block">
+                            Choose Session Mode
+                          </label>
+                          <div className="grid grid-cols-3 gap-1">
+                            {(["silent", "collaborative", "quizzing"] as const).map((m) => (
+                              <button
+                                key={m}
+                                type="button"
+                                onClick={() => setContractMode(m)}
+                                className={`py-1.5 rounded-lg text-[9px] font-bold border transition flex flex-col items-center gap-0.5 ${
+                                  contractMode === m
+                                    ? "bg-rose-gradient text-white border-transparent"
+                                    : "border-[color:var(--hairline)] text-[color:var(--text-secondary)] hover:text-white"
+                                }`}
+                              >
+                                <span>{m === "silent" ? "🤫" : m === "collaborative" ? "💬" : "❓"}</span>
+                                <span className="capitalize">{m}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Generate Button / Status message */}
+                        {!sessionGoal || !partnerGoal ? (
+                          <div className="text-center p-2.5 rounded-xl border border-dashed border-[color:var(--hairline)] bg-[color:var(--surface-2)]/30">
+                            <p className="text-[10px] text-[color:var(--text-muted)] leading-normal">
+                              ⚠️ Need both study goals to generate contract.
+                            </p>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              generateAndShareContract(
+                                sessionGoal,
+                                partnerGoal.goal,
+                                Math.round(secs / 60) || 50,
+                                contractMode
+                              )
+                            }
+                            disabled={generating}
+                            className="w-full btn-pill bg-rose-gradient text-[color:var(--primary-foreground)] py-2 font-semibold text-[10px] flex items-center justify-center gap-1.5 transition disabled:opacity-50"
+                            style={{ boxShadow: "var(--shadow-rose)" }}
+                          >
+                            {generating ? (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Analyzing...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-3 w-3" />
+                                Generate Contract
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3.5 text-left">
+                        {/* Contract Header */}
+                        <div className="pb-2 border-b border-[color:var(--hairline)] flex items-center justify-between gap-2">
+                          <div>
+                            <span className="text-[9px] font-bold text-[#FF6B9E] bg-[#FF6B9E]/10 px-1.5 py-0.5 rounded-full capitalize">
+                              {contractMode}
+                            </span>
+                            <h4 className="font-display font-extrabold text-sm text-rose-gradient mt-0.5 leading-snug">
+                              {contract.title}
+                            </h4>
+                          </div>
+                          <button
+                            onClick={resetContract}
+                            className="text-[9px] text-[color:var(--text-muted)] hover:text-red-400 transition shrink-0"
+                          >
+                            Reset
+                          </button>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div>
+                          <div className="flex justify-between items-center mb-1 text-[9px] font-semibold text-[color:var(--text-muted)]">
+                            <span>PROGRESS</span>
+                            <span>
+                              {Math.round(
+                                (contract.milestones.filter((m) => m.done).length /
+                                  contract.milestones.length) *
+                                  100
+                              )}
+                              %
+                            </span>
+                          </div>
+                          <div className="h-1 rounded-full overflow-hidden bg-[color:var(--surface-2)]">
+                            <div
+                              className="h-full transition-all duration-300"
+                              style={{
+                                width: `${
+                                  (contract.milestones.filter((m) => m.done).length /
+                                    contract.milestones.length) *
+                                  100
+                                }%`,
+                                background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Milestones Checklist */}
+                        <div className="space-y-2">
+                          {contract.milestones.map((m) => (
+                            <div
+                              key={m.id}
+                              className="flex items-start gap-2 p-2 rounded-xl bg-[color:var(--surface-2)]/40 border border-[color:var(--hairline)]"
+                            >
+                              <button
+                                onClick={() => toggleMilestone(m.id)}
+                                className={`h-4.5 w-4.5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${
+                                  m.done
+                                    ? "border-emerald-500 bg-emerald-500"
+                                    : "border-slate-500"
+                                }`}
+                              >
+                                {m.done && <span className="text-[9px] text-white font-bold">✓</span>}
+                              </button>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex justify-between items-baseline mb-0.5 gap-2">
+                                  <span
+                                    className={`text-[11px] font-bold leading-tight ${
+                                      m.done ? "line-through text-[color:var(--text-muted)]" : "text-slate-100"
+                                    }`}
+                                  >
+                                    {m.label}
+                                  </span>
+                                  <span className="text-[8px] font-bold text-[color:var(--text-muted)] shrink-0">
+                                    {m.durationMinutes}m
+                                  </span>
+                                </div>
+                                <p
+                                  className={`text-[9px] leading-relaxed ${
+                                    m.done ? "text-[color:var(--text-muted)]" : "text-slate-350"
+                                  }`}
+                                >
+                                  {m.description}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Coach Tip */}
+                        {contract.coachTip && (
+                          <div className="p-2.5 rounded-xl border border-[color:var(--hairline)] bg-[color:var(--surface-2)]/20">
+                            <p className="text-[9px] leading-relaxed text-slate-300 italic">
+                              💡 "{contract.coachTip}"
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

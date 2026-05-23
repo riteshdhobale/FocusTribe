@@ -29,10 +29,10 @@ type JitsiMeetProps = {
 };
 
 // ─── Jitsi server config ───────────────────────────────────────────
-// meet.ffmuc.net = free community Jitsi (anonymous rooms, no login required)
+// meet.element.io = free community Jitsi (anonymous rooms, no login required)
 // For production: self-host on DigitalOcean/AWS (~$20/mo)
 // Guide: https://jitsi.github.io/handbook/docs/devops-guide/
-const JITSI_DOMAIN = "meet.ffmuc.net";
+const JITSI_DOMAIN = "meet.element.io";
 // ────────────────────────────────────────────────────────────────────
 
 declare global {
@@ -208,7 +208,7 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
       if (apiRef.current) {
         try {
           apiRef.current.dispose();
-        } catch {}
+        } catch { }
         apiRef.current = null;
       }
     };
@@ -562,11 +562,10 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
                 background: isAudioMuted
                   ? "color-mix(in oklab, var(--crimson) 20%, var(--surface-2))"
                   : "var(--surface-2)",
-                border: `1px solid ${
-                  isAudioMuted
+                border: `1px solid ${isAudioMuted
                     ? "color-mix(in oklab, var(--crimson) 40%, transparent)"
                     : "var(--hairline)"
-                }`,
+                  }`,
               }}
               aria-label={isAudioMuted ? "Unmute" : "Mute"}
             >
