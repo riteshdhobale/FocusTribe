@@ -9,7 +9,7 @@ import { supabase, isSupabaseConfigured } from "./supabase";
 import { track } from "./analytics";
 
 export type SessionData = {
-  matchId?: string; // UUID of the match (for 1-on-1 Study Date rooms)
+  matchId?: string; // UUID of the match (for 1-on-1 Study Session rooms)
   roomId?: string; // Room ID (for category rooms)
   durationMinutes: number; // Actual time spent
   pomodorosCompleted?: number;

@@ -33,37 +33,37 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "StudyDate — Find your perfect study room" },
+      { title: "FocusTribe — Find your perfect study room" },
       {
         name: "description",
         content:
           "Find study partners, join focused rooms, and build momentum with students preparing for exams, finals, certifications, and research goals.",
       },
-      { name: "author", content: "StudyDate" },
-      { name: "theme-color", content: "#FF6B9E" },
-      { property: "og:title", content: "StudyDate — Find your perfect study partner" },
+      { name: "author", content: "FocusTribe" },
+      { name: "theme-color", content: "#6366F1" },
+      { property: "og:title", content: "FocusTribe — Find your perfect study partner" },
       {
         property: "og:description",
         content:
           "Swipe on ambition, not just looks. Match by goal, exam focus, and availability, then study in focused rooms. Free to start.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://studydate.in" },
-      { property: "og:image", content: "https://studydate.in/og-image.png" },
+      { property: "og:url", content: "https://focustribe.in" },
+      { property: "og:image", content: "https://focustribe.in/og-image.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "StudyDate — Find your perfect study partner" },
-      { property: "og:site_name", content: "StudyDate" },
+      { property: "og:image:alt", content: "FocusTribe — Find your perfect study partner" },
+      { property: "og:site_name", content: "FocusTribe" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@StudyDateApp" },
-      { name: "twitter:creator", content: "@StudyDateApp" },
-      { name: "twitter:title", content: "StudyDate — Tinder for study partners" },
+      { name: "twitter:site", content: "@FocusTribeApp" },
+      { name: "twitter:creator", content: "@FocusTribeApp" },
+      { name: "twitter:title", content: "FocusTribe — The accountability platform for serious students" },
       {
         name: "twitter:description",
         content:
           "Swipe on ambition, not just looks. Match by goal, exam focus, and availability. Free to start.",
       },
-      { name: "twitter:image", content: "https://studydate.in/og-image.png" },
+      { name: "twitter:image", content: "https://focustribe.in/og-image.png" },
     ],
     links: [
       {

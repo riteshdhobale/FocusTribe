@@ -96,12 +96,12 @@ export function BanScreen({ reason, banType, expiresAt }: BanScreenProps) {
             team.
           </p>
           <a
-            href="mailto:safety@studydate.app"
+            href="mailto:safety@focustribe.app"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition hover:opacity-80"
             style={{ borderColor: "var(--hairline)", color: "var(--text-primary)" }}
           >
             <Mail className="h-4 w-4" />
-            safety@studydate.app
+            safety@focustribe.app
           </a>
         </div>
 

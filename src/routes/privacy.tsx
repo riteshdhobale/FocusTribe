@@ -3,7 +3,7 @@ import { Navbar } from "@/components/Navbar";
 
 export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
-  head: () => ({ meta: [{ title: "Privacy Policy — StudyDate" }] }),
+  head: () => ({ meta: [{ title: "Privacy Policy — FocusTribe" }] }),
 });
 
 function PrivacyPage() {
@@ -37,7 +37,7 @@ function PrivacyPage() {
           style={{ borderColor: "rgba(255,107,158,0.2)", background: "rgba(255,107,158,0.05)" }}
         >
           <p className="text-sm" style={{ color: "var(--text-primary)" }}>
-            <strong>TL;DR:</strong> We collect only what we need to run StudyDate. We never sell
+            <strong>TL;DR:</strong> We collect only what we need to run FocusTribe. We never sell
             your data. We use Supabase (hosted in India/Singapore) for secure storage. You can
             delete your account and all data at any time.
           </p>
@@ -131,7 +131,7 @@ function PrivacyPage() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <strong>Other users:</strong> Your profile information is visible to other StudyDate
+                <strong>Other users:</strong> Your profile information is visible to other FocusTribe
                 users as part of the matching experience
               </li>
               <li>
@@ -143,7 +143,7 @@ function PrivacyPage() {
                 government regulation
               </li>
               <li>
-                <strong>Safety:</strong> To protect the rights, safety, or property of StudyDate,
+                <strong>Safety:</strong> To protect the rights, safety, or property of FocusTribe,
                 our users, or the public
               </li>
             </ul>
@@ -204,11 +204,11 @@ function PrivacyPage() {
             <p className="mt-3">
               To exercise any of these rights, email us at{" "}
               <a
-                href="mailto:privacy@studydate.in"
+                href="mailto:privacy@focustribe.in"
                 className="font-medium"
                 style={{ color: "var(--rose-accent)" }}
               >
-                privacy@studydate.in
+                privacy@focustribe.in
               </a>
             </p>
           </section>
@@ -265,7 +265,7 @@ function PrivacyPage() {
               8. Children's Privacy
             </h2>
             <p>
-              StudyDate is not intended for users under 18 years of age. We do not knowingly collect
+              FocusTribe is not intended for users under 18 years of age. We do not knowingly collect
               personal information from children. If we learn that we have collected data from a
               user under 18, we will delete that information immediately.
             </p>
@@ -297,20 +297,20 @@ function PrivacyPage() {
               <br />
               <strong>Data Protection Officer:</strong>{" "}
               <a
-                href="mailto:privacy@studydate.in"
+                href="mailto:privacy@focustribe.in"
                 className="font-medium"
                 style={{ color: "var(--rose-accent)" }}
               >
-                privacy@studydate.in
+                privacy@focustribe.in
               </a>
               <br />
               <strong>General support:</strong>{" "}
               <a
-                href="mailto:support@studydate.in"
+                href="mailto:support@focustribe.in"
                 className="font-medium"
                 style={{ color: "var(--rose-accent)" }}
               >
-                support@studydate.in
+                support@focustribe.in
               </a>
             </p>
           </section>

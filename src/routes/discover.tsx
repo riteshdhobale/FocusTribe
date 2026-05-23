@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/useAuth";
 import { useBanCheck } from "@/lib/useBanCheck";
 import { useActionLimits, incrementSparksUsed, SWIPE_LIMITS } from "@/hooks/useActionLimits";
 import { Filter, Sparkles, UsersRound } from "lucide-react";
+import { MATCH_MODES, getModeConfig, getStoredMode, setStoredMode, type MatchMode } from "@/lib/matchModes";
 import {
   getMyProfile,
   getFilteredDeck,
@@ -40,7 +41,7 @@ export const Route = createFileRoute("/discover")({
           className="font-display font-bold text-2xl mb-2"
           style={{ color: "var(--text-primary)" }}
         >
-          Loading StudyDate...
+          Loading FocusTribe...
         </h1>
         <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
           {String(error?.message || "Something went wrong. Try refreshing.")}
@@ -48,14 +49,14 @@ export const Route = createFileRoute("/discover")({
         <button
           onClick={() => (window.location.href = "/discover")}
           className="px-6 py-3 rounded-xl text-sm font-semibold"
-          style={{ background: "#FF6B9E", color: "#0B1120" }}
+          style={{ background: "var(--ft-primary)", color: "#fff" }}
         >
           Refresh
         </button>
       </div>
     </div>
   ),
-  head: () => ({ meta: [{ title: "Discover — StudyDate" }] }),
+  head: () => ({ meta: [{ title: "Discover — FocusTribe" }] }),
 });
 
 function DiscoverPage() {
@@ -79,6 +80,13 @@ function DiscoverPage() {
   const { canRightSwipe, rightRemaining, canSendSpark, sparkRemaining } = limits;
   const [showPromptModal, setShowPromptModal] = useState<Profile | null>(null);
   const [showSparkModal, setShowSparkModal] = useState<Profile | null>(null);
+  const [mode, setMode] = useState<MatchMode>(getStoredMode());
+  const modeConfig = getModeConfig(mode);
+
+  const handleModeChange = (newMode: MatchMode) => {
+    setMode(newMode);
+    setStoredMode(newMode);
+  };
 
   const refreshDeck = useCallback(async () => {
     const filtered = await getFilteredDeck(prefs);
@@ -160,10 +168,10 @@ function DiscoverPage() {
         <div className="text-center">
           <div
             className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center animate-pulse"
-            style={{ background: "#FF6B9E" }}
+            style={{ background: "var(--ft-primary)" }}
           >
-            <span className="font-bold" style={{ color: "#0B1120" }}>
-              S
+            <span className="font-bold" style={{ color: "#fff" }}>
+              FT
             </span>
           </div>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
@@ -226,21 +234,53 @@ function DiscoverPage() {
 
           {/* Center — Swipe deck */}
           <div className="flex flex-col items-center">
+            {/* ── Mode Switcher ── */}
+            <div className="w-full max-w-lg mb-5">
+              <div
+                className="flex p-1 rounded-2xl gap-1"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  backdropFilter: "blur(12px)",
+                }}
+              >
+                {MATCH_MODES.map((m) => {
+                  const isActive = mode === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => handleModeChange(m.id)}
+                      className="mode-tab flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
+                      style={{
+                        background: isActive ? m.gradient : "transparent",
+                        color: isActive ? "#fff" : "var(--text-muted)",
+                        boxShadow: isActive ? `0 4px 20px ${m.colorGlow}` : "none",
+                        "--mode-glow": m.colorGlow,
+                      } as React.CSSProperties}
+                    >
+                      <span className="text-sm">{m.emoji}</span>
+                      <span className="hidden sm:inline">{m.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="w-full max-w-lg mb-4">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <span
                     className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em]"
-                    style={{ color: "#FF8FB5" }}
+                    style={{ color: modeConfig.color }}
                   >
                     <Sparkles className="h-3.5 w-3.5" />
-                    Swipe deck
+                    {modeConfig.name}
                   </span>
                   <h1
                     className="mt-1 font-display text-2xl font-extrabold leading-tight"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    Find your next study date
+                    {modeConfig.tagline}
                   </h1>
                 </div>
                 <span
@@ -256,9 +296,9 @@ function DiscoverPage() {
                 <span
                   className="inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase"
                   style={{
-                    borderColor: "rgba(255,107,158,0.24)",
-                    color: "#FF8FB5",
-                    background: "rgba(255,107,158,0.08)",
+                    borderColor: `${modeConfig.color}3D`,
+                    color: modeConfig.color,
+                    background: modeConfig.colorSoft,
                   }}
                 >
                   {deck.length === 1 ? "1 profile ready" : `${deck.length} profiles ready`}
@@ -276,12 +316,13 @@ function DiscoverPage() {
             {currentProfile ? (
               <SwipeCard
                 profile={currentProfile}
-                compatibility={compatibilityScore(myProfile, currentProfile)}
+                compatibility={compatibilityScore(myProfile, currentProfile, mode)}
                 onLike={() => handleSwipe("like")}
                 onPass={() => handleSwipe("pass")}
                 onSuperLike={() => handleSwipe("super")}
                 onSpark={() => setShowSparkModal(currentProfile)}
                 sparkRemaining={sparkRemaining}
+                mode={mode}
               />
             ) : (
               <div
@@ -363,6 +404,7 @@ function DiscoverPage() {
           profile={celebration}
           onMessage={() => dismissCelebration(true)}
           onKeep={() => dismissCelebration(false)}
+          mode={mode}
         />
       )}
 

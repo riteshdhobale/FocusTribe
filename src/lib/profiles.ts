@@ -243,8 +243,8 @@ export async function getProfileById(id: string): Promise<Profile | null> {
 // ═══════════════════════════════════════════════════════════════════
 
 export const BOT_PROFILE: Profile = {
-  id: "studydate-bot",
-  name: "Arya (StudyDate Bot)",
+  id: "focustribe-bot",
+  name: "Arya (FocusTribe Bot)",
   age: 21,
   gender: "female",
   city: "Mumbai",
@@ -260,7 +260,7 @@ export const BOT_PROFILE: Profile = {
   availability: "Evenings + Weekends",
   lookingForPrompt:
     "Someone who's serious about studying but knows how to have fun. Let's crack this together! 🚀",
-  avatarColor: "#FF6B9E",
+  avatarColor: "#6366F1",
   avatarEmoji: "🤖",
   isOnline: true,
   hoursStudied: 342,
@@ -280,10 +280,10 @@ const BOT_REPLIES = [
   "Let's do a 25-min Pomodoro sprint together?",
   "I just hit a 45-day streak! Your turn 💪",
   "Haha same! This topic is tricky but we'll crack it.",
-  "Click the Study Date button above to start a video session with me! 📹",
+  "Click the video button above to start a session with me! 📹",
   "Pro tip: use the Pomodoro timer in the room — it really helps focus.",
   "You're doing great! Keep going 🚀",
-  "I love how StudyDate makes studying less lonely 💛",
+  "I love how FocusTribe makes studying less lonely 💛",
   "Want to try the video room? It's like body doubling but better!",
 ];
 
@@ -521,24 +521,25 @@ export async function addToSwipeHistory(
   }
 }
 
-export function compatibilityScore(a: Profile, b: Profile): number {
+export function compatibilityScore(
+  a: Profile,
+  b: Profile,
+  mode?: "study-date" | "accountability-buddy" | "study-buddy",
+): number {
   const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
+  // Subject alignment
   const setA = new Set((a.examFocus || []).map((x) => x.toLowerCase()));
   const setB = new Set((b.examFocus || []).map((x) => x.toLowerCase()));
   const sharedFocus = [...setA].filter((x) => setB.has(x)).length;
+  const subjectScore = Math.min(20, sharedFocus * 10);
 
+  // Habit similarity (intent + study formats + availability)
   const intentsA = new Set(
-    (a.intent || "")
-      .split(",")
-      .map((x) => x.trim())
-      .filter(Boolean),
+    (a.intent || "").split(",").map((x) => x.trim()).filter(Boolean),
   );
   const intentsB = new Set(
-    (b.intent || "")
-      .split(",")
-      .map((x) => x.trim())
-      .filter(Boolean),
+    (b.intent || "").split(",").map((x) => x.trim()).filter(Boolean),
   );
   const sharedIntent = [...intentsA].filter((x) => intentsB.has(x)).length;
 
@@ -546,21 +547,33 @@ export function compatibilityScore(a: Profile, b: Profile): number {
   const formatsB = new Set((b.studyFormats || []).map((x) => x.toLowerCase()));
   const sharedFormats = [...formatsA].filter((x) => formatsB.has(x)).length;
 
+  const sameAvailability = a.availability && b.availability &&
+    a.availability.toLowerCase() === b.availability.toLowerCase();
+  const habitsScore = Math.min(20, sharedIntent * 8 + sharedFormats * 5 + (sameAvailability ? 4 : 0));
+
+  // Interests alignment
   const interestsA = new Set((a.interests || []).map((x) => x.toLowerCase()));
   const interestsB = new Set((b.interests || []).map((x) => x.toLowerCase()));
   const sharedInterests = [...interestsA].filter((x) => interestsB.has(x)).length;
+  const interestsScore = Math.min(20, sharedInterests * 4);
 
+  // Proximity (city match)
   const sameCity = a.city && b.city && a.city.toLowerCase() === b.city.toLowerCase();
+  const proximityScore = sameCity ? 10 : 0;
 
-  const score =
-    35 +
-    Math.min(20, sharedFocus * 10) +
-    Math.min(15, sharedIntent * 12) +
-    Math.min(15, sharedFormats * 6) +
-    Math.min(10, sharedInterests * 3) +
-    (sameCity ? 5 : 0);
+  // Mode-specific weights
+  let wS = 0.30, wH = 0.30, wI = 0.25, wP = 0.15; // defaults
+  if (mode === "study-date")           { wS = 0.40; wH = 0.30; wI = 0.20; wP = 0.10; }
+  else if (mode === "accountability-buddy") { wS = 0.20; wH = 0.45; wI = 0.10; wP = 0.25; }
+  else if (mode === "study-buddy")     { wS = 0.25; wH = 0.25; wI = 0.35; wP = 0.15; }
 
-  return clamp(score);
+  const raw = 35 +
+    (subjectScore * wS * 5) +
+    (habitsScore * wH * 5) +
+    (interestsScore * wI * 5) +
+    (proximityScore * wP * 5);
+
+  return clamp(raw);
 }
 
 export function getAutoReply(): string {

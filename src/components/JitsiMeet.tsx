@@ -22,7 +22,7 @@ type JitsiMeetProps = {
   roomName: string;
   displayName: string;
   categoryName?: string;
-  /** Allow microphone — true only for matched 1-on-1 Study Date rooms */
+  /** Allow microphone — true only for matched 1-on-1 Study Session rooms */
   allowMic?: boolean;
   /** Number of tasks marked done — shown on the session summary screen */
   completedTasksCount?: number;
@@ -89,7 +89,7 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
         if (!mounted || !containerRef.current) return;
 
         // Sanitize room name for Jitsi
-        const sanitizedRoom = `StudyDate-${roomName}`
+        const sanitizedRoom = `FocusTribe-${roomName}`
           .replace(/[^a-zA-Z0-9-]/g, "-")
           .replace(/-+/g, "-")
           .substring(0, 64);
@@ -112,7 +112,7 @@ export function JitsiMeet({ roomName, displayName, categoryName, allowMic = fals
             ...(allowMic ? {} : {
               disableAudioLevels: true,
             }),
-            subject: categoryName ? `${categoryName} — StudyDate` : "StudyDate Study Room",
+            subject: categoryName ? `${categoryName} — FocusTribe` : "FocusTribe Study Room",
             // We have our own custom toolbar — hide ALL Jitsi native buttons
             toolbarButtons: [],
             notifications: [],

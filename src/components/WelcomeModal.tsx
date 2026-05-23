@@ -42,10 +42,10 @@ export function WelcomeModal({ open, onClose, redirectTo }: Props) {
       <div
         onClick={(e) => e.stopPropagation()}
         className="surface-card w-full max-w-md p-8 animate-fade-up text-center"
-        style={{ borderColor: "color-mix(in oklab, #FF6B9E 35%, transparent)" }}
+        style={{ borderColor: "color-mix(in oklab, #6366F1 35%, transparent)" }}
       >
         <h3 className="text-2xl font-display font-bold mb-2">
-          Welcome to <span className="text-rose-gradient">StudyDate</span> 🎯
+          Welcome to <span className="text-ft-gradient">FocusTribe</span> 🎯
         </h3>
         <p className="text-sm text-[color:var(--text-secondary)] mb-6">
           Sign in to join live study rooms and track your pomodoro sessions.

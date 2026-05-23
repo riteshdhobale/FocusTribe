@@ -195,7 +195,7 @@ export async function openCheckout(
       key: RAZORPAY_KEY_ID,
       amount: orderData.amount,
       currency: orderData.currency || "INR",
-      name: "StudyDate",
+      name: "FocusTribe",
       description: plan.description,
       order_id: orderData.orderId,
       prefill: {

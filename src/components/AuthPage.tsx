@@ -26,8 +26,8 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
   const proPrice = formatPrice(pricing.plans.pro.amount, pricing.currencySymbol);
   const priceAnchor =
     pricing.region === "india"
-      ? `Price check: StudyDate Pro (${proPrice}/mo) is less than a Netflix plan — and it pays back in consistency.`
-      : `Price check: StudyDate Pro (${proPrice}/mo) is less than a typical streaming plan — and it pays back in consistency.`;
+      ? `Price check: FocusTribe Pro (${proPrice}/mo) is less than a Netflix plan — and it pays back in consistency.`
+      : `Price check: FocusTribe Pro (${proPrice}/mo) is less than a typical streaming plan — and it pays back in consistency.`;
 
   const pillars = [
     {
@@ -64,7 +64,7 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
       sub: "…but no momentum",
     },
     {
-      label: "StudyDate",
+      label: "FocusTribe",
       headline: "Momentum",
       sub: "focus + chemistry + progress",
       featured: true,
@@ -162,7 +162,7 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
               className="mt-5 max-w-2xl text-lg leading-8"
               style={{ color: "var(--text-secondary)" }}
             >
-              StudyDate matches you by exam focus, intent, and availability, then nudges both of
+              FocusTribe matches you by exam focus, intent, and availability, then nudges both of
               you into a real study room before motivation fades.
             </p>
 
@@ -599,7 +599,7 @@ export function AuthPage({ onLocalMode }: { onLocalMode: () => void }) {
 
           {/* Footer */}
           <p className="text-center text-[10px] mt-6" style={{ color: "var(--text-muted)" }}>
-            By continuing, you agree to StudyDate's{" "}
+            By continuing, you agree to FocusTribe's{" "}
             <a
               href="/terms"
               className="underline hover:opacity-80"

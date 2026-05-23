@@ -18,7 +18,7 @@ export function Navbar() {
   const isActive = (path: string) => currentPath === path;
 
   const navLinks = [
-    { to: "/", label: "Rooms" },
+    { to: "/", label: "Tribe Rooms" },
     { to: "/discover", label: "Discover" },
     { to: "/matches", label: "Matches" },
     ...(!isPro ? [{ to: "/pricing", label: "Pricing" }] : []),
@@ -30,23 +30,28 @@ export function Navbar() {
       <nav
         className="sticky top-0 z-50 border-b"
         style={{
-          background: "var(--bg-main)",
+          background: "rgba(11,17,32,0.82)",
           borderColor: "var(--hairline)",
-          backdropFilter: "blur(16px)",
+          backdropFilter: "blur(20px) saturate(1.6)",
+          WebkitBackdropFilter: "blur(20px) saturate(1.6)",
         }}
       >
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
+          <Link to="/" className="flex items-center gap-2.5 group" onClick={() => setMobileOpen(false)}>
             <span
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
-              style={{ background: "#FF6B9E", color: "#0B1120" }}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold transition-transform duration-200 group-hover:scale-110"
+              style={{
+                background: "linear-gradient(135deg, #6366F1 0%, #818CF8 100%)",
+                color: "#fff",
+                boxShadow: "0 0 16px rgba(99,102,241,0.3)",
+              }}
             >
-              S
+              FT
             </span>
             <span className="font-display font-bold text-lg">
-              <span style={{ color: "#FF6B9E" }}>Study</span>
-              <span style={{ color: "var(--text-primary)" }}>Date</span>
+              <span style={{ color: "#818CF8" }}>Focus</span>
+              <span style={{ color: "var(--text-primary)" }}>Tribe</span>
             </span>
           </Link>
 
@@ -63,7 +68,7 @@ export function Navbar() {
                 {isActive(link.to) && (
                   <span
                     className="absolute -bottom-[17px] left-0 right-0 h-0.5 rounded-full"
-                    style={{ background: "#FF6B9E" }}
+                    style={{ background: "linear-gradient(90deg, #6366F1, #818CF8)" }}
                   />
                 )}
               </Link>
@@ -77,9 +82,9 @@ export function Navbar() {
                 to="/pricing"
                 className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-full border transition hover:opacity-90"
                 style={{
-                  borderColor: "rgba(255,107,158,0.4)",
-                  color: "#FF6B9E",
-                  background: "rgba(255,107,158,0.05)",
+                  borderColor: "rgba(99,102,241,0.4)",
+                  color: "#818CF8",
+                  background: "rgba(99,102,241,0.05)",
                 }}
               >
                 <Sparkles className="w-3 h-3" />
@@ -93,8 +98,8 @@ export function Navbar() {
                   <button
                     className="w-9 h-9 flex items-center justify-center rounded-full border transition hover:scale-105 outline-none"
                     style={{
-                      background: "rgba(255,107,158,0.1)",
-                      borderColor: "rgba(255,107,158,0.3)",
+                      background: "rgba(99,102,241,0.1)",
+                      borderColor: "rgba(99,102,241,0.3)",
                       color: "var(--text-primary)",
                     }}
                   >
@@ -129,13 +134,13 @@ export function Navbar() {
                       <button
                         onClick={() => { setReferralOpen(true); }}
                         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium outline-none cursor-pointer transition-colors"
-                        style={{ color: "#FF6B9E" }}
+                        style={{ color: "#818CF8" }}
                         onMouseEnter={(e) =>
-                          (e.currentTarget.style.background = "rgba(255,107,158,0.08)")
+                          (e.currentTarget.style.background = "rgba(99,102,241,0.08)")
                         }
                         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                       >
-                        <Gift size={16} style={{ color: "#FF6B9E" }} />
+                        <Gift size={16} style={{ color: "#818CF8" }} />
                         Refer & Earn 3 days free
                       </button>
                     </DropdownMenu.Item>
@@ -165,7 +170,10 @@ export function Navbar() {
               <Link
                 to="/discover"
                 className="text-xs font-semibold px-4 py-2 rounded-full transition hover:opacity-90"
-                style={{ background: "#FF6B9E", color: "#0B1120" }}
+                style={{
+                  background: "linear-gradient(135deg, #6366F1, #818CF8)",
+                  color: "#fff",
+                }}
               >
                 Log In
               </Link>
@@ -203,11 +211,11 @@ export function Navbar() {
                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition"
                 style={{
                   color: isActive(link.to) ? "var(--text-primary)" : "var(--text-muted)",
-                  background: isActive(link.to) ? "rgba(255,107,158,0.08)" : "transparent",
+                  background: isActive(link.to) ? "rgba(99,102,241,0.08)" : "transparent",
                 }}
               >
                 {isActive(link.to) && (
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#FF6B9E" }} />
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#6366F1" }} />
                 )}
                 {link.label}
               </Link>
@@ -219,7 +227,7 @@ export function Navbar() {
                   to="/pricing"
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition"
-                  style={{ background: "rgba(255,107,158,0.1)", color: "#FF6B9E" }}
+                  style={{ background: "rgba(99,102,241,0.1)", color: "#818CF8" }}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   Upgrade to Pro

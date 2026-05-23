@@ -159,7 +159,7 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
             style={{ boxShadow: "var(--shadow-rose)" }}
           >
             <Video className="h-4 w-4" />
-            Study Date
+            Study Session
           </button>
           <ReportButton userId={partner.id} userName={partner.name} context="chat" />
 
@@ -209,7 +209,7 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
               You matched with {partner.name}!
             </div>
             <p className="text-sm text-[color:var(--text-secondary)] max-w-xs">
-              Say hi and plan your first study date together. You both have common interests!
+              Say hi and plan your first study session together. You both have common interests!
             </p>
           </div>
         )}

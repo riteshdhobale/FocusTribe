@@ -17,7 +17,7 @@ export const Route = createFileRoute("/matches")({
   component: MatchesPage,
   head: () => ({
     meta: [
-      { title: "Matches — StudyDate" },
+      { title: "Matches — FocusTribe" },
       { name: "robots", content: "noindex" },
       {
         name: "description",

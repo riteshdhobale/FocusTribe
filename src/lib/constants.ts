@@ -1,4 +1,4 @@
-// ─── StudyDate Constants ────────────────────────────────────────────
+// ─── FocusTribe Constants ────────────────────────────────────────────
 
 // ── Intent (what you want from the platform) ─────────────────────
 export const INTENTS = [
@@ -27,16 +27,16 @@ export const INTENTS = [
     desc: "Make new friends who share your academic goals",
   },
   {
-    value: "friends-first",
-    label: "Friends First",
-    emoji: "👋",
-    desc: "Build friendship through shared goals, see where it goes",
+    value: "body-doubling",
+    label: "Body Doubling",
+    emoji: "👥",
+    desc: "Silent co-working for focus and presence",
   },
   {
-    value: "meaningful-dating",
-    label: "Meaningful Dating",
-    emoji: "💛",
-    desc: "Open to romantic connection through studying together",
+    value: "daily-checkin",
+    label: "Daily Check-in",
+    emoji: "📋",
+    desc: "Quick daily goal-setting and review partner",
   },
 ] as const;
 
@@ -46,7 +46,7 @@ export type IntentValue = (typeof INTENTS)[number]["value"];
 export const STUDY_FORMATS = [
   "Library sessions",
   "Virtual focus calls",
-  "Cafe study dates",
+  "Cafe sessions",
   "Camera-on accountability",
   "Voice-only check-ins",
   "Weekend marathons",

@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase, isSupabaseConfigured } from "./supabase";
 
-const BASE_URL = "https://studydate.in";
+const BASE_URL = "https://focustribe.in";
 
 export type ReferralStats = {
   totalReferrals: number;
@@ -102,7 +102,7 @@ export function useReferral() {
   const shareOnTwitter = useCallback(() => {
     if (!shareUrl) return;
     const text = encodeURIComponent(
-      `I've been using StudyDate to find serious study partners — it's like Tinder but for your academic goals 🎯\n\nJoin free (+ 3 days Pro): ${shareUrl}`
+      `I've been using FocusTribe to find serious study partners — it's like Tinder but for your academic goals 🎯\n\nJoin free (+ 3 days Pro): ${shareUrl}`
     );
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
   }, [shareUrl]);
@@ -110,7 +110,7 @@ export function useReferral() {
   const shareOnWhatsApp = useCallback(() => {
     if (!shareUrl) return;
     const text = encodeURIComponent(
-      `Hey! Try StudyDate — it matches you with study partners for JEE/NEET/UPSC.\nSign up free + get 3 days Pro: ${shareUrl}`
+      `Hey! Try FocusTribe — it matches you with study partners for JEE/NEET/UPSC.\nSign up free + get 3 days Pro: ${shareUrl}`
     );
     window.open(`https://wa.me/?text=${text}`, "_blank");
   }, [shareUrl]);

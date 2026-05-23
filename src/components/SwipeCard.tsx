@@ -1,7 +1,8 @@
 import { useMemo, useState, useRef, useEffect } from "react";
-import { Heart, X, Star } from "lucide-react";
+import { Heart, X, Star, Flame, Clock } from "lucide-react";
 import { INTENTS, ACADEMIC_FOCUS } from "@/lib/constants";
 import { ReportButton } from "./ReportButton";
+import { getModeConfig, type MatchMode } from "@/lib/matchModes";
 import type { Profile } from "@/lib/profiles";
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
   /** Spark — rendered as floating overlay on card bottom-right */
   onSpark?: () => void;
   sparkRemaining?: number;
+  mode?: MatchMode;
 };
 
 export function SwipeCard({
@@ -23,7 +25,9 @@ export function SwipeCard({
   onSuperLike,
   onSpark,
   sparkRemaining = 0,
+  mode = "study-date",
 }: Props) {
+  const modeConfig = getModeConfig(mode);
   const cardRef = useRef<HTMLDivElement>(null);
   const photoAreaRef = useRef<HTMLDivElement>(null);
   const [dragX, setDragX] = useState(0);
@@ -109,7 +113,7 @@ export function SwipeCard({
 
   const likeColor = "var(--emerald-live)";
   const passColor = "var(--crimson)";
-  const accentColor = "var(--rose-accent)";
+  const accentColor = modeConfig.color;
 
   return (
     <div className="relative w-full max-w-lg mx-auto">
@@ -195,10 +199,10 @@ export function SwipeCard({
               <span
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide"
                 style={{
-                  background: "color-mix(in oklab, var(--rose-accent) 22%, rgba(0,0,0,0.45))",
+                  background: `color-mix(in oklab, ${modeConfig.color} 22%, rgba(0,0,0,0.45))`,
                   color: "#fff",
-                  border: "1px solid color-mix(in oklab, var(--rose-accent) 35%, transparent)",
-                  boxShadow: "var(--shadow-rose-soft)",
+                  border: `1px solid color-mix(in oklab, ${modeConfig.color} 35%, transparent)`,
+                  boxShadow: `0 0 12px ${modeConfig.colorGlow}`,
                   backdropFilter: "blur(10px)",
                 }}
               >
@@ -452,14 +456,14 @@ export function SwipeCard({
             onClick={() => handleAction("right", onLike)}
             className="w-[76px] h-[76px] rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 relative group"
             style={{
-              background: "linear-gradient(135deg, #FF6B9E 0%, #FF2D6F 100%)",
-              boxShadow: "0 0 0 8px rgba(255,107,158,0.10), 0 10px 36px rgba(255,107,158,0.55)",
+              background: modeConfig.gradient,
+              boxShadow: `0 0 0 8px ${modeConfig.colorSoft}, 0 10px 36px ${modeConfig.colorGlow}`,
             }}
           >
             <div className="absolute inset-0 rounded-full bg-white/15 opacity-0 group-hover:opacity-100 transition-opacity" />
             <Heart className="w-[34px] h-[34px] text-white drop-shadow transition-transform group-hover:scale-110 duration-200" fill="currentColor" />
           </button>
-          <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,107,158,0.9)" }}>Like</span>
+          <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: modeConfig.color }}>{modeConfig.actions.like}</span>
         </div>
 
         {/* ★ Superlike */}

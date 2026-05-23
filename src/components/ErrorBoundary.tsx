@@ -89,7 +89,7 @@ export class ErrorBoundary extends Component<Props, State> {
               className="text-sm mb-2 leading-relaxed"
               style={{ color: "rgba(255,255,255,0.5)" }}
             >
-              StudyDate hit an unexpected error. Don't worry — your data is safe.
+              FocusTribe hit an unexpected error. Don't worry — your data is safe.
             </p>
 
             {/* Show error message in dev mode */}
@@ -136,7 +136,7 @@ export class ErrorBoundary extends Component<Props, State> {
               className="text-xs mt-8"
               style={{ color: "rgba(255,255,255,0.25)" }}
             >
-              If this keeps happening, contact us at support@studydate.in
+              If this keeps happening, contact us at support@focustribe.in
             </p>
           </div>
         </div>

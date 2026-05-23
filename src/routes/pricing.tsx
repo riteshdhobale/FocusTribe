@@ -33,21 +33,21 @@ export const Route = createFileRoute("/pricing")({
   component: PricingPage,
   head: () => ({
     meta: [
-      { title: "Pricing — StudyDate | Plans from ₹59/week" },
+      { title: "Pricing — FocusTribe | Plans from ₹59/week" },
       {
         name: "description",
         content:
-          "StudyDate Pro: Unlimited study rooms, streaks, and matching. Half the price of the competition. Plans starting at ₹59/week.",
+          "FocusTribe Pro: Unlimited study rooms, streaks, and matching. Half the price of the competition. Plans starting at ₹59/week.",
       },
-      { property: "og:title", content: "StudyDate Pricing — Unlock Unlimited Study Partners" },
+      { property: "og:title", content: "FocusTribe Pricing — Unlock Unlimited Study Partners" },
       {
         property: "og:description",
         content:
           "Less than a coffee. Unlimited swiping, study rooms, and streak shields. Free 24-hour Pro trial.",
       },
-      { property: "og:url", content: "https://studydate.in/pricing" },
-      { property: "og:image", content: "https://studydate.in/og-image.png" },
-      { name: "twitter:title", content: "StudyDate Pricing — Plans from ₹59/week" },
+      { property: "og:url", content: "https://focustribe.in/pricing" },
+      { property: "og:image", content: "https://focustribe.in/og-image.png" },
+      { name: "twitter:title", content: "FocusTribe Pricing — Plans from ₹59/week" },
       {
         name: "twitter:description",
         content:
@@ -93,7 +93,7 @@ function PricingPage() {
       console.log("[Pricing] checkout result:", result);
 
       if (result.success) {
-        toast.success("Payment successful! Welcome to StudyDate Pro 🎉");
+        toast.success("Payment successful! Welcome to FocusTribe Pro 🎉");
         setTimeout(() => window.location.reload(), 2000);
       } else if (result.error && result.error !== "Payment cancelled") {
         toast.error(result.error || "Payment failed. Please try again.");
@@ -162,7 +162,7 @@ function PricingPage() {
             type: "waste" as const,
           },
           {
-            app: "StudyDate Pro",
+            app: "FocusTribe Pro",
             price: formatPrice(pricing.plans.pro.amount, sym),
             icon: (
               <Target
@@ -230,7 +230,7 @@ function PricingPage() {
             type: "waste" as const,
           },
           {
-            app: "StudyDate Pro",
+            app: "FocusTribe Pro",
             price: formatPrice(pricing.plans.pro.amount, sym),
             icon: (
               <Target
@@ -288,7 +288,7 @@ function PricingPage() {
             >
               <CheckCircle2 className="w-5 h-5" />
               <span>
-                <strong>Payment successful!</strong> Welcome to StudyDate Pro. Your subscription is
+                <strong>Payment successful!</strong> Welcome to FocusTribe Pro. Your subscription is
                 now active.
               </span>
             </div>
@@ -678,7 +678,7 @@ function PricingPage() {
             <div className="relative">
               <div className="text-3xl mb-3">🎁</div>
               <h3 className="font-display font-extrabold text-2xl md:text-3xl mb-3">
-                Gift StudyDate Pro
+                Gift FocusTribe Pro
               </h3>
               <p className="text-[color:var(--text-secondary)] max-w-xl mx-auto mb-6 text-sm md:text-base">
                 {pricing.region === "india"
@@ -692,7 +692,7 @@ function PricingPage() {
                   borderColor: "rgba(255,107,158,0.3)",
                   color: "#FF6B9E",
                 }}
-                onClick={() => window.open("mailto:support@studydate.in?subject=Gift%20a%20Subscription", "_blank")}
+                onClick={() => window.open("mailto:support@focustribe.in?subject=Gift%20a%20Subscription", "_blank")}
               >
                 <Sparkles className="w-4 h-4" />
                 Email us to gift a subscription
@@ -708,7 +708,7 @@ function PricingPage() {
             <div className="space-y-3 text-left max-w-3xl mx-auto">
               {[
                 {
-                  q: "Is StudyDate free to start?",
+                  q: "Is FocusTribe free to start?",
                   a: "Yes — you get a free 24-hour Pro trial when you sign up. No credit card required. After the trial, you can stay on the free plan (3 hours/day) or upgrade to Pro for unlimited access. Invite friends to earn 3 extra days Pro!",
                 },
                 {
@@ -723,19 +723,19 @@ function PricingPage() {
                 },
                 {
                   q: "Why is the price different based on my country?",
-                  a: `We use geo-based pricing to make StudyDate affordable everywhere. Your current region sees ${formatPrice(pricing.plans.pro.amount, sym)}/mo for Pro. You get the same product — priced for your market's purchasing power.`,
+                  a: `We use geo-based pricing to make FocusTribe affordable everywhere. Your current region sees ${formatPrice(pricing.plans.pro.amount, sym)}/mo for Pro. You get the same product — priced for your market's purchasing power.`,
                 },
                 {
                   q: "Is my data safe?",
                   a: "Yes. All data is stored on Supabase (Postgres) with row-level security. Your profile is only visible to matched users. We never sell data to third parties. See our Privacy Policy for full details.",
                 },
                 {
-                  q: "Can I use StudyDate outside India?",
-                  a: "100%. StudyDate works globally. International users see globally relevant rooms and exam filters such as GRE, GMAT, MCAT, IELTS, TOEFL, finals, and research. Price automatically adapts to your region.",
+                  q: "Can I use FocusTribe outside India?",
+                  a: "100%. FocusTribe works globally. International users see globally relevant rooms and exam filters such as GRE, GMAT, MCAT, IELTS, TOEFL, finals, and research. Price automatically adapts to your region.",
                 },
                 {
-                  q: "How is StudyDate different from a Discord server?",
-                  a: "Discord is a chat platform. StudyDate is built for focused studying — swipe-based partner matching by exam type, built-in Pomodoro timers in every room, session goals, streak tracking, and a distraction-free environment. It's an accountability system, not a social network.",
+                  q: "How is FocusTribe different from a Discord server?",
+                  a: "Discord is a chat platform. FocusTribe is built for focused studying — swipe-based partner matching by exam type, built-in Pomodoro timers in every room, session goals, streak tracking, and a distraction-free environment. It's an accountability system, not a social network.",
                 },
               ].map((faq) => (
                 <details

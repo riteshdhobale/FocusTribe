@@ -3,7 +3,7 @@ import { Navbar } from "@/components/Navbar";
 
 export const Route = createFileRoute("/terms")({
   component: TermsPage,
-  head: () => ({ meta: [{ title: "Terms of Service — StudyDate" }] }),
+  head: () => ({ meta: [{ title: "Terms of Service — FocusTribe" }] }),
 });
 
 function TermsPage() {
@@ -44,9 +44,9 @@ function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing or using StudyDate ("the Service"), you agree to be bound by these Terms
+              By accessing or using FocusTribe ("the Service"), you agree to be bound by these Terms
               of Service. If you do not agree to these terms, please do not use the Service.
-              StudyDate is operated by StudyDate Technologies ("we", "us", or "our").
+              FocusTribe is operated by FocusTribe Technologies ("we", "us", or "our").
             </p>
           </section>
 
@@ -58,7 +58,7 @@ function TermsPage() {
               2. Eligibility
             </h2>
             <p>
-              You must be at least 18 years old to use StudyDate. By creating an account, you
+              You must be at least 18 years old to use FocusTribe. By creating an account, you
               represent and warrant that:
             </p>
             <ul className="list-disc pl-6 mt-2 space-y-1">
@@ -124,7 +124,7 @@ function TermsPage() {
               5. Subscriptions & Payments
             </h2>
             <p>
-              StudyDate offers free and paid subscription tiers. Paid subscriptions ("Pro",
+              FocusTribe offers free and paid subscription tiers. Paid subscriptions ("Pro",
               "Campus", "Weekly Pass") are processed through Razorpay. By purchasing a subscription:
             </p>
             <ul className="list-disc pl-6 mt-2 space-y-1">
@@ -164,8 +164,8 @@ function TermsPage() {
               7. Intellectual Property
             </h2>
             <p>
-              All content, features, and functionality of StudyDate (including but not limited to
-              text, graphics, logos, icons, and software) are owned by StudyDate Technologies and
+              All content, features, and functionality of FocusTribe (including but not limited to
+              text, graphics, logos, icons, and software) are owned by FocusTribe Technologies and
               are protected by copyright, trademark, and other intellectual property laws. You
               retain ownership of content you upload (photos, bio text) but grant us a non-exclusive
               license to display it within the Service.
@@ -195,7 +195,7 @@ function TermsPage() {
               9. Limitation of Liability
             </h2>
             <p>
-              StudyDate is provided "as is" without warranties of any kind. We are not liable for
+              FocusTribe is provided "as is" without warranties of any kind. We are not liable for
               any indirect, incidental, special, consequential, or punitive damages arising from
               your use of the Service. Our total liability shall not exceed the amount you paid us
               in the 12 months prior to any claim.
@@ -241,11 +241,11 @@ function TermsPage() {
               If you have any questions about these Terms, please contact us at:
               <br />
               <a
-                href="mailto:support@studydate.in"
+                href="mailto:support@focustribe.in"
                 className="font-medium"
                 style={{ color: "var(--rose-accent)" }}
               >
-                support@studydate.in
+                support@focustribe.in
               </a>
             </p>
           </section>

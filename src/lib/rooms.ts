@@ -19,7 +19,7 @@ const EMPTY_ROOM_TTL_MINUTES = 15;
 /** A new overflow room is only allowed when the fullest room is this % full */
 const OVERFLOW_THRESHOLD = 0.75;
 
-const LOCAL_ROOMS_KEY = "studydate_rooms";
+const LOCAL_ROOMS_KEY = "focustribe_rooms";
 
 // ─── Local Storage Helpers (Demo Fallback) ──────────────────────
 function getLocalRooms(): StudyRoom[] {

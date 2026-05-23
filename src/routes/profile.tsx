@@ -17,7 +17,7 @@ import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
-  head: () => ({ meta: [{ title: "My Profile — StudyDate" }] }),
+  head: () => ({ meta: [{ title: "My Profile — FocusTribe" }] }),
 });
 
 function ProfilePage() {
@@ -183,7 +183,7 @@ function ProfilePage() {
                 {plan === "campus" ? "🎓" : "⭐"}
               </span>
               <span className="text-sm font-extrabold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B9E] to-[#FFA3C0]">
-                StudyDate {plan}
+                FocusTribe {plan}
               </span>
             </div>
           )}

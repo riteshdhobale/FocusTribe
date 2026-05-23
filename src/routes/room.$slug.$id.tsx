@@ -29,7 +29,7 @@ export const Route = createFileRoute("/room/$slug/$id")({
     const c = getCategory(params.slug);
     return {
       meta: [
-        { title: `${c?.name ?? "Study"} room — StudyDate` },
+        { title: `${c?.name ?? "Study"} room — FocusTribe` },
         { name: "description", content: "Live study room with Pomodoro and tasks." },
       ],
     };
@@ -57,11 +57,11 @@ function StudyRoomView() {
         setRoom(res);
       } else if (id.length > 10) {
         // Fallback: If no public room is found but the ID is a long UUID (like a Match ID),
-        // we automatically create a private 1-on-1 Study Date room on the fly!
+        // we automatically create a private 1-on-1 Study Session room on the fly!
         setRoom({
           id,
           slug,
-          name: "Private Study Date",
+          name: "Private Study Session",
           topic: "1-on-1 Session",
           capacity: 2,
           created_by: "system",
@@ -100,11 +100,11 @@ function StudyRoomView() {
   }, [user]);
 
   // Generate a deterministic Jitsi room name
-  const jitsiRoomName = `studydate-${slug}-${id}`.replace(/[^a-zA-Z0-9-]/g, "");
+  const jitsiRoomName = `focustribe-${slug}-${id}`.replace(/[^a-zA-Z0-9-]/g, "");
 
   // Private 1-on-1 match rooms get mic enabled; category rooms are silent
   const isPrivateRoom =
-    room?.name === "Private Study Date" ||
+    room?.name === "Private Study Session" ||
     (room?.capacity === 2 && id.length > 20);
 
   // Pomodoro — with localStorage persistence

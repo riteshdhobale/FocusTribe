@@ -20,7 +20,7 @@ export const SWIPE_LIMITS = {
 } as const;
 
 // ─── What is a Spark? ──────────────────────────────────────────────────────
-// Spark = Hinge's Rose for StudyDate. A highlighted like that:
+// Spark = Hinge's Rose for FocusTribe. A highlighted like that:
 //   1. Requires a message (can't send silently)
 //   2. Goes to the TOP of the receiver's "Likes You" queue with a ⚡ badge
 //   3. Severely limited (1 free / 3 pro per MONTH) — creates scarcity + intentionality

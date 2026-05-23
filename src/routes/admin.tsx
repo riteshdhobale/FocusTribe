@@ -23,7 +23,7 @@ export const Route = (createFileRoute as any)("/admin")({
   component: AdminDashboard,
   head: () => ({
     meta: [
-      { title: "Admin — StudyDate" },
+      { title: "Admin — FocusTribe" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -32,8 +32,8 @@ export const Route = (createFileRoute as any)("/admin")({
 // ─── Admin email whitelist ─────────────────────────────────────────
 // Add your admin emails here
 const ADMIN_EMAILS = [
-  "ritesh@studydate.in",
-  "admin@studydate.in",
+  "ritesh@focustribe.in",
+  "admin@focustribe.in",
   // Add more admins as needed
 ];
 
@@ -83,7 +83,7 @@ function AdminDashboard() {
             className="px-6 py-3 rounded-xl text-sm font-semibold"
             style={{ background: "#FF6B9E", color: "#0B1120" }}
           >
-            Go to StudyDate
+            Go to FocusTribe
           </button>
         </div>
       </div>
@@ -114,7 +114,7 @@ function AdminDashboard() {
             className="font-bold text-lg"
             style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)" }}
           >
-            StudyDate Admin
+            FocusTribe Admin
           </span>
         </div>
         <div className="flex items-center gap-3 text-sm" style={{ color: "var(--text-muted)" }}>

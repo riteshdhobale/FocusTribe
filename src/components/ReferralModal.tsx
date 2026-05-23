@@ -257,7 +257,7 @@ export function ReferralModal({ open, onClose }: ReferralModalProps) {
                     Your invite link
                   </div>
                   <div className="text-sm font-mono text-white truncate">
-                    {shareUrl || "studydate.in/?ref=..."}
+                    {shareUrl || "focustribe.in/?ref=..."}
                   </div>
                 </>
               )}

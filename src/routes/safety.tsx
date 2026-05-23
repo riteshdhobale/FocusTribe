@@ -6,11 +6,11 @@ export const Route = createFileRoute("/safety")({
   component: SafetyPage,
   head: () => ({
     meta: [
-      { title: "Safety & Trust — StudyDate" },
+      { title: "Safety & Trust — FocusTribe" },
       {
         name: "description",
         content:
-          "Your safety matters. Learn about StudyDate's moderation, reporting, and community standards.",
+          "Your safety matters. Learn about FocusTribe's moderation, reporting, and community standards.",
       },
     ],
   }),
@@ -38,7 +38,7 @@ function SafetyPage() {
             not chaos
           </h1>
           <p className="text-base max-w-lg mx-auto" style={{ color: "var(--text-muted)" }}>
-            StudyDate is designed to help ambitious students connect safely, study effectively, and
+            FocusTribe is designed to help ambitious students connect safely, study effectively, and
             build meaningful relationships around shared goals.
           </p>
         </div>
@@ -120,7 +120,7 @@ function SafetyPage() {
             },
             {
               title: "Text-only chat — no mic, no calls",
-              desc: "In-app chat is text-only by design. Voice and video are only available inside study date rooms where sessions are timed and tracked.",
+              desc: "In-app chat is text-only by design. Voice and video are only available inside study partner rooms where sessions are timed and tracked.",
               icon: "💬",
             },
             {
@@ -171,7 +171,7 @@ function SafetyPage() {
             className="font-display font-bold text-xl mb-2"
             style={{ color: "var(--text-primary)" }}
           >
-            Ready to find your study date?
+            Ready to find your study partner?
           </h3>
           <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
             It's free, it's safe, and it's built for people like you.

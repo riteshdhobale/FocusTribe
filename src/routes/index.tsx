@@ -28,13 +28,13 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "StudyDate — Study with people who get your grind" },
+      { title: "FocusTribe — Study with people who get your grind" },
       {
         name: "description",
         content:
           "Live exam-specific study rooms — NEET, JEE, UPSC, CA, GATE. Real accountability, unlimited hours. Starting at ₹199/mo.",
       },
-      { property: "og:title", content: "StudyDate — Live study rooms for serious students" },
+      { property: "og:title", content: "FocusTribe — Live study rooms for serious students" },
       {
         property: "og:description",
         content:
@@ -132,7 +132,7 @@ function Landing() {
             <br />
             <span
               style={{
-                background: "linear-gradient(135deg, #FF7B90 0%, #FF58A6 100%)",
+                background: "linear-gradient(135deg, #818CF8 0%, #6366F1 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
@@ -174,9 +174,9 @@ function Landing() {
               onClick={() => open()}
               className="group btn-pill px-7 py-3.5 font-bold transition inline-flex items-center gap-2"
               style={{
-                background: "linear-gradient(135deg, #FF7B90 0%, #FF58A6 100%)",
+                background: "linear-gradient(135deg, #6366F1 0%, #818CF8 100%)",
                 color: "white",
-                boxShadow: "0 8px 30px rgba(255, 88, 166, 0.3)",
+                boxShadow: "0 8px 30px rgba(99, 102, 241, 0.3)",
               }}
             >
               Find a room — it's free
@@ -659,8 +659,8 @@ function Landing() {
             <span className="text-[color:var(--text-muted)]">·</span>
             <span className="text-[color:var(--text-muted)]">Spotify: ₹119</span>
             <span className="text-[color:var(--text-muted)]">·</span>
-            <span className="font-semibold text-rose-gradient">
-              StudyDate Pro: ₹199 — your co-working space from any desk
+            <span className="font-semibold text-ft-gradient">
+              FocusTribe Pro: ₹199 — your co-working space from any desk
             </span>
           </div>
 
@@ -694,7 +694,7 @@ function Landing() {
           <div className="mt-12 space-y-3">
             {[
               {
-                q: "Is StudyDate really free?",
+                q: "Is FocusTribe really free?",
                 a: "Yes — 3 hours of free study every day, forever. Upgrade to Pro for unlimited.",
               },
               {
@@ -770,7 +770,7 @@ function Landing() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
             <div className="font-display font-extrabold text-xl">
-              Study<span className="text-rose-gradient">Date</span>
+              Focus<span className="text-ft-gradient">Tribe</span>
             </div>
             <p className="text-sm text-[color:var(--text-secondary)]">
               Unlimited studying. Half the price. Built for India. 🇮🇳
@@ -796,7 +796,7 @@ function Landing() {
               Contact
             </a>
             <span className="text-[color:var(--hairline)]">·</span>
-            <span>© {new Date().getFullYear()} StudyDate Technologies</span>
+            <span>© {new Date().getFullYear()} FocusTribe</span>
           </div>
         </div>
       </footer>

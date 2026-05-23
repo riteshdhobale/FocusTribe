@@ -141,26 +141,26 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
     1: {
       title: "Tell people who you are",
       subtitle:
-        "StudyDate is for ambitious people who want chemistry with direction. Profiles are 18+ and built around trust, intent, and academic alignment.",
-      why: "Better filters create better matches. The more honest you are about your ambition, style, and intent, the more likely you are to find a study date that actually works in real life.",
+        "FocusTribe matches you with students who share your academic goals, study habits, and daily rhythm. Profiles are 18+ and built around trust and academic alignment.",
+      why: "Better profiles create better matches. The more honest you are about your ambition, style, and schedule, the more likely you are to find a study partner who actually shows up.",
     },
     2: {
       title: "Map your academic ambition",
       subtitle:
-        "StudyDate is for ambitious people who want chemistry with direction. Profiles are 18+ and built around trust, intent, and academic alignment.",
-      why: "Better filters create better matches. The more honest you are about your ambition, style, and intent, the more likely you are to find a study date that actually works in real life.",
+        "FocusTribe matches you with students who share your academic goals, study habits, and daily rhythm. Profiles are 18+ and built around trust and academic alignment.",
+      why: "Students studying for the same exam or in the same field make the best accountability partners. Tell us what you're grinding toward.",
     },
     3: {
-      title: "Choose your study-date vibe",
+      title: "Choose your study vibe",
       subtitle:
-        "StudyDate is for ambitious people who want chemistry with direction. Profiles are 18+ and built around trust, intent, and academic alignment.",
-      why: "Better filters create better matches. The more honest you are about your ambition, style, and intent, the more likely you are to find a study date that actually works in real life.",
+        "FocusTribe supports multiple study styles — from silent body doubling to active collaboration. Pick the formats that work for you.",
+      why: "Matching on study style prevents friction. A Pomodoro person and a marathon studier rarely sync well — knowing your preference helps us find your perfect partner.",
     },
     4: {
       title: "Set your filters and go live",
       subtitle:
-        "StudyDate is for ambitious people who want chemistry with direction. Profiles are 18+ and built around trust, intent, and academic alignment.",
-      why: "Better filters create better matches. The more honest you are about your ambition, style, and intent, the more likely you are to find a study date that actually works in real life.",
+        "FocusTribe matches you with students who share your academic goals, study habits, and daily rhythm. Profiles are 18+ and built around trust and academic alignment.",
+      why: "Your bio and prompt are the first thing potential study partners see. Make it count — tell them what you're working on and what kind of partner you need.",
     },
   };
 

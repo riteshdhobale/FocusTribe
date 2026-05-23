@@ -1,23 +1,33 @@
-import { Heart } from "lucide-react";
+import { Heart, Zap, Handshake, BookOpen } from "lucide-react";
 import type { Profile } from "@/lib/profiles";
+import { getModeConfig, type MatchMode } from "@/lib/matchModes";
 
 type Props = {
   profile: Profile;
   onMessage: () => void;
   onKeep: () => void;
+  mode?: MatchMode;
 };
 
-export function MatchCelebration({ profile, onMessage, onKeep }: Props) {
+export function MatchCelebration({ profile, onMessage, onKeep, mode = "study-date" }: Props) {
+  const modeConfig = getModeConfig(mode);
+
+  const modeIcons = {
+    "study-date": "🎯",
+    "accountability-buddy": "🤝",
+    "study-buddy": "📚",
+  };
+
   return (
     <div
       className="fixed inset-0 z-[90] flex items-center justify-center px-4"
       style={{
         background:
-          "radial-gradient(ellipse at center, rgba(244,114,182,0.15), rgba(11,17,32,0.95) 70%)",
+          `radial-gradient(ellipse at center, ${modeConfig.colorSoft.replace("0.12", "0.15")}, rgba(11,17,32,0.95) 70%)`,
         backdropFilter: "blur(20px)",
       }}
     >
-      {/* Floating hearts */}
+      {/* Floating particles */}
       {Array.from({ length: 12 }).map((_, i) => (
         <div
           key={i}
@@ -29,7 +39,7 @@ export function MatchCelebration({ profile, onMessage, onKeep }: Props) {
             opacity: 0.7,
           }}
         >
-          {["💛", "💜", "💗", "✨", "⭐"][Math.floor(Math.random() * 5)]}
+          {["✨", "⭐", "🔥", "💪", modeConfig.emoji][Math.floor(Math.random() * 5)]}
         </div>
       ))}
 
@@ -37,22 +47,22 @@ export function MatchCelebration({ profile, onMessage, onKeep }: Props) {
         {/* Avatars connecting */}
         <div className="flex items-center justify-center gap-4 mb-6">
           <div
-            className="h-24 w-24 rounded-full flex items-center justify-center text-5xl shadow-lg ring-4"
+            className="h-24 w-24 rounded-full flex items-center justify-center text-5xl shadow-lg"
             style={{
-              background: `linear-gradient(135deg, #FF6B9E, var(--gold-soft))`,
-              boxShadow: "0 0 0 4px color-mix(in oklab, #FF6B9E 40%, transparent)",
+              background: `linear-gradient(135deg, ${modeConfig.color}, color-mix(in oklab, ${modeConfig.color} 60%, #0B1120))`,
+              boxShadow: `0 0 0 4px ${modeConfig.colorGlow}`,
             }}
           >
-            📚
+            {modeIcons[mode]}
           </div>
           <div className="animate-celebrate" style={{ animationDelay: "0.3s" }}>
-            <Heart
+            <Zap
               className="h-10 w-10 pulse-heart"
-              style={{ color: "#F472B6", fill: "#F472B6" }}
+              style={{ color: modeConfig.color, fill: modeConfig.color }}
             />
           </div>
           <div
-            className="h-24 w-24 rounded-full flex items-center justify-center text-5xl shadow-lg ring-4"
+            className="h-24 w-24 rounded-full flex items-center justify-center text-5xl shadow-lg"
             style={{
               background: `linear-gradient(135deg, ${profile.avatarColor}, color-mix(in oklab, ${profile.avatarColor} 60%, #0B1120))`,
               boxShadow: `0 0 0 4px color-mix(in oklab, ${profile.avatarColor} 40%, transparent)`,
@@ -63,16 +73,22 @@ export function MatchCelebration({ profile, onMessage, onKeep }: Props) {
         </div>
 
         <h2
-          className="font-display font-extrabold text-4xl mb-2"
+          className="font-display font-extrabold text-3xl mb-2"
           style={{ animationDelay: "0.2s" }}
         >
-          It's a <span className="text-rose-gradient">Study Date!</span> 🎉
+          <span
+            style={{
+              background: modeConfig.gradient,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            {modeConfig.celebrationTitle(profile.name)}
+          </span>
         </h2>
 
         <p className="text-[color:var(--text-secondary)] mb-2">
-          You and{" "}
-          <span className="text-[color:var(--text-primary)] font-semibold">{profile.name}</span>{" "}
-          want to study together!
+          {modeConfig.celebrationSubtitle}
         </p>
 
         <p className="text-sm text-[color:var(--text-muted)] mb-8">
@@ -82,8 +98,11 @@ export function MatchCelebration({ profile, onMessage, onKeep }: Props) {
         <div className="flex flex-col gap-3">
           <button
             onClick={onMessage}
-            className="btn-pill bg-rose-gradient text-white px-8 py-3.5 font-semibold inline-flex items-center justify-center gap-2 transition hover:opacity-95"
-            style={{ boxShadow: "var(--shadow-rose)" }}
+            className="btn-pill text-white px-8 py-3.5 font-semibold inline-flex items-center justify-center gap-2 transition hover:opacity-95"
+            style={{
+              background: modeConfig.gradient,
+              boxShadow: `0 10px 40px -12px ${modeConfig.colorGlow}`,
+            }}
           >
             Send a message 💬
           </button>

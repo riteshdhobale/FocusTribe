@@ -111,7 +111,7 @@ const STUDY_DATE_STARTERS: Starter[] = [
   { text: "I'll bring the notes, you bring the focus. Deal?", category: "study-date" },
   { text: "Let's do a 3-hour library session and grab food after?", category: "study-date" },
   {
-    text: "Virtual study date tonight? I have a Pomodoro playlist ready 🎵",
+    text: "Virtual study session tonight? I have a Pomodoro playlist ready 🎵",
     category: "study-date",
   },
   {
@@ -185,7 +185,7 @@ export function getBestNextMove(): { title: string; body: string } {
     },
     {
       title: "Start with a virtual session",
-      body: "A 50-minute camera-on Pomodoro session is the perfect first study date. Low pressure, high accountability.",
+      body: "A 50-minute camera-on Pomodoro session is the perfect first study session. Low pressure, high accountability.",
     },
   ];
   return moves[Math.floor(Math.random() * moves.length)];
