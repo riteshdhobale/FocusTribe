@@ -546,6 +546,7 @@ function ProfilePage() {
       {cropImageUrl && (
         <ImageCropModal
           imageUrl={cropImageUrl}
+          requireFace={(profile.photoUrls || []).length === 0}
           onConfirm={uploadCroppedPhoto}
           onCancel={() => {
             URL.revokeObjectURL(cropImageUrl);

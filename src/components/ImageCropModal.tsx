@@ -6,12 +6,15 @@
 import { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
-import { X, ZoomIn, ZoomOut, Check } from "lucide-react";
+import { X, ZoomIn, ZoomOut, Check, AlertTriangle } from "lucide-react";
+import { detectFace } from "@/lib/faceDetect";
 
 type Props = {
   imageUrl: string; // object URL of the picked file
   onConfirm: (croppedBlob: Blob) => void;
   onCancel: () => void;
+  /** When true, blocks confirmation if no human face is detected in the crop */
+  requireFace?: boolean;
 };
 
 /** Reads a cropped region from an image using canvas and returns a Blob. */
@@ -56,11 +59,13 @@ function createImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
-export function ImageCropModal({ imageUrl, onConfirm, onCancel }: Props) {
+export function ImageCropModal({ imageUrl, onConfirm, onCancel, requireFace = false }: Props) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [faceError, setFaceError] = useState("");
+  const [detecting, setDetecting] = useState(false);
 
   const onCropComplete = useCallback((_: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
@@ -69,11 +74,29 @@ export function ImageCropModal({ imageUrl, onConfirm, onCancel }: Props) {
   const handleConfirm = async () => {
     if (!croppedAreaPixels) return;
     setProcessing(true);
+    setFaceError("");
     try {
       const blob = await getCroppedBlob(imageUrl, croppedAreaPixels);
+
+      // Run face detection if required (cover photo)
+      if (requireFace) {
+        setDetecting(true);
+        const result = await detectFace(blob);
+        setDetecting(false);
+
+        if (!result.hasFace) {
+          setFaceError(
+            "We couldn't detect a face in this photo. Please use a clear, well-lit photo of yourself.",
+          );
+          setProcessing(false);
+          return;
+        }
+      }
+
       onConfirm(blob);
     } catch (e) {
       console.error("Crop failed:", e);
+      setDetecting(false);
       setProcessing(false);
     }
   };
@@ -113,7 +136,9 @@ export function ImageCropModal({ imageUrl, onConfirm, onCancel }: Props) {
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition active:scale-95 disabled:opacity-50"
           style={{ background: "var(--rose-accent)", color: "#0B1120" }}
         >
-          {processing ? (
+          {detecting ? (
+            <span className="animate-pulse">Detecting face…</span>
+          ) : processing ? (
             <span className="animate-pulse">Processing…</span>
           ) : (
             <>
@@ -186,9 +211,32 @@ export function ImageCropModal({ imageUrl, onConfirm, onCancel }: Props) {
         </span>
       </div>
 
+      {/* Face detection error */}
+      {faceError && (
+        <div
+          className="mx-4 mb-2 flex items-start gap-3 p-4 rounded-2xl border flex-shrink-0"
+          style={{
+            borderColor: "rgba(245,158,11,0.4)",
+            background: "rgba(245,158,11,0.08)",
+          }}
+        >
+          <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#F59E0B" }} />
+          <div>
+            <p className="text-sm font-semibold mb-0.5" style={{ color: "#F59E0B" }}>
+              No face detected
+            </p>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              {faceError}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Preview hint */}
       <p className="text-center text-[11px] pb-4 flex-shrink-0" style={{ color: "var(--text-muted)" }}>
-        The pink frame is exactly how your photo will appear on the discover card
+        {requireFace
+          ? "Your cover photo must show your face clearly"
+          : "The frame is exactly how your photo will appear on the discover card"}
       </p>
     </div>
   );

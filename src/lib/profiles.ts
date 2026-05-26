@@ -360,16 +360,16 @@ export async function getMessages(matchId: string): Promise<Message[]> {
   }));
 }
 
-export async function sendMessage(matchId: string, text: string) {
+export async function sendMessage(matchId: string, text: string): Promise<string | undefined> {
   const { data: session } = await supabase.auth.getSession();
   if (!session?.session?.user) return;
   const uid = session.session.user.id;
 
-  const { error } = await supabase.from("messages").insert({
+  const { data: inserted, error } = await supabase.from("messages").insert({
     match_id: matchId,
     sender_id: uid,
     text: text,
-  });
+  }).select("id").single();
 
   if (error) {
     console.error("Failed to send message:", error);
@@ -393,6 +393,8 @@ export async function sendMessage(matchId: string, text: string) {
 
     await supabase.from("matches").update(dbUpdates).eq("id", matchId);
   }
+
+  return inserted?.id;
 }
 
 const PREFS_KEY = "sd_match_prefs";

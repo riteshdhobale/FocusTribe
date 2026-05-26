@@ -1035,6 +1035,7 @@ export function ProfileSetup({ onComplete }: { onComplete: () => void }) {
     {cropImageUrl && (
       <ImageCropModal
         imageUrl={cropImageUrl}
+        requireFace={photoUrls.length === 0}
         onConfirm={uploadCroppedBlob}
         onCancel={() => {
           URL.revokeObjectURL(cropImageUrl);

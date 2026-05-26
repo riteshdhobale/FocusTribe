@@ -45,7 +45,30 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
           (payload) => {
             const newMsg = payload.new;
             setMessages((prev) => {
+              // Already have this exact message (by server ID) — skip
               if (prev.find((m) => m.id === newMsg.id)) return prev;
+
+              // Check for an optimistic message from the same sender with the
+              // same text that hasn't been reconciled yet (its id is still a
+              // local UUID). Replace it with the real server message.
+              const optimisticIdx = prev.findIndex(
+                (m) =>
+                  m.senderId === newMsg.sender_id &&
+                  m.text === (newMsg.is_filtered ? "[Message blocked by filter]" : newMsg.text) &&
+                  m.id !== newMsg.id,
+              );
+              if (optimisticIdx !== -1) {
+                const updated = [...prev];
+                updated[optimisticIdx] = {
+                  id: newMsg.id,
+                  matchId: newMsg.match_id,
+                  senderId: newMsg.sender_id,
+                  text: newMsg.is_filtered ? "[Message blocked by filter]" : newMsg.text,
+                  timestamp: new Date(newMsg.created_at).getTime(),
+                };
+                return updated;
+              }
+
               return [
                 ...prev,
                 {
@@ -92,8 +115,9 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
     if (!input.trim() || !me) return;
     const text = input.trim();
     setInput("");
+    const tempId = crypto.randomUUID();
     const tempMsg: Message = {
-      id: crypto.randomUUID(),
+      id: tempId,
       matchId: match.id,
       senderId: me.id,
       text,
@@ -101,9 +125,16 @@ export function ChatWindow({ match, partner, onStatusChange }: Props) {
     };
     setMessages((prev) => [...prev, tempMsg]);
     try {
-      await sendMessage(match.id, text);
+      const serverId = await sendMessage(match.id, text);
+      // Replace optimistic ID with the real server ID so the realtime
+      // subscription's dedup check will recognise this message and skip it.
+      if (serverId) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...m, id: serverId } : m)),
+        );
+      }
     } catch {
-      setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
     }
   };
 
