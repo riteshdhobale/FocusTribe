@@ -23,6 +23,10 @@ import {
   ShieldCheck,
   Heart,
   Loader2,
+  Video,
+  MessageCircle,
+  Users,
+  Zap,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -298,6 +302,94 @@ function Landing() {
         <Marquee />
       </section>
 
+      {/* CATEGORIES — positioned right after hero so "Find a room" scroll lands here */}
+      <section id="rooms" className="relative px-6 py-24 md:py-32">
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            background:
+              "radial-gradient(50% 60% at 50% 0%, color-mix(in oklab, var(--rose-accent) 18%, transparent) 0%, transparent 100%)",
+          }}
+        />
+        <div className="max-w-7xl mx-auto relative">
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="badge-chip mx-auto">
+              <Sparkles className="h-3 w-3" /> Study Rooms
+            </div>
+            <h2 className="mt-5 text-4xl md:text-5xl font-display font-extrabold">
+              Find your tribe
+            </h2>
+            <p className="mt-4 text-[color:var(--text-secondary)]">
+              Pick your exam. Join a room. Study with students on the exact same path as you.
+            </p>
+          </div>
+
+          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {categories.map((c) => (
+              <button
+                key={c.slug}
+                onClick={() => joinBestRoom(c.slug)}
+                disabled={joiningSlug === c.slug}
+                className="surface-card text-left p-7 group relative overflow-hidden disabled:opacity-70 disabled:cursor-wait"
+              >
+                <div
+                  className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, transparent, var(--rose-accent), transparent)",
+                  }}
+                />
+                <div
+                  className="absolute -top-24 -right-24 h-48 w-48 rounded-full opacity-0 group-hover:opacity-30 transition"
+                  style={{
+                    background: "radial-gradient(circle, var(--rose-accent), transparent 60%)",
+                    filter: "blur(20px)",
+                  }}
+                />
+                <div className="flex items-center gap-4">
+                  <div
+                    className="h-12 w-12 rounded-xl flex items-center justify-center text-2xl"
+                    style={{
+                      background: "color-mix(in oklab, var(--rose-accent) 12%, var(--surface-2))",
+                    }}
+                  >
+                    {c.icon}
+                  </div>
+                  <div>
+                    <div className="font-display font-bold text-lg">{c.name}</div>
+                  </div>
+                  {joiningSlug === c.slug ? (
+                    <Loader2 className="ml-auto h-4 w-4 animate-spin text-[color:var(--rose-accent)]" />
+                  ) : (
+                    <ArrowRight className="ml-auto h-4 w-4 text-[color:var(--text-muted)] group-hover:text-[color:var(--rose-accent)] group-hover:translate-x-1 transition" />
+                  )}
+                </div>
+                <p className="mt-4 text-sm text-[color:var(--text-secondary)]">{c.description}</p>
+                <div className="mt-4 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 text-[color:var(--text-secondary)]">
+                    <span className="live-dot" /> {c.studying} studying
+                  </div>
+                  <div className="text-[color:var(--text-muted)]">{c.rooms} rooms</div>
+                </div>
+                {/* Big Join CTA */}
+                <div
+                  className="mt-5 w-full py-3 rounded-xl text-center text-sm font-bold transition-all group-hover:scale-[1.02] group-hover:shadow-lg"
+                  style={{
+                    background: "linear-gradient(135deg, #6366F1 0%, #818CF8 100%)",
+                    color: "white",
+                    boxShadow: "0 4px 20px rgba(99, 102, 241, 0.25)",
+                  }}
+                >
+                  {joiningSlug === c.slug ? "Joining..." : "Join Now →"}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="rose-divider max-w-5xl mx-auto" />
+
       {/* HOW IT WORKS */}
       <section id="how-it-works" className="relative px-6 py-32">
         <div className="max-w-6xl mx-auto">
@@ -364,75 +456,232 @@ function Landing() {
 
       <div className="rose-divider max-w-5xl mx-auto" />
 
-      {/* CATEGORIES */}
-      <section id="rooms" className="relative px-6 py-32">
-        <div className="max-w-7xl mx-auto">
+      {/* FEATURE SHOWCASE */}
+      <section id="showcase" className="relative px-6 py-32 overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            background:
+              "radial-gradient(60% 40% at 30% 50%, color-mix(in oklab, var(--rose-accent) 12%, transparent) 0%, transparent 100%)",
+          }}
+        />
+        <div className="max-w-7xl mx-auto relative">
           <div className="text-center max-w-2xl mx-auto">
             <div className="badge-chip mx-auto">
-              <Sparkles className="h-3 w-3" /> Study Rooms
+              <Zap className="h-3 w-3" /> See it in action
             </div>
             <h2 className="mt-5 text-4xl md:text-5xl font-display font-extrabold">
-              Find your tribe
+              Everything you need to{" "}
+              <span className="text-rose-gradient">study smarter</span>
             </h2>
             <p className="mt-4 text-[color:var(--text-secondary)]">
-              Pick your exam. Join a room. Study with students on the exact same path as you.
+              Video rooms, study partner matching, real-time chat, and structured sessions — all in one place.
             </p>
           </div>
 
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((c) => (
-              <button
-                key={c.slug}
-                onClick={() => joinBestRoom(c.slug)}
-                disabled={joiningSlug === c.slug}
-                className="surface-card text-left p-7 group relative overflow-hidden disabled:opacity-70 disabled:cursor-wait"
-              >
+          {/* Feature 1 — Video Rooms */}
+          <div className="mt-20 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
+            <div className="order-2 lg:order-1">
+              <div className="flex items-center gap-3 mb-4">
                 <div
-                  className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition"
+                  className="h-10 w-10 rounded-xl flex items-center justify-center"
                   style={{
-                    background:
-                      "linear-gradient(90deg, transparent, var(--rose-accent), transparent)",
+                    background: "color-mix(in oklab, var(--rose-accent) 14%, var(--surface-2))",
+                    color: "var(--rose-accent)",
                   }}
+                >
+                  <Video className="h-5 w-5" />
+                </div>
+                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[color:var(--text-muted)]">
+                  Live Study Rooms
+                </span>
+              </div>
+              <h3 className="font-display font-extrabold text-2xl md:text-3xl">
+                WebRTC video calls with your tribe
+              </h3>
+              <p className="mt-3 text-[color:var(--text-secondary)] leading-relaxed">
+                Join live study rooms with built-in Pomodoro timer, task tracker, and video calling.
+                Stay focused with your peers — cameras on or off, it's your call.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {["Pomodoro Timer", "Task Tracker", "Camera On/Off", "AI Study Contract"].map(
+                  (tag) => (
+                    <span
+                      key={tag}
+                      className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
+                    >
+                      {tag}
+                    </span>
+                  ),
+                )}
+              </div>
+            </div>
+            <div className="order-1 lg:order-2 relative group">
+              <div className="absolute -inset-3 rounded-[28px] bg-rose-gradient opacity-15 blur-2xl group-hover:opacity-25 transition-opacity duration-500" />
+              <div className="relative surface-card overflow-hidden p-1.5 ring-rose-soft">
+                <img
+                  src="/features/video-room.png"
+                  alt="Live video study room with Pomodoro timer and task tracker"
+                  className="rounded-2xl w-full h-auto"
+                  loading="lazy"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Feature 2 — Matching */}
+          <div className="mt-28 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
+            <div className="relative group">
+              <div className="absolute -inset-3 rounded-[28px] opacity-15 blur-2xl group-hover:opacity-25 transition-opacity duration-500" style={{ background: "linear-gradient(135deg, #6366F1, #818CF8)" }} />
+              <div className="relative surface-card overflow-hidden p-1.5 ring-rose-soft">
+                <img
+                  src="/features/matching.png"
+                  alt="Study partner matching with compatibility scores"
+                  className="rounded-2xl w-full h-auto"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-4">
                 <div
-                  className="absolute -top-24 -right-24 h-48 w-48 rounded-full opacity-0 group-hover:opacity-30 transition"
+                  className="h-10 w-10 rounded-xl flex items-center justify-center"
                   style={{
-                    background: "radial-gradient(circle, var(--rose-accent), transparent 60%)",
-                    filter: "blur(20px)",
+                    background: "color-mix(in oklab, #818CF8 14%, var(--surface-2))",
+                    color: "#818CF8",
                   }}
+                >
+                  <Heart className="h-5 w-5" />
+                </div>
+                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[color:var(--text-muted)]">
+                  Smart Matching
+                </span>
+              </div>
+              <h3 className="font-display font-extrabold text-2xl md:text-3xl">
+                Find your perfect study partner
+              </h3>
+              <p className="mt-3 text-[color:var(--text-secondary)] leading-relaxed">
+                Swipe through profiles matched by exam, schedule, and study style.
+                Three modes — Study Buddy, Accountability Partner, or Group Study — so you find exactly who you need.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {["Compatibility Score", "3 Match Modes", "Filters", "Super Likes"].map(
+                  (tag) => (
+                    <span
+                      key={tag}
+                      className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
+                    >
+                      {tag}
+                    </span>
+                  ),
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Feature 3 — Chat */}
+          <div className="mt-28 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
+            <div className="order-2 lg:order-1">
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="h-10 w-10 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: "color-mix(in oklab, #10B981 14%, var(--surface-2))",
+                    color: "#10B981",
+                  }}
+                >
+                  <MessageCircle className="h-5 w-5" />
+                </div>
+                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[color:var(--text-muted)]">
+                  Chat & Connect
+                </span>
+              </div>
+              <h3 className="font-display font-extrabold text-2xl md:text-3xl">
+                Chat, plan, and study together
+              </h3>
+              <p className="mt-3 text-[color:var(--text-secondary)] leading-relaxed">
+                Once you match, jump into real-time chat. Share notes, plan sessions, and launch
+                1-on-1 private study rooms with a single click. See who liked you and manage your connections.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {["Real-time Chat", "1-on-1 Sessions", "Likes You", "Study Scheduling"].map(
+                  (tag) => (
+                    <span
+                      key={tag}
+                      className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
+                    >
+                      {tag}
+                    </span>
+                  ),
+                )}
+              </div>
+            </div>
+            <div className="order-1 lg:order-2 relative group">
+              <div className="absolute -inset-3 rounded-[28px] opacity-15 blur-2xl group-hover:opacity-25 transition-opacity duration-500" style={{ background: "linear-gradient(135deg, #10B981, #059669)" }} />
+              <div className="relative surface-card overflow-hidden p-1.5 ring-rose-soft">
+                <img
+                  src="/features/chat.png"
+                  alt="Chat and messaging with study partners"
+                  className="rounded-2xl w-full h-auto"
+                  loading="lazy"
                 />
-                <div className="flex items-center gap-4">
-                  <div
-                    className="h-12 w-12 rounded-xl flex items-center justify-center text-2xl"
-                    style={{
-                      background: "color-mix(in oklab, var(--rose-accent) 12%, var(--surface-2))",
-                    }}
-                  >
-                    {c.icon}
-                  </div>
-                  <div>
-                    <div className="font-display font-bold text-lg">{c.name}</div>
-                  </div>
-                  {joiningSlug === c.slug ? (
-                    <Loader2 className="ml-auto h-4 w-4 animate-spin text-[color:var(--rose-accent)]" />
-                  ) : (
-                    <ArrowRight className="ml-auto h-4 w-4 text-[color:var(--text-muted)] group-hover:text-[color:var(--rose-accent)] group-hover:translate-x-1 transition" />
-                  )}
+              </div>
+            </div>
+          </div>
+
+          {/* Feature 4 — Rooms */}
+          <div className="mt-28 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
+            <div className="relative group">
+              <div className="absolute -inset-3 rounded-[28px] opacity-15 blur-2xl group-hover:opacity-25 transition-opacity duration-500" style={{ background: "linear-gradient(135deg, #F59E0B, #FBBF24)" }} />
+              <div className="relative surface-card overflow-hidden p-1.5 ring-rose-soft">
+                <img
+                  src="/features/rooms.png"
+                  alt="Exam-specific study rooms with live participants"
+                  className="rounded-2xl w-full h-auto"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="h-10 w-10 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: "color-mix(in oklab, #F59E0B 14%, var(--surface-2))",
+                    color: "#F59E0B",
+                  }}
+                >
+                  <Users className="h-5 w-5" />
                 </div>
-                <p className="mt-4 text-sm text-[color:var(--text-secondary)]">{c.description}</p>
-                <div className="mt-6 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-[color:var(--text-secondary)]">
-                    <span className="live-dot" /> {c.studying} studying
-                  </div>
-                  <div className="text-[color:var(--text-muted)]">{c.rooms} rooms</div>
-                </div>
-              </button>
-            ))}
+                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[color:var(--text-muted)]">
+                  Exam Rooms
+                </span>
+              </div>
+              <h3 className="font-display font-extrabold text-2xl md:text-3xl">
+                Rooms for every exam category
+              </h3>
+              <p className="mt-3 text-[color:var(--text-secondary)] leading-relaxed">
+                NEET, JEE, UPSC, CAT, GATE, CA — browse rooms by category and join one that matches your grind.
+                See live participant counts and jump in with one click.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {["8+ Exam Categories", "Live Counts", "One-Click Join", "Public & Private"].map(
+                  (tag) => (
+                    <span
+                      key={tag}
+                      className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-[color:var(--hairline)] text-[color:var(--text-secondary)]"
+                    >
+                      {tag}
+                    </span>
+                  ),
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="rose-divider max-w-5xl mx-auto" />
+
 
       {/* FEATURES — Bento layout */}
       <section id="features" className="relative px-6 py-32">
@@ -554,28 +803,34 @@ function Landing() {
               {
                 name: "Aarav R.",
                 exam: "NEET Aspirant",
+                photo: "/features/pfp-aarav.png",
                 quote: "10x more accountable than studying alone. The room dynamic is unreal.",
               },
               {
                 name: "Meera K.",
                 exam: "UPSC CSE",
+                photo: "/features/pfp-meera.png",
                 quote:
                   "I went from 3 to 9 hours/day in two weeks. The pomodoro + tribe combo is magic.",
               },
               {
-                name: "Siddharth P.",
-                exam: "JEE Advanced",
+                name: "Sarah M.",
+                exam: "GRE Prep · USA",
+                photo: "/features/pfp-sarah.png",
                 quote:
-                  "₹199 for unlimited? I cancelled three other apps. Wish this existed last year.",
+                  "I'm prepping for the GRE from my dorm and this app keeps me locked in. Found an accountability partner from Mumbai — we study every single day.",
               },
             ].map((t) => (
               <div key={t.name} className="surface-card p-7 relative">
                 <Quote className="h-6 w-6" style={{ color: "var(--rose-accent)" }} />
                 <p className="mt-4 text-[color:var(--text-primary)] leading-relaxed">"{t.quote}"</p>
                 <div className="mt-6 flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-rose-gradient flex items-center justify-center font-bold text-[color:var(--primary-foreground)]">
-                    {t.name[0]}
-                  </div>
+                  <img
+                    src={t.photo}
+                    alt={t.name}
+                    className="h-11 w-11 rounded-full object-cover ring-2 ring-[color:var(--hairline)]"
+                    loading="lazy"
+                  />
                   <div>
                     <div className="text-sm font-semibold">{t.name}</div>
                     <div className="text-xs text-[color:var(--text-muted)]">{t.exam}</div>
