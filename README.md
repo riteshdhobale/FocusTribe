@@ -217,17 +217,26 @@ supabase/
 
 ## 📸 Screenshots
 
-| Hero | Video Rooms |
+| Landing — Hero | Live Video Study Rooms |
 |---|---|
 | ![Hero](assets/hero.png) | ![Video Rooms](assets/video-rooms.png) |
 
-| Smart Matching | Chat & Connect |
+| Discover — Swipe Deck | It's a Match! |
 |---|---|
-| ![Matching](assets/matching.png) | ![Chat](assets/chat.png) |
 
-| Exam Rooms Grid |
+| ![Discover](assets/discover.png) | ![Match Screen](assets/match-screen.png) |
+
+| Matches & Chat | Session Goal Gate (Task Gate) |
+|---|---|
+| ![Matches Chat](assets/matches-chat.png) | ![Task Gate](assets/task-gate.png) |
+
+| Live Study Room (WebRTC + Pomodoro + Tasks) | Exam Rooms Grid |
+|---|---|
+| ![Study Room](assets/study-room.png) | ![Rooms Grid](assets/rooms-grid.png) |
+
+| Smart Partner Matching |
 |---|
-| ![Rooms Grid](assets/rooms-grid.png) |
+| ![Matching](assets/matching.png) |
 
 ---
 
